@@ -6,33 +6,45 @@ CUDA is a parallel computing platform and programming model developed by NVIDIA 
 
 The CUDA Toolkit from NVIDIA provides everything you need to develop GPU-accelerated applications. The CUDA Toolkit includes GPU-accelerated libraries, a compiler, development tools and the CUDA runtime.
 
-The CUDA container images on Docker Hub provide an easy-to-use distribution for CUDA supported platforms and architectures.
+The CUDA container images provide an easy-to-use distribution for CUDA supported platforms and architectures.
 
-*Maintained by the NVIDIA CUDA Installer Team*
+## Documentation
 
-### NVIDIA License Agreements
+For more information on CUDA, including the release notes, programming model, APIs and developer tools, visit the [CUDA documentation site](https://docs.nvidia.com/cuda).
 
-By downloading these images, you agree to the terms of the license agreements for NVIDIA software included in the images.
+## Overview of Images
 
-#### CUDA Toolkit License
+Three flavors of images are provided:
+- `base`: Includes the CUDA runtime (cudart)
+- `runtime`: Builds on the `base` and includes the [CUDA math libraries](https://developer.nvidia.com/gpu-accelerated-libraries), and [NCCL](https://developer.nvidia.com/nccl). A `runtime` image that also includes [cuDNN](https://developer.nvidia.com/cudnn) is available. 
+- `devel`: Builds on the `runtime` and includes headers, development tools for building CUDA images. These images are particularly useful for multi-stage builds.
+
+The Dockerfiles for the images are open-source and licensed under 3-clause BSD. For more information see the Supported Tags section below.
+
+### End User License Agreements
+
+The images are governed by the following NVIDIA End User License Agreements. By pulling and using the CUDA images, you accept the terms and conditions of these licenses. 
+Since the images may include components licensed under open-source licenses such as GPL, the sources for these components are archived [here](https://developer.download.nvidia.com/compute/cuda/opensource/).
+
+#### CUDA Toolkit EULA
 
 To view the license for the CUDA Toolkit included in this image, click [*here*](http://docs.nvidia.com/cuda/eula/index.html)
 
-#### cuDNN Toolkit
+#### cuDNN EULA
 
 To view the license for the cuDNN Toolkit included in this image, click [*here*](https://docs.nvidia.com/deeplearning/sdk/cudnn-sla/index.html)
 
-### NVIDIA Container Runtime
+### NVIDIA Container Toolkit
 
-The [NVIDIA Container Runtime](https://github.com/NVIDIA/nvidia-docker) for Docker is required to run CUDA images.
+The [NVIDIA Container Toolkit](https://github.com/NVIDIA/nvidia-docker) for Docker is required to run CUDA images.
 
-For CUDA 10.0, nvida-docker2 or greater is required. Older versions of the NVIDIA runtime work but an un-supported.
+For CUDA 10.0, `nvida-docker2` (v2.1.0) or greater is recommended. It is also recommended to use Docker 19.03.
 
 ### How to report a problem
 
-Read [NVIDIA Container Runtime Frequently Asked Questions](https://github.com/NVIDIA/nvidia-docker/wiki/Frequently-Asked-Questions) to see if the problem has been encountered before.
+Read [NVIDIA Container Toolkit Frequently Asked Questions](https://github.com/NVIDIA/nvidia-docker/wiki/Frequently-Asked-Questions) to see if the problem has been encountered before.
 
-After it has been determined the problem is not with the NVIDIA runtime, report an issue at the [CUDA Container Image Issue Tracker](https://github.com/NVIDIA/nvidia-docker/issues/new).
+After it has been determined the problem is not with the NVIDIA runtime, report an issue at the [CUDA Container Image Issue Tracker](https://gitlab.com/nvidia/container-images/cuda/-/issues).
 
 ## Supported tags
 
