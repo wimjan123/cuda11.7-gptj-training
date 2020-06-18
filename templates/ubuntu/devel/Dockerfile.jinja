@@ -1,0 +1,81 @@
+ARG IMAGE_NAME
+FROM ${IMAGE_NAME}:{{ cuda.version.major }}.{{ cuda.version.minor }}-runtime-{{ cuda.os.distro }}{{ cuda.os.version }}{{ cuda.image_tag_suffix if "image_tag_suffix" in cuda }}
+
+LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
+
+{% if "nvml_dev" in cuda.components %}
+{% set nvml_dev_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.nvml_dev.version %}
+{% endif %}
+{% if "command_line_tools" in cuda.components %}
+{% set cmdline_tools_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.command_line_tools.version %}
+{% endif %}
+{% if "libcublas_dev" in cuda.components %}
+{% set libcublas_dev_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.libcublas_dev.version %}
+{% endif %}
+{% if "libraries_dev" in cuda.components %}
+{% set libraries_dev_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.libraries_dev.version %}
+{% endif %}
+{% if "minimal_build" in cuda.components %}
+{% set minimal_build_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.minimal_build.version %}
+{% endif %}
+{% if "libcusparse" in cuda.components %}
+{% set libcusparse_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.libcusparse.version %}
+{% endif %}
+{% if "libcusparse_dev" in cuda.components %}
+{% set libcusparse_dev_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.libcusparse_dev.version -%}
+{% endif %}
+{% if "libnpp_dev" in cuda.components %}
+    {% set libnpp_dev_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.libnpp_dev.version %}
+{% endif -%}
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    cuda-nvml-dev-{{ nvml_dev_component_version if nvml_dev_component_version is defined and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
+    cuda-command-line-tools-{{ cmdline_tools_component_version if cmdline_tools_component_version is defined and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
+    {% if (cuda.arch != "arm64" or cuda.arch == "ppc64le") and cuda.version.major | int <= 10 %}
+    cuda-npp-dev-{{ libnpp_component_version if libnpp_component_version is defined and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
+    {% else %}
+    libnpp-dev-{{ libnpp_dev_component_version if libnpp_dev_component_version is defined and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
+    {% endif %}
+{% if cuda.version.major | int >= 9 and cuda.version.major | int >= 1 %}
+    cuda-libraries-dev-{{ libraries_dev_component_version if libraries_dev_component_version is defined and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
+    cuda-minimal-build-{{ minimal_build_component_version if minimal_build_component_version is defined and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
+    {# libnccl-dev=$NCCL_VERSION-1+cuda{{ cuda.version.major }}.{{ cuda.version.minor }} \ #}
+{% endif %}
+{% if cuda.version.major | int > 10 %}
+    libcublas-dev-{{ libcublas_dev_component_version if libcublas_dev_component_version is defined and cuda.version.major | int >= 10 else "10.2." + cuda.version.minor + "." + cuda.version.build + "-1" }} \
+    libcusparse-{{ libcusparse_component_version if libcusparse_component_version is defined and cuda.version.major | int >= 10 else "10.2." + cuda.version.minor + "." + cuda.version.build + "-1" }} \
+    libcusparse-dev-{{ libcusparse_dev_component_version if libcusparse_dev_component_version is defined and cuda.version.major | int >= 10 else "10.2." + cuda.version.minor + "." + cuda.version.build + "-1" }} \
+{% endif %}
+{% if cuda.version.major | int == 9 and cuda.version.minor | int == 0 %}
+    cuda-core-{{ cuda.version.major }}-{{ cuda.version.minor }}={{ cuda.version.full }}.3-1 \
+    cuda-cublas-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}={{ cuda.version.full }}.4-1 \
+{% elif cuda.version.major | int == 8 and cuda.version.minor | int == 0 %}
+    cuda-core-$CUDA_PKG_VERSION \
+    cuda-misc-headers-$CUDA_PKG_VERSION \
+    cuda-nvrtc-dev-$CUDA_PKG_VERSION \
+    cuda-nvgraph-dev-$CUDA_PKG_VERSION \
+    cuda-cusolver-dev-$CUDA_PKG_VERSION \
+    cuda-cublas-dev-8-0=8.0.61.2-1 \
+    cuda-cufft-dev-$CUDA_PKG_VERSION \
+    cuda-curand-dev-$CUDA_PKG_VERSION \
+    cuda-cusparse-dev-$CUDA_PKG_VERSION \
+    cuda-npp-dev-$CUDA_PKG_VERSION \
+    cuda-cudart-dev-$CUDA_PKG_VERSION \
+    cuda-driver-dev-$CUDA_PKG_VERSION \
+{% endif %}
+    && rm -rf /var/lib/apt/lists/*
+
+{% if "libnccl2" in cuda.components and "source" in cuda.components.libnccl2 %}
+    {% set arch = cuda.arch %}
+    {% if cuda.arch == "arm64" %} {% set arch = "aarch64" %} {% endif %}
+    {% set basename =  "nccl_" + cuda.components.libnccl2.version + "-1+cuda" + cuda.version.major + "." + cuda.version.minor + "_" + arch + ".txz" %}
+RUN apt update && apt install curl xz-utils -y --no-install-recommends && NCCL_DOWNLOAD_SUM={{ cuda.components.libnccl2.sha256sum }} && \
+    curl -fsSL {{ cuda.components.libnccl2.source }} -O && \
+    echo "$NCCL_DOWNLOAD_SUM  {{ basename }}" | sha256sum -c - && \
+    tar --no-same-owner --lzma -xvf  {{ basename }} -C /usr/local/cuda/include/ --strip-components=2 --wildcards '*/include/*' && \
+    tar --no-same-owner --lzma -xvf  {{ basename }} -C /usr/local/cuda/lib64/ --strip-components=2 --wildcards '*/lib/libnccl.so' && \
+    rm {{ basename }} && \
+    ldconfig && apt-get purge --autoremove -y curl xz-utils && rm -rf /var/lib/apt/lists/*
+{% endif %}
+
+ENV LIBRARY_PATH /usr/local/cuda/lib64/stubs

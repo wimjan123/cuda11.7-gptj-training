@@ -1,0 +1,41 @@
+ARG IMAGE_NAME
+FROM ${IMAGE_NAME}:{{ cuda.version.major }}.{{ cuda.version.minor }}-{{ cuda.cudnn.target }}-{{ cuda.os.distro }}{{ cuda.os.version }}{{ cuda.image_tag_suffix }}
+LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
+
+{% if cuda.version.major | int == 8 %}
+RUN echo "deb https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu{{ cuda.os.version | replace(".", "") }}/x86_64 /" > /etc/apt/sources.list.d/nvidia-ml.list
+
+{% endif -%}
+
+ENV CUDNN_VERSION {{ cuda.cudnn.version }}
+
+LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
+
+{% if "source" in cuda.cudnn %}
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gnupg2 curl ca-certificates
+
+RUN CUDNN_DOWNLOAD_SUM={{ cuda.cudnn.sha256sum }} && \
+    curl -fsSL {{ cuda.cudnn.source }} -O && \
+    echo "$CUDNN_DOWNLOAD_SUM  {{ cuda.cudnn.basename }}" | sha256sum -c - && \
+    dpkg -i {{ cuda.cudnn.basename }} && \
+    rm -f {{ cuda.cudnn.basename }}
+
+{% if cuda.cudnn.target == "devel" -%}
+RUN CUDNN_DEV_DOWNLOAD_SUM={{ cuda.cudnn.dev.sha256sum }} && \
+    curl -fsSL {{ cuda.cudnn.dev.source }} -O && \
+    echo "$CUDNN_DEV_DOWNLOAD_SUM  {{ cuda.cudnn.dev.basename }}" | sha256sum -c - && \
+    dpkg -i {{ cuda.cudnn.dev.basename }} && \
+    rm -f {{ cuda.cudnn.dev.basename }}
+
+{% endif %}
+RUN rm -rf /var/lib/apt/lists/*
+{% else %}
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libcudnn{{ cuda.cudnn.version[0] }}=$CUDNN_VERSION-1+cuda{{ cuda.version.major }}.{{ cuda.version.minor }} \
+{% if cuda.cudnn.target == "devel" %}
+    libcudnn{{ cuda.cudnn.version[0] }}-dev=$CUDNN_VERSION-1+cuda{{ cuda.version.major }}.{{ cuda.version.minor }} \
+{% endif %}
+    && apt-mark hold libcudnn{{ cuda.cudnn.version[0] }} && \
+    rm -rf /var/lib/apt/lists/*
+{% endif %}
