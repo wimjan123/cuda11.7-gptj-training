@@ -43,7 +43,6 @@ before_script:
   - export OS_VERSION="$(echo ${CI_JOB_NAME} | cut -f1 -d- | sed -n 's/[[:alpha:]]\+\([[:digit:]\.]\+\)/\1/p')"
   - export CUDA_VERSION="$(echo ${CI_JOB_NAME} | cut -f2 -d- | awk -Fv '{ print $2 }')"
   - export CUDNN_VERSION="$(echo ${CI_JOB_NAME} | cut -f3 -d-)"
-  - export DRY_RUN=1
   - if [[ ! -z ${ARCH} ]] && [[ "${ARCH}" != "x86_64" ]]; then
       if [[ ${ARCH} == "ppc64le" ]]; then
         export IMAGE_NAME="nvidia/cuda-ppc64le";
