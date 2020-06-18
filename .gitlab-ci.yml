@@ -179,7 +179,7 @@ trigger:
     MANIFEST: "manifests/cuda.yaml"
   script:
     - echo CI_COMMIT_MESSAGE:$CI_COMMIT_MESSAGE
-    - python manager.py ${MANIFEST:+`echo "--manifest ${MANIFEST}"`} ${TRIGGER_OVERRIDE:+`echo "--trigger-override ${TRIGGER_OVERRIDE}"`} trigger
+    - python manager.py ${MANIFEST:+`echo "--manifest ${MANIFEST}"`} trigger ${TRIGGER_OVERRIDE:+`echo "--trigger-override ${TRIGGER_OVERRIDE}"`}
   only:
     variables:
       - $TRIGGER == null
