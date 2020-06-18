@@ -58,7 +58,15 @@ To run the pipeline without publishing to the registries indicated in `manifest.
 
 1. Go to the [pipelines](https://gitlab.com/nvidia/cuda/pipelines) page and click "Run Pipeline".
 
-1. Input variable should be "DRY_RUN"; set it to "1" or whatever. It just needs to be set.
+1. Ensure the correct branch of the repo is selected.
+
+1. Add an input variable, it should be set to `TRIGGER` with a value of "true"
+
+1. Add an input variable, it should be set to `all` with a value of "true"
+
+   * `all` must be lower case...
+
+1. Add an input variable, it should be set to `DRY_RUN` with a value of "1" or whatever. It just needs to be set.
 
 1. Click "Run Pipeline"
 
@@ -77,10 +85,17 @@ ci.trigger = <pipeline>[,...]
 Where pipeline can be:
 
 - `all`: All of the pipelines are built.
-- `<distro><distro_version>_cuda<major>_<minor>`: A specific cuda version for a specific cuda version. See variables in .gitlab-cia.yml
-- `v<major>.<minor>`: A cuda version for all distros.
+- `<distro><distro_version>-cuda<major>.<minor>`: A specific cuda version for a specific cuda version.
+- `cuda<major>.<minor>`: A cuda version for all distros.
 - **TODO**: `<distro><distro_version>`: all cuda versions for a distro version.
 - **TODO**: `cudnn<version>`: A cudnn version for all distros.
+
+### Examples
+
+* `ci.trigger = cuda11.0`: All cuda 11.0 pipelines for all platforms and architectures.
+* `ci.trigger = ubuntu18.04-cuda11.0`: All ubuntu18.04 pipelines for cuda11.0 on all supported architectures.
+* `ci.trigger = ubuntu18.04`: All ubuntu18.04 pipelines for all supported cuda versions and architectures.
+* `ci.trigger = ubuntu18.04-cuda11.0-x86_64`: Only ubuntu18.04 cuda11.0 pipeline for x86_64.
 
 ## manifest.yaml
 
@@ -105,11 +120,13 @@ ubi7:
 
 Notable keys:
 
-* **template_path**: The path to search in for templates for this image. The path should be in the same directory as manager.py.
+* *template_path*: The path to search in for templates for this image. The path should be in the same directory as manager.py.
 
-* **cuda**: Controls the versions of cuda supported by this image definition. It is possible to define multiple cuda versions as well as multiple cudnn versions.
+* *cuda*: Controls the versions of cuda supported by this image definition. It is possible to define multiple cuda versions as well as multiple cudnn versions.
 
-* **repo_url**: A variable used in the container source templates.
+* *repo_url*: A variable used in the container source templates.
+
+* *skip_tests*: Don't generate tests for the cuda version.
 
 And to generate the image:
 

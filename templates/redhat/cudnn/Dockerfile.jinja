@@ -1,0 +1,33 @@
+ARG IMAGE_NAME
+FROM ${IMAGE_NAME}:{{ cuda.version.major }}.{{ cuda.version.minor }}-{{ cuda.cudnn.target }}-{{ cuda.os.distro }}{{ cuda.os.version }}{{ cuda.image_tag_suffix }}
+LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
+
+ENV CUDNN_VERSION {{ cuda.cudnn.version }}
+LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
+
+{% set cudnn_version = cuda.cudnn.version -%}
+{% if not cuda.cudnn.version.startswith("7.6") -%}
+  {% set cudnn_version = cuda.cudnn.version[:3] -%}
+{% endif -%}
+
+{% if "source" in cuda.cudnn %}
+RUN CUDNN_DOWNLOAD_SUM={{ cuda.cudnn.sha256sum }} && \
+    curl -fsSL {{ cuda.cudnn.source }} -O && \
+    echo "$CUDNN_DOWNLOAD_SUM  {{ cuda.cudnn.basename }}" | sha256sum -c - && \
+    rpm -vih {{ cuda.cudnn.basename }} && \
+    rm -f {{ cuda.cudnn.basename }} && \
+    ldconfig
+{% else %}
+{% set arch = cuda.arch | replace("86_", "") %}
+{% set archive_path = "cuda/lib64/libcudnn.so.*" %}
+{% if arch == "ppc64le" %}
+    {% set archive_path = "cuda/targets/ppc64le-linux/lib/libcudnn.so.*" %}
+{% endif %}
+# cuDNN license: https://developer.nvidia.com/cudnn/license_agreement
+RUN CUDNN_DOWNLOAD_SUM={{ cuda.cudnn.sha256sum }} && \
+    curl -fsSL http://developer.download.nvidia.com/compute/redist/cudnn/v{{ cuda.cudnn.version[:cuda.cudnn.version.rfind(".")] }}/cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-{{ arch }}-v{{ cudnn_version }}.tgz -O && \
+    echo "$CUDNN_DOWNLOAD_SUM  cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-{{ arch }}-v{{ cudnn_version}}.tgz" | sha256sum -c - && \
+    tar --no-same-owner -xzf cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-{{ arch }}-v{{ cudnn_version }}.tgz -C /usr/local {% if cuda.cudnn.target == "runtime" -%}--wildcards '{{ archive_path }}' {% endif -%} && \
+    rm cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-{{ arch }}-v{{ cudnn_version }}.tgz && \
+    ldconfig
+{% endif %}
