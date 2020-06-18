@@ -43,10 +43,14 @@ ENV CUDA_PKG_VERSION {{ cuda.version.major }}-{{ cuda.version.minor }}=$CUDA_VER
 {% if "cudart" in cuda.components %}
 {% set cudart_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.cudart.version %}
 {% endif -%}
+{% if "docs" in cuda.components %}
+{% set docs_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.docs.version %}
+{% endif -%}
 
 # For libraries in the cuda-compat-* package: https://docs.nvidia.com/cuda/eula/index.html#attachment-a
 RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-cudart-{{ cudart_component_version if cuda.version.major | int == 11 else "$CUDA_PKG_VERSION" }} \
+    {# cuda-documentation-{{ docs_component_version if cuda.version.major | int == 11 else "$CUDA_PKG_VERSION" }} \ #}
 {% if cuda.version.major | int >= 10 and cuda.arch != "arm64" %}
     cuda-compat-{{ cuda.version.major }}-{{ cuda.version.minor }} \
 {% elif cuda.version.major | int == 8 %}

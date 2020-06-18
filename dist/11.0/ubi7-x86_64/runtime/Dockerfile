@@ -12,7 +12,7 @@ RUN yum install -y xz && NCCL_DOWNLOAD_SUM=d112b722bf557cff96d571ac3386e4f539be7
     curl -fsSL https://developer.download.nvidia.com/compute/redist/nccl/v2.7/nccl_2.7.3-1+cuda11.0_x86_64.txz -O && \
     echo "$NCCL_DOWNLOAD_SUM  nccl_2.7.3-1+cuda11.0_x86_64.txz" | sha256sum -c - && \
     unxz nccl_2.7.3-1+cuda11.0_x86_64.txz && \
-    tar --no-same-owner -xvf nccl_2.7.3-1+cuda11.0_x86_64.tar -C /usr/local/cuda/lib64/ --strip-components=2 --wildcards '*/lib/libnccl.so.*' && \
-    tar --no-same-owner -xvf  nccl_2.7.3-1+cuda11.0_x86_64.tar -C /usr/lib64/pkgconfig/ --strip-components=3 --wildcards '*/lib/pkgconfig/*' && \
+    tar --no-same-owner --keep-old-files --no-overwrite-dir -xvf nccl_2.7.3-1+cuda11.0_x86_64.tar -C /usr/local/cuda/lib64/ --strip-components=2 --wildcards '*/lib/libnccl.so.*' && \
+    tar --no-same-owner --keep-old-files --no-overwrite-dir -xvf  nccl_2.7.3-1+cuda11.0_x86_64.tar -C /usr/lib64/pkgconfig/ --strip-components=3 --wildcards '*/lib/pkgconfig/*' && \
     rm -f nccl_2.7.3-1+cuda11.0_x86_64.tar && \
     ldconfig

@@ -27,10 +27,18 @@ LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 {% if "libnpp_dev" in cuda.components %}
     {% set libnpp_dev_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.libnpp_dev.version %}
 {% endif -%}
+{% if "nvcc" in cuda.components %}
+    {% set nvcc_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.nvcc.version %}
+{% endif -%}
+{% if "nvprof" in cuda.components %}
+    {% set nvprof_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.nvprof.version %}
+{% endif -%}
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-nvml-dev-{{ nvml_dev_component_version if nvml_dev_component_version is defined and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
     cuda-command-line-tools-{{ cmdline_tools_component_version if cmdline_tools_component_version is defined and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
+    cuda-nvcc-{{ nvcc_component_version if nvcc_component_version is defined and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
+    cuda-nvprof-{{ nvprof_component_version if nvprof_component_version is defined and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
     {% if (cuda.arch != "arm64" or cuda.arch == "ppc64le") and cuda.version.major | int <= 10 %}
     cuda-npp-dev-{{ libnpp_component_version if libnpp_component_version is defined and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
     {% else %}
@@ -45,6 +53,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libcublas-dev-{{ libcublas_dev_component_version if libcublas_dev_component_version is defined and cuda.version.major | int >= 10 else "10.2." + cuda.version.minor + "." + cuda.version.build + "-1" }} \
     libcusparse-{{ libcusparse_component_version if libcusparse_component_version is defined and cuda.version.major | int >= 10 else "10.2." + cuda.version.minor + "." + cuda.version.build + "-1" }} \
     libcusparse-dev-{{ libcusparse_dev_component_version if libcusparse_dev_component_version is defined and cuda.version.major | int >= 10 else "10.2." + cuda.version.minor + "." + cuda.version.build + "-1" }} \
+{% elif cuda.version.major | int == 10 %}
+    {% set cublas_dev_vers = "%s.%s.%s.%s-1" | format(cuda.version.major, cuda.version.minor, cuda.version.minor, cuda.version.build) %}
+    {% set haz10_2 = "-10-2" if cuda.arch == "arm64" and cuda.version.minor | int == 2 %}
+    libcublas-dev{{ haz10_2 }}={{ cublas_dev_vers }} \
 {% endif %}
 {% if cuda.version.major | int == 9 and cuda.version.minor | int == 0 %}
     cuda-core-{{ cuda.version.major }}-{{ cuda.version.minor }}={{ cuda.version.full }}.3-1 \
@@ -72,10 +84,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN apt update && apt install curl xz-utils -y --no-install-recommends && NCCL_DOWNLOAD_SUM={{ cuda.components.libnccl2.sha256sum }} && \
     curl -fsSL {{ cuda.components.libnccl2.source }} -O && \
     echo "$NCCL_DOWNLOAD_SUM  {{ basename }}" | sha256sum -c - && \
-    tar --no-same-owner --lzma -xvf  {{ basename }} -C /usr/local/cuda/include/ --strip-components=2 --wildcards '*/include/*' && \
-    tar --no-same-owner --lzma -xvf  {{ basename }} -C /usr/local/cuda/lib64/ --strip-components=2 --wildcards '*/lib/libnccl.so' && \
+    tar --no-same-owner --keep-old-files --lzma -xvf  {{ basename }} -C /usr/local/cuda/include/ --strip-components=2 --wildcards '*/include/*' && \
+    tar --no-same-owner --keep-old-files --lzma -xvf  {{ basename }} -C /usr/local/cuda/lib64/ --strip-components=2 --wildcards '*/lib/libnccl.so' && \
     rm {{ basename }} && \
-    ldconfig && apt-get purge --autoremove -y curl xz-utils && rm -rf /var/lib/apt/lists/*
+    ldconfig && rm -rf /var/lib/apt/lists/*
 {% endif %}
 
 ENV LIBRARY_PATH /usr/local/cuda/lib64/stubs

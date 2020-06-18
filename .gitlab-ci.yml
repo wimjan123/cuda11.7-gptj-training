@@ -26,9 +26,6 @@ variables:
   IMAGE_NAME: "nvidia/cuda"
 
 before_script:
-  # WARNING: DO NOT install qemu-${ARCH} alpine package here for use in qemu-user-static multi-arch container builds, there
-  # WARNING: is a bug with DNS that causes it to fail with the internal nvidia domains (cuda-repo.nvidia.com)
-  # WARNING: SEE: https://gitlab.alpinelinux.org/alpine/aports/issues/8131
   - apk add --no-cache git bash findutils python3 python3-dev curl g++ libmagic
   - python3 -m ensurepip && \
   - rm -r /usr/lib/python*/ensurepip && \
@@ -105,13 +102,6 @@ stages:
         export DIST_BASE_PATH="dist/${OS}/${CUDA_VERSION}/${ARCH}";
       else
         export DIST_BASE_PATH="${DIST_BASE_PATH}/${OS}-${ARCH}";
-      fi
-    # See https://github.com/multiarch/qemu-user-static for options;
-    # It is possible to overide the qemu-${ARCH} binary by moving the following line to after the docker run
-    # This will use the qemu-${ARCH} binary installed in the the docker gitlab-runner alpine image "docker:stable"
-    # cp /usr/bin/qemu-${ARCH} ${DIST_BASE_PATH}/${OS}/${CUDA_VERSION}/${ARCH}/base/;
-    - if [[ "${ARCH}" != "x86_64" ]]; then
-        docker run --rm --privileged multiarch/qemu-user-static:register;
       fi
     - 'echo "DIST_BASE_PATH: ${DIST_BASE_PATH}"'
     - 'echo "TAG_LATEST: ${TAG_LATEST}"'
@@ -213,7 +203,7 @@ ubuntu18.04-v11.0-test-x86_64:
   <<: *ubuntu18_04_11_0_x86_64_only
 
 ubuntu18.04-v11.0-scan-x86_64:
-  needs: ["ubuntu18.04-v11.0-x86_64"]
+  needs: ["ubuntu18.04-v11.0-x86_64", "ubuntu18.04-v11.0-test-x86_64"]
   <<: *scan_definition
   <<: *ubuntu18_04_11_0_x86_64_only
 
@@ -250,7 +240,7 @@ ubuntu18.04-v11.0-test-ppc64le:
   <<: *ubuntu18_04_11_0_ppc64le_only
 
 ubuntu18.04-v11.0-scan-ppc64le:
-  needs: ["ubuntu18.04-v11.0-ppc64le"]
+  needs: ["ubuntu18.04-v11.0-ppc64le", "ubuntu18.04-v11.0-test-ppc64le"]
   <<: *scan_definition
   <<: *ubuntu18_04_11_0_ppc64le_only
 
@@ -285,7 +275,7 @@ ubuntu16.04-v11.0-test-x86_64:
   <<: *ubuntu16_04_11_0_x86_64_only
 
 ubuntu16.04-v11.0-scan-x86_64:
-  needs: ["ubuntu16.04-v11.0-x86_64"]
+  needs: ["ubuntu16.04-v11.0-x86_64", "ubuntu16.04-v11.0-test-x86_64"]
   <<: *scan_definition
   <<: *ubuntu16_04_11_0_x86_64_only
 
@@ -320,7 +310,7 @@ centos8-v11.0-test-x86_64:
   <<: *centos8_11_0_x86_64_only
 
 centos8-v11.0-scan-x86_64:
-  needs: ["centos8-v11.0-x86_64"]
+  needs: ["centos8-v11.0-x86_64", "centos8-v11.0-test-x86_64"]
   <<: *scan_definition
   <<: *centos8_11_0_x86_64_only
 
@@ -355,7 +345,7 @@ centos8-v11.0-test-ppc64le:
   <<: *centos8_11_0_ppc64le_only
 
 centos8-v11.0-scan-ppc64le:
-  needs: ["centos8-v11.0-ppc64le"]
+  needs: ["centos8-v11.0-ppc64le", "centos8-v11.0-test-ppc64le"]
   <<: *scan_definition
   <<: *centos8_11_0_ppc64le_only
 
@@ -390,7 +380,7 @@ ubi8-v11.0-test-x86_64:
   <<: *ubi8_11_0_x86_64_only
 
 ubi8-v11.0-scan-x86_64:
-  needs: ["ubi8-v11.0-x86_64"]
+  needs: ["ubi8-v11.0-x86_64", "ubi8-v11.0-test-x86_64"]
   <<: *scan_definition
   <<: *ubi8_11_0_x86_64_only
 
@@ -425,7 +415,7 @@ ubi8-v11.0-test-ppc64le:
   <<: *ubi8_11_0_ppc64le_only
 
 ubi8-v11.0-scan-ppc64le:
-  needs: ["ubi8-v11.0-ppc64le"]
+  needs: ["ubi8-v11.0-ppc64le", "ubi8-v11.0-test-ppc64le"]
   <<: *scan_definition
   <<: *ubi8_11_0_ppc64le_only
 
@@ -460,7 +450,7 @@ centos7-v11.0-test-x86_64:
   <<: *centos7_11_0_x86_64_only
 
 centos7-v11.0-scan-x86_64:
-  needs: ["centos7-v11.0-x86_64"]
+  needs: ["centos7-v11.0-x86_64", "centos7-v11.0-test-x86_64"]
   <<: *scan_definition
   <<: *centos7_11_0_x86_64_only
 
@@ -495,7 +485,7 @@ ubi7-v11.0-test-x86_64:
   <<: *ubi7_11_0_x86_64_only
 
 ubi7-v11.0-scan-x86_64:
-  needs: ["ubi7-v11.0-x86_64"]
+  needs: ["ubi7-v11.0-x86_64", "ubi7-v11.0-test-x86_64"]
   <<: *scan_definition
   <<: *ubi7_11_0_x86_64_only
 
@@ -535,7 +525,7 @@ ubuntu18.04-v10.2-test-x86_64:
   <<: *ubuntu18_04_10_2_x86_64_only
 
 ubuntu18.04-v10.2-scan-x86_64:
-  needs: ["ubuntu18.04-v10.2-x86_64"]
+  needs: ["ubuntu18.04-v10.2-x86_64", "ubuntu18.04-v10.2-test-x86_64"]
   <<: *scan_definition
   <<: *ubuntu18_04_10_2_x86_64_only
 
@@ -575,7 +565,7 @@ ubuntu18.04-v10.2-test-ppc64le:
   <<: *ubuntu18_04_10_2_ppc64le_only
 
 ubuntu18.04-v10.2-scan-ppc64le:
-  needs: ["ubuntu18.04-v10.2-ppc64le"]
+  needs: ["ubuntu18.04-v10.2-ppc64le", "ubuntu18.04-v10.2-test-ppc64le"]
   <<: *scan_definition
   <<: *ubuntu18_04_10_2_ppc64le_only
 
@@ -610,7 +600,7 @@ ubuntu18.04-v10.2-test-arm64:
   <<: *ubuntu18_04_10_2_arm64_only
 
 ubuntu18.04-v10.2-scan-arm64:
-  needs: ["ubuntu18.04-v10.2-arm64"]
+  needs: ["ubuntu18.04-v10.2-arm64", "ubuntu18.04-v10.2-test-arm64"]
   <<: *scan_definition
   <<: *ubuntu18_04_10_2_arm64_only
 
@@ -649,7 +639,7 @@ ubuntu16.04-v10.2-test-x86_64:
   <<: *ubuntu16_04_10_2_x86_64_only
 
 ubuntu16.04-v10.2-scan-x86_64:
-  needs: ["ubuntu16.04-v10.2-x86_64"]
+  needs: ["ubuntu16.04-v10.2-x86_64", "ubuntu16.04-v10.2-test-x86_64"]
   <<: *scan_definition
   <<: *ubuntu16_04_10_2_x86_64_only
 
@@ -688,7 +678,7 @@ centos8-v10.2-test-x86_64:
   <<: *centos8_10_2_x86_64_only
 
 centos8-v10.2-scan-x86_64:
-  needs: ["centos8-v10.2-x86_64"]
+  needs: ["centos8-v10.2-x86_64", "centos8-v10.2-test-x86_64"]
   <<: *scan_definition
   <<: *centos8_10_2_x86_64_only
 
@@ -727,7 +717,7 @@ ubi8-v10.2-test-x86_64:
   <<: *ubi8_10_2_x86_64_only
 
 ubi8-v10.2-scan-x86_64:
-  needs: ["ubi8-v10.2-x86_64"]
+  needs: ["ubi8-v10.2-x86_64", "ubi8-v10.2-test-x86_64"]
   <<: *scan_definition
   <<: *ubi8_10_2_x86_64_only
 
@@ -766,7 +756,7 @@ centos7-v10.2-test-x86_64:
   <<: *centos7_10_2_x86_64_only
 
 centos7-v10.2-scan-x86_64:
-  needs: ["centos7-v10.2-x86_64"]
+  needs: ["centos7-v10.2-x86_64", "centos7-v10.2-test-x86_64"]
   <<: *scan_definition
   <<: *centos7_10_2_x86_64_only
 
@@ -805,7 +795,7 @@ centos7-v10.2-test-ppc64le:
   <<: *centos7_10_2_ppc64le_only
 
 centos7-v10.2-scan-ppc64le:
-  needs: ["centos7-v10.2-ppc64le"]
+  needs: ["centos7-v10.2-ppc64le", "centos7-v10.2-test-ppc64le"]
   <<: *scan_definition
   <<: *centos7_10_2_ppc64le_only
 
@@ -844,7 +834,7 @@ ubi7-v10.2-test-x86_64:
   <<: *ubi7_10_2_x86_64_only
 
 ubi7-v10.2-scan-x86_64:
-  needs: ["ubi7-v10.2-x86_64"]
+  needs: ["ubi7-v10.2-x86_64", "ubi7-v10.2-test-x86_64"]
   <<: *scan_definition
   <<: *ubi7_10_2_x86_64_only
 

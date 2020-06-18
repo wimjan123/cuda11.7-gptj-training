@@ -67,6 +67,10 @@ push_repos:
     version: 11.0.1-1
   nvtx:
     version: 11.0.167-1
+  nvprof:
+    version: 11.0.167-1
+  nvcc:
+    version: 11.0.167-1
   libcusparse:
     version: 11.0.0.191-1
   libcusparse_dev:
@@ -336,6 +340,8 @@ cuda_v11.0:
 
 .components_v10.2: &cuda10_2_components
   build_version: 89
+  libcublas_dev:
+    version: 10.2.1.243-1
   libnccl2:
     version: 2.6.4
   cudnn7:

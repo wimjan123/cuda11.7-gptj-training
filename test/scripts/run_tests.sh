@@ -10,16 +10,14 @@ for test in $(find test/ -iname "*.bats"); do
       echo "Skipping test '${test}' on architecture ${ARCH}"
       continue
   fi
-  if [[ "${test}" == *samples* ]]; then
-      # Samples repo is not working with 11.0, need to get internal repo for this
+  if [[ "${test}" == *samples* ]] && [[ "${ARCH}" != "x86_64" ]]; then
+      # FIXME: Samples tests on multi-arch    
       echo "Skipping test '${test}' on architecture ${ARCH}"
       continue
   fi
-  dir=$(dirname ${test})
-  name=$(basename ${test})
-  curDir=${PWD}
-  cd ${dir}
+  # if [[ "${test}" != "test/01-samples.bats" ]]; then
+  #   continue
+  # fi
   echo "# Running test script '${test}'"
-  /usr/local/bin/bats --tap ${name}
-  cd ${curDir}
+  /usr/local/bin/bats --tap ${test}
 done

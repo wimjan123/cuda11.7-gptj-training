@@ -26,9 +26,6 @@ variables:
   IMAGE_NAME: "nvidia/cuda"
 
 before_script:
-  # WARNING: DO NOT install qemu-${ARCH} alpine package here for use in qemu-user-static multi-arch container builds, there
-  # WARNING: is a bug with DNS that causes it to fail with the internal nvidia domains (cuda-repo.nvidia.com)
-  # WARNING: SEE: https://gitlab.alpinelinux.org/alpine/aports/issues/8131
   - apk add --no-cache git bash findutils python3 python3-dev curl g++ libmagic
   - python3 -m ensurepip && \
   - rm -r /usr/lib/python*/ensurepip && \
@@ -38,6 +35,8 @@ before_script:
   - curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python
   - source $HOME/.poetry/env
   - poetry config virtualenvs.create false && poetry install
+  {# Uncomment this to not push to the contanier registries, don't forget to regenerate the gitlab pipelines with `manager.py generate --ci` #}
+  {# - export DRY_RUN=1 #}
   - export OS="$(echo ${CI_JOB_NAME} | cut -f1 -d-)"
   - export OS_NAME="$(echo ${CI_JOB_NAME} | cut -f1 -d-| sed 's/[[:digit:]\.]*//g')"
   - export OS_VERSION="$(echo ${CI_JOB_NAME} | cut -f1 -d- | sed -n 's/[[:alpha:]]\+\([[:digit:]\.]\+\)/\1/p')"
@@ -105,13 +104,6 @@ stages:
         export DIST_BASE_PATH="dist/${OS}/${CUDA_VERSION}/${ARCH}";
       else
         export DIST_BASE_PATH="${DIST_BASE_PATH}/${OS}-${ARCH}";
-      fi
-    # See https://github.com/multiarch/qemu-user-static for options;
-    # It is possible to overide the qemu-${ARCH} binary by moving the following line to after the docker run
-    # This will use the qemu-${ARCH} binary installed in the the docker gitlab-runner alpine image "docker:stable"
-    # cp /usr/bin/qemu-${ARCH} ${DIST_BASE_PATH}/${OS}/${CUDA_VERSION}/${ARCH}/base/;
-    - if [[ "${ARCH}" != "x86_64" ]]; then
-        docker run --rm --privileged multiarch/qemu-user-static:register;
       fi
     - 'echo "DIST_BASE_PATH: ${DIST_BASE_PATH}"'
     - 'echo "TAG_LATEST: ${TAG_LATEST}"'
@@ -234,7 +226,7 @@ trigger:
   <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}_{{ arch }}_only
 
 {{ distro }}-v{{ cuda_version }}-scan-{{ arch }}:
-  needs: ["{{ distro }}-v{{ cuda_version }}-{{ arch }}"]
+  needs: ["{{ distro }}-v{{ cuda_version }}-{{ arch }}", "{{ distro }}-v{{ cuda_version }}-test-{{ arch }}"]
   <<: *scan_definition
   <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}_{{ arch }}_only
 

@@ -15,8 +15,8 @@ RUN yum install -y xz && NCCL_DOWNLOAD_SUM=ccd4960ef3eb22f0ed8fcb91d3b8ae71e7c88
     curl -fsSL https://developer.download.nvidia.com/compute/redist/nccl/v2.7/nccl_2.7.3-1+cuda10.2_ppc64le.txz -O && \
     echo "$NCCL_DOWNLOAD_SUM  nccl_2.7.3-1+cuda10.2_ppc64le.txz" | sha256sum -c - && \
     unxz nccl_2.7.3-1+cuda10.2_ppc64le.txz && \
-    tar --no-same-owner -xvf  nccl_2.7.3-1+cuda10.2_ppc64le.tar -C /usr/local/cuda/include/ --strip-components=2 --wildcards '*/include/*' && \
-    tar --no-same-owner -xvf  nccl_2.7.3-1+cuda10.2_ppc64le.tar -C /usr/local/cuda/lib64/ --strip-components=2 --wildcards '*/lib/libnccl.so' && \
+    tar --no-same-owner --keep-old-files --no-overwrite-dir -xvf  nccl_2.7.3-1+cuda10.2_ppc64le.tar -C /usr/local/cuda/include/ --strip-components=2 --wildcards '*/include/*' && \
+    tar --no-same-owner --keep-old-files --no-overwrite-dir -xvf  nccl_2.7.3-1+cuda10.2_ppc64le.tar -C /usr/local/cuda/lib64/ --strip-components=2 --wildcards '*/lib/libnccl.so' && \
     rm -f nccl_2.7.3-1+cuda10.2_ppc64le.tar && \
     ldconfig
 
