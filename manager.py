@@ -128,6 +128,17 @@ class ManagerTrigger(Manager):
                     ci_vars.append(match.groups(0)[0])
         return ci_vars
 
+    def ci_pipeline_variables(self, name):
+        log.debug(f"have pipeline_name: {name}")
+        rgx = re.compile(fr"^\s+- \$(?!all)(.*_{name}_.*) == \"true\"$")
+        ci_vars = []
+        with open(".gitlab-ci.yml", "r") as fp:
+            for _, line in enumerate(fp):
+                match = rgx.match(line)
+                if match:
+                    ci_vars.append(match.groups(0)[0])
+        return ci_vars
+
     def ci_cuda_version_distro_arch_variables(self, version, distro, arch):
         rgx = re.compile(fr"^\s+- \$(?!all)({distro}.{version}.{arch}) == \"true\"$")
         ci_vars = []
@@ -141,10 +152,15 @@ class ManagerTrigger(Manager):
     def get_cuda_version_from_trigger(self, trigger):
         rgx = re.compile(r".*cuda([\d\.]+).*$")
         match = rgx.match(trigger)
-        if match is not None:
+        if (match := rgx.match(trigger)) is not None:
             return match.group(1)
         else:
             log.info(f"Cuda version not found in trigger!")
+
+    def get_pipeline_name_from_trigger(self, trigger):
+        rgx = re.compile(r".*name:(\w+)$")
+        if (match := rgx.match(trigger)) is not None:
+            return match.group(1)
 
     def get_distro_version_from_trigger(self, trigger):
         rgx = re.compile(r".*cuda([\d\.]+).*$")
@@ -158,7 +174,7 @@ class ManagerTrigger(Manager):
         if not version:
             return
         distros = ["ubuntu", "ubi", "centos"]
-        keys = self.parent.manifest[f"cuda_v{version}"].keys()
+        keys = self.parent.manifest[self.key].keys()
 
         # There are other keys in the cuda field other than distros, we need to strip those out
         def get_distro_name(name):
@@ -168,7 +184,6 @@ class ManagerTrigger(Manager):
         return [f for f in keys if get_distro_name(f) in distros]
 
     def check_explicit_trigger(self):
-        # FIXME: Need to unit test this!
         self.repo = git.Repo(pathlib.Path("."))
         commit = self.repo.commit("HEAD")
         rgx = re.compile(r"ci\.trigger = (.*)")
@@ -200,19 +215,28 @@ class ManagerTrigger(Manager):
 
             for job in jobs:
                 version = self.get_cuda_version_from_trigger(job)
+                if not version:
+                    pipeline_name = self.get_pipeline_name_from_trigger(job)
+
+                log.debug("pipeline_name: '%s'" % pipeline_name)
+
                 distro_list = ["ubuntu", "ubi", "centos"]
                 if version:
                     distro_list = self.supported_distro_list_by_cuda_version(version)
+
                 distro = next(
                     (distro for distro in distro_list if distro in job), None,
                 )
+
                 arch = next(
                     (arch for arch in ["x86_64", "ppc64le", "arm64"] if arch in job),
                     None,
                 )
+
                 log.debug(
-                    f"job: '{job}' version: {version} distro: {distro} arch: {arch}"
+                    f"job: '{job}' name: {pipeline_name} version: {version} distro: {distro} arch: {arch}"
                 )
+
                 log.debug(f"distro_list: '{distro_list}'")
 
                 cijobs = []
@@ -229,6 +253,8 @@ class ManagerTrigger(Manager):
                                 version, distro2, "\w+",
                             )
                         )
+                elif pipeline_name:
+                    cijobs = self.ci_pipeline_variables(pipeline_name)
                 else:
                     cijobs = self.ci_distro_variables(job)
 
@@ -402,20 +428,27 @@ class ManagerContainerPush(Manager):
         help="Push images for a particular architecture.",
     )
 
+    pipeline_name = cli.SwitchAttr(
+        "--pipeline-name",
+        str,
+        help="The name of the pipeline the deploy is coming from",
+    )
+
     client = None
     repos = []
     tags = []
+    key = ""
 
     def docker_login(self):
         distro_push_repos = self.get_data(
             self.parent.manifest,
-            f"cuda_v{self.cuda_version}",
+            self.key,
             f"{self.distro}{self.distro_version}",
             "push_repos",
         )
         excluded_repos = self.get_data(
             self.parent.manifest,
-            f"cuda_v{self.cuda_version}",
+            self.key,
             f"{self.distro}{self.distro_version}",
             self.arch,
             "exclude_repos",
@@ -536,6 +569,9 @@ class ManagerContainerPush(Manager):
 
     def main(self):
         log.debug("dry-run: %s", self.dry_run)
+        self.key = f"cuda_v{self.cuda_version}"
+        if self.pipeline_name:
+            self.key = f"cuda_v{self.cuda_version}_{self.pipeline_name}"
         self.client = docker.DockerClient(
             base_url="unix://var/run/docker.sock", timeout=600
         )
@@ -551,6 +587,8 @@ class ManagerGenerate(Manager):
     cuda = {}
     output_path = {}
     dist_base_path = ""
+    pipeline_name = ""
+    key = ""
 
     template_env = Environment(
         extensions=["jinja2.ext.do"], trim_blocks=True, lstrip_blocks=True
@@ -607,7 +645,7 @@ class ManagerGenerate(Manager):
         if not version:
             return
         distros = ["ubuntu", "ubi", "centos"]
-        keys = self.parent.manifest[f"cuda_v{version}"].keys()
+        keys = self.parent.manifest[self.key].keys()
 
         # There are other keys in the cuda field other than distros, we need to strip those out
         def get_distro_name(name):
@@ -620,9 +658,7 @@ class ManagerGenerate(Manager):
         ls = []
         for k in glom.glom(
             self.parent.manifest,
-            glom.Path(
-                f"cuda_v{self.cuda_version}", f"{self.distro}{self.distro_version}"
-            ),
+            glom.Path(self.key, f"{self.distro}{self.distro_version}"),
         ):
             if k in ["x86_64", "ppc64le", "arm64"]:
                 ls.append(k)
@@ -724,7 +760,7 @@ class ManagerGenerate(Manager):
 
         build_version = self.get_data(
             conf,
-            f"cuda_v{self.cuda_version}",
+            self.key,
             f"{self.distro}{self.distro_version}",
             self.arch,
             "components",
@@ -733,7 +769,7 @@ class ManagerGenerate(Manager):
 
         self.image_tag_suffix = self.get_data(
             conf,
-            f"cuda_v{self.cuda_version}",
+            self.key,
             f"{self.distro}{self.distro_version}",
             "image_tag_suffix",
             can_skip=True,
@@ -755,7 +791,7 @@ class ManagerGenerate(Manager):
             "image_tag_suffix": self.image_tag_suffix,
             "components": self.get_data(
                 conf,
-                f"cuda_v{self.cuda_version}",
+                self.key,
                 f"{self.distro}{self.distro_version}",
                 self.arch,
                 "components",
@@ -767,18 +803,11 @@ class ManagerGenerate(Manager):
         # and the discovered keys are injected into the template context.
         # We only checks at three levels in the manifest
         self.extract_keys(
-            self.get_data(
-                conf,
-                f"cuda_v{self.cuda_version}",
-                f"{self.distro}{self.distro_version}",
-            )
+            self.get_data(conf, self.key, f"{self.distro}{self.distro_version}",)
         )
         self.extract_keys(
             self.get_data(
-                conf,
-                f"cuda_v{self.cuda_version}",
-                f"{self.distro}{self.distro_version}",
-                self.arch,
+                conf, self.key, f"{self.distro}{self.distro_version}", self.arch,
             )
         )
         log.info("cuda version %s" % (self.cuda_version))
@@ -847,89 +876,102 @@ class ManagerGenerate(Manager):
             if "base" not in img:
                 self.generate_cudnn_scripts(img, temp_path)
 
+    # FIXME: Probably a much nicer way to do this with GLOM...
+    # FIXME: Turn off black auto format for this function...
+    # fmt: off
     def generate_gitlab_pipelines(self):
-        # FIXME: probably a much nicer way to do this with GLOM...
-        # FIXME: THIS FUNCTION SUCKS AND NEEDS A REFACTOR
-        ctx = {"manifest_path": self.parent.manifest_path}
-        rgx = re.compile(r"cuda_v([\d\.]+)")
 
-        def get_cudnn_components(cuda_version, distro, arch):
+        manifest = self.parent.manifest
+        ctx = {"manifest_path": self.parent.manifest_path}
+
+        def get_cudnn_components(key, distro, arch):
             comps = {}
-            for comp, val in self.parent.manifest[f"cuda_v{cuda_version}"][distro][
-                arch
-            ]["components"].items():
+            for comp, val in manifest[key][distro][arch]["components"].items():
                 if "cudnn" in comp:
                     #  print(comp, val)
                     comps[comp] = {}
                     comps[comp]["version"] = val["version"]
             return comps
 
-        for k, _ in self.parent.manifest.items():
+        def matched(key):
             match = rgx.match(k)
             if match:
-                cuda_version = match.group(1)
-                ctx[cuda_version] = {}
-                ctx[cuda_version]["yaml_safe"] = cuda_version.replace(".", "_")
-                for distro, _ in self.parent.manifest[f"cuda_v{cuda_version}"].items():
-                    dmrgx = re.compile(r"^(\D+)([\d\.]+)$")
-                    dm = dmrgx.match(distro)
-                    if dm:
-                        ctx[cuda_version][distro] = {}
-                        ctx[cuda_version][distro]["yaml_safe"] = distro.replace(
-                            ".", "_"
-                        )
-                        image_tag_suffix = self.get_data(
-                            self.parent.manifest,
-                            f"cuda_v{cuda_version}",
-                            distro,
-                            "image_tag_suffix",
-                            can_skip=True,
-                        )
-                        ctx[cuda_version][distro]["image_tag_suffix"] = ""
-                        if image_tag_suffix:
-                            ctx[cuda_version][distro][
-                                "image_tag_suffix"
-                            ] = image_tag_suffix
-                        ctx[cuda_version][distro]["arches"] = []
-                        for arch, _ in self.parent.manifest[f"cuda_v{cuda_version}"][
-                            distro
-                        ].items():
-                            if arch in ["arm64", "ppc64le", "x86_64"]:
-                                no_os_suffix = self.get_data(
-                                    self.parent.manifest,
-                                    f"cuda_v{cuda_version}",
-                                    distro,
-                                    arch,
-                                    "no_os_suffix",
-                                    can_skip=True,
-                                )
+                return match
 
-                                latest = self.get_data(
-                                    self.parent.manifest,
-                                    f"cuda_v{cuda_version}",
-                                    distro,
-                                    arch,
-                                    "latest",
-                                    can_skip=True,
-                                )
-                                if "latest" not in ctx[cuda_version][distro]:
-                                    ctx[cuda_version][distro]["latest"] = {}
-                                ctx[cuda_version][distro]["latest"][arch] = (
-                                    True if latest else False
-                                )
-                                if "no_os_suffix" not in ctx[cuda_version][distro]:
-                                    ctx[cuda_version][distro]["no_os_suffix"] = {}
-                                ctx[cuda_version][distro]["no_os_suffix"][arch] = (
-                                    True if no_os_suffix else False
-                                )
-                                ctx[cuda_version][distro]["arches"].append(arch)
-                                if "cudnn" not in ctx[cuda_version][distro]:
-                                    ctx[cuda_version][distro]["cudnn"] = {}
-                                ctx[cuda_version][distro]["cudnn"][
-                                    arch
-                                ] = get_cudnn_components(cuda_version, distro, arch)
+        for k, _ in manifest.items():
+            rgx = re.compile(r"cuda_v([\d\.]+)(?:_(\w+))?$")
+            if (match := matched(k)) is None:
+                log.debug("No match for %s" % k)
+                continue
+
+            log.info("Adding pipeline '%s'" % k)
+            cuda_version = match.group(1)
+            if (pipeline_name := match.group(2)) is None:
+                pipeline_name = "default"
+            log.debug("matched cuda_version: %s" % cuda_version)
+            log.debug("matched pipeline_name: %s" % pipeline_name)
+
+            if cuda_version not in ctx:
+                ctx[cuda_version] = {}
+            ctx[cuda_version][pipeline_name] = {}
+            ctx[cuda_version][pipeline_name]["yaml_safe"] = cuda_version.replace(".", "_")
+
+            key = f"cuda_v{cuda_version}"
+            if pipeline_name and pipeline_name != "default":
+                key = f"cuda_v{cuda_version}_{pipeline_name}"
+
+            #  log.debug("key: '%s'" % key)
+            #  log.debug("cuda_version: '%s'" % cuda_version)
+            ctx[cuda_version][pipeline_name]["dist_base_path"] = self.get_data(manifest, key, "dist_base_path")
+            ctx[cuda_version][pipeline_name]["pipeline_name"] = self.pipeline_name
+
+            for distro, _ in manifest[key].items():
+                dmrgx = re.compile(r"(?P<name>[a-zA-Z]+)(?P<version>[\d\.]+)$")
+                if (dm := dmrgx.match(distro)) is None:
+                    continue
+
+                #  log.debug("distro: '%s'" % distro)
+                #  log.debug("pipeline_name: '%s'" % pipeline_name)
+                ctx[cuda_version][pipeline_name][distro] = {}
+                ctx[cuda_version][pipeline_name][distro]["name"] = dm.group('name')
+                ctx[cuda_version][pipeline_name][distro]["version"] = dm.group('version')
+                ctx[cuda_version][pipeline_name][distro]["yaml_safe"] = distro.replace(".", "_")
+                image_tag_suffix = self.get_data(manifest, key, distro, "image_tag_suffix", can_skip=True)
+                ctx[cuda_version][pipeline_name][distro]["image_tag_suffix"] = ""
+                ctx[cuda_version][pipeline_name][distro]["image_name"] = {}
+
+                if image_tag_suffix:
+                    ctx[cuda_version][pipeline_name][distro]["image_tag_suffix"] = image_tag_suffix
+
+                ctx[cuda_version][pipeline_name][distro]["arches"] = []
+
+                for arch, _ in manifest[key][distro].items():
+                    if arch not in ["arm64", "ppc64le", "x86_64"]:
+                        continue
+
+                    #  log.debug("arch: '%s'" % arch)
+                    no_os_suffix = self.get_data(manifest, key, distro, arch, "no_os_suffix", can_skip=True)
+                    latest = self.get_data(manifest, key, distro, arch, "latest", can_skip=True)
+                    ctx[cuda_version][pipeline_name][distro]["image_name"][arch] = self.get_data(manifest, key, distro, arch, "image_name")
+
+                    if "latest" not in ctx[cuda_version][pipeline_name][distro]:
+                        ctx[cuda_version][pipeline_name][distro]["latest"] = {}
+
+                    ctx[cuda_version][pipeline_name][distro]["latest"][arch] = (True if latest else False)
+
+                    if "no_os_suffix" not in ctx[cuda_version][pipeline_name][distro]:
+                        ctx[cuda_version][pipeline_name][distro]["no_os_suffix"] = {}
+
+                    ctx[cuda_version][pipeline_name][distro]["no_os_suffix"][arch] = (True if no_os_suffix else False)
+                    ctx[cuda_version][pipeline_name][distro]["arches"].append(arch)
+
+                    if "cudnn" not in ctx[cuda_version][pipeline_name][distro]:
+                        ctx[cuda_version][pipeline_name][distro]["cudnn"] = {}
+
+                    ctx[cuda_version][pipeline_name][distro]["cudnn"][arch] = get_cudnn_components(key, distro, arch)
 
         log.debug(f"ci pipline context: {ctx}")
+
         template_path = pathlib.Path("templates/gitlab/gitlab-ci.yml.jinja")
         with open(template_path) as f:
             log.debug("Processing template %s", template_path)
@@ -940,31 +982,43 @@ class ManagerGenerate(Manager):
 
         #  sys.exit(1)
 
+    # fmt: on
     def target_all(self):
         log.debug("Generating all container scripts!")
-        rgx = re.compile(r"^([a-zA-Z]*)([\d\.]*)-v([\d\.]*)-(arm64|ppc64le|x86_64)")
-        for k, _ in self.parent.ci.items():
-            match = rgx.match(k)
-            if match:
-                self.distro = match.group(1)
-                self.distro_version = match.group(2)
-                self.cuda_version = match.group(3)
-                self.arch = match.group(4)
-                self.dist_base_path = self.parent.get_data(
-                    self.parent.manifest,
-                    f"cuda_v{self.cuda_version}",
-                    "dist_base_path",
-                    can_skip=True,
-                )
-                log.debug("distro_base_path: %s" % (self.dist_base_path))
-                log.debug(
-                    "Generating distro: '%s' distro_version: '%s' cuda_version: '%s' arch: '%s'"
-                    % (self.distro, self.distro_version, self.cuda_version, self.arch)
-                )
-                self.targeted()
+        rgx = re.compile(
+            # use regex101.com to debug with gitlab-ci.yml as the search text
+            r"^(?P<distro>[a-zA-Z]*)(?P<distro_version>[\d\.]*)-v(?P<cuda_version>[\d\.]*)(?:-(?!cudnn|test|scan|deploy)(?P<pipeline_name>\w+))?-(?P<arch>arm64|ppc64le|x86_64)"
+        )
+
+        for ci_job, _ in self.parent.ci.items():
+            if (match := rgx.match(ci_job)) is None:
+                continue
+            self.distro = match.group("distro")
+            self.distro_version = match.group("distro_version")
+            self.cuda_version = match.group("cuda_version")
+            self.pipeline_name = match.group("pipeline_name")
+            self.arch = match.group("arch")
+
+            log.debug("ci_job: '%s'" % ci_job)
+            self.key = f"cuda_v{self.cuda_version}"
+            if self.pipeline_name:
+                self.key = f"cuda_v{self.cuda_version}_{self.pipeline_name}"
+
+            self.dist_base_path = self.parent.get_data(
+                self.parent.manifest, self.key, "dist_base_path",
+            )
+
+            log.debug("dist_base_path: %s" % (self.dist_base_path))
+            log.debug(
+                "Generating distro: '%s' distro_version: '%s' cuda_version: '%s' arch: '%s'"
+                % (self.distro, self.distro_version, self.cuda_version, self.arch)
+            )
+
+            self.targeted()
 
         if not self.dist_base_path:
             self.dist_base_path = "dist"
+
         sys.exit()
 
     def targeted(self):
@@ -984,7 +1038,7 @@ class ManagerGenerate(Manager):
             )
             target = f"{self.distro}{self.distro_version}"
             self.output_path = pathlib.Path(
-                f"dist/{self.cuda_version}/{target}-{self.arch}"
+                f"{self.dist_base_path}/{target}-{self.arch}"
             )
 
             if self.output_path.exists:

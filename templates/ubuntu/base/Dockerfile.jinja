@@ -38,11 +38,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 {% if cuda.version.major | int != 11 %}
 ENV CUDA_VERSION {{ cuda.version.full }}
 ENV CUDA_PKG_VERSION {{ cuda.version.major }}-{{ cuda.version.minor }}=$CUDA_VERSION-1
+
 {% endif -%}
 
 {% if "cudart" in cuda.components %}
 {% set cudart_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.cudart.version %}
-{% endif -%}
+{% endif %}
 {% if "docs" in cuda.components %}
 {% set docs_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.docs.version %}
 {% endif -%}

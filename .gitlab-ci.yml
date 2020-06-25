@@ -23,7 +23,6 @@ image: docker:stable
 variables:
   # Need a value of two here for checking the manifest in the last commit
   GIT_DEPTH: "2"
-  IMAGE_NAME: "nvidia/cuda"
 
 before_script:
   - apk add --no-cache git bash findutils python3 python3-dev curl g++ libmagic
@@ -35,18 +34,6 @@ before_script:
   - curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python
   - source $HOME/.poetry/env
   - poetry config virtualenvs.create false && poetry install
-  - export OS="$(echo ${CI_JOB_NAME} | cut -f1 -d-)"
-  - export OS_NAME="$(echo ${CI_JOB_NAME} | cut -f1 -d-| sed 's/[[:digit:]\.]*//g')"
-  - export OS_VERSION="$(echo ${CI_JOB_NAME} | cut -f1 -d- | sed -n 's/[[:alpha:]]\+\([[:digit:]\.]\+\)/\1/p')"
-  - export CUDA_VERSION="$(echo ${CI_JOB_NAME} | cut -f2 -d- | awk -Fv '{ print $2 }')"
-  - export CUDNN_VERSION="$(echo ${CI_JOB_NAME} | cut -f3 -d-)"
-  - if [[ ! -z ${ARCH} ]] && [[ "${ARCH}" != "x86_64" ]]; then
-      if [[ ${ARCH} == "ppc64le" ]]; then
-        export IMAGE_NAME="nvidia/cuda-ppc64le";
-      else
-        export IMAGE_NAME="nvidia/cuda-arm64";
-      fi
-    fi
   - 'echo "ARCH: $ARCH"'
   - 'echo "OS: $OS"'
   - 'echo "IMAGE_NAME: $IMAGE_NAME"'
@@ -161,6 +148,7 @@ stages:
         --os-version "${OS_VERSION}"
         --cuda-version "${CUDA_VERSION}"
         --arch "${ARCH}"
+        ${PIPELINE_NAME:+`echo "--pipeline-name ${PIPELINE_NAME}"`}
         ${IMAGE_TAG_SUFFIX:+`echo "--tag-suffix ${IMAGE_TAG_SUFFIX}"`} ${DRY_RUN:+"-n"}
 
 trigger:
@@ -175,14 +163,22 @@ trigger:
       - $TRIGGER == null
       - $TRIGGER_OVERRIDE
 
+.ubuntu18_04_11_0_x86_64_variables: &ubuntu18_04_11_0_x86_64_variables
+  ARCH: "x86_64"
+  DIST_BASE_PATH: "dist/11.0"
+  IMAGE_NAME: "nvidia/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  IMAGE_TAG_SUFFIX: -rc
+  LATEST: "true"
+  NO_OS_SUFFIX: "true"
+  OS: "ubuntu18.04"
+  OS_NAME: "ubuntu"
+  OS_VERSION: "18.04"
+  CUDA_VERSION: "11.0"
+
 .ubuntu18_04_11_0_x86_64_only: &ubuntu18_04_11_0_x86_64_only
   variables:
-    ARCH: "x86_64"
-    DIST_BASE_PATH: "dist/11.0"
-    MANIFEST: "manifests/cuda.yaml"
-    IMAGE_TAG_SUFFIX: -rc
-    LATEST: "true"
-    NO_OS_SUFFIX: "true"
+    <<: *ubuntu18_04_11_0_x86_64_variables
   only:
     variables:
       - $ubuntu18_04_11_0_x86_64 == "true"
@@ -196,6 +192,10 @@ ubuntu18.04-v11.0-cudnn8-x86_64:
   needs: ["ubuntu18.04-v11.0-x86_64"]
   <<: *cudnn_definition
   <<: *ubuntu18_04_11_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu18_04_11_0_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
 
 ubuntu18.04-v11.0-test-x86_64:
   needs: ["ubuntu18.04-v11.0-x86_64"]
@@ -212,14 +212,22 @@ ubuntu18.04-v11.0-deploy-x86_64:
   <<: *deploy_definition
   <<: *ubuntu18_04_11_0_x86_64_only
 
+.ubuntu18_04_11_0_ppc64le_variables: &ubuntu18_04_11_0_ppc64le_variables
+  ARCH: "ppc64le"
+  DIST_BASE_PATH: "dist/11.0"
+  IMAGE_NAME: "nvidia/cuda-ppc64le"
+  MANIFEST: "manifests/cuda.yaml"
+  IMAGE_TAG_SUFFIX: -rc
+  LATEST: "true"
+  NO_OS_SUFFIX: "true"
+  OS: "ubuntu18.04"
+  OS_NAME: "ubuntu"
+  OS_VERSION: "18.04"
+  CUDA_VERSION: "11.0"
+
 .ubuntu18_04_11_0_ppc64le_only: &ubuntu18_04_11_0_ppc64le_only
   variables:
-    ARCH: "ppc64le"
-    DIST_BASE_PATH: "dist/11.0"
-    MANIFEST: "manifests/cuda.yaml"
-    IMAGE_TAG_SUFFIX: -rc
-    LATEST: "true"
-    NO_OS_SUFFIX: "true"
+    <<: *ubuntu18_04_11_0_ppc64le_variables
   only:
     variables:
       - $ubuntu18_04_11_0_ppc64le == "true"
@@ -233,6 +241,10 @@ ubuntu18.04-v11.0-cudnn8-ppc64le:
   needs: ["ubuntu18.04-v11.0-ppc64le"]
   <<: *cudnn_definition
   <<: *ubuntu18_04_11_0_ppc64le_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu18_04_11_0_ppc64le_variables
+    CUDNN_VERSION: "cudnn8"
 
 ubuntu18.04-v11.0-test-ppc64le:
   needs: ["ubuntu18.04-v11.0-ppc64le"]
@@ -249,12 +261,20 @@ ubuntu18.04-v11.0-deploy-ppc64le:
   <<: *deploy_definition
   <<: *ubuntu18_04_11_0_ppc64le_only
 
+.ubuntu16_04_11_0_x86_64_variables: &ubuntu16_04_11_0_x86_64_variables
+  ARCH: "x86_64"
+  DIST_BASE_PATH: "dist/11.0"
+  IMAGE_NAME: "nvidia/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  IMAGE_TAG_SUFFIX: -rc
+  OS: "ubuntu16.04"
+  OS_NAME: "ubuntu"
+  OS_VERSION: "16.04"
+  CUDA_VERSION: "11.0"
+
 .ubuntu16_04_11_0_x86_64_only: &ubuntu16_04_11_0_x86_64_only
   variables:
-    ARCH: "x86_64"
-    DIST_BASE_PATH: "dist/11.0"
-    MANIFEST: "manifests/cuda.yaml"
-    IMAGE_TAG_SUFFIX: -rc
+    <<: *ubuntu16_04_11_0_x86_64_variables
   only:
     variables:
       - $ubuntu16_04_11_0_x86_64 == "true"
@@ -268,6 +288,10 @@ ubuntu16.04-v11.0-cudnn8-x86_64:
   needs: ["ubuntu16.04-v11.0-x86_64"]
   <<: *cudnn_definition
   <<: *ubuntu16_04_11_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu16_04_11_0_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
 
 ubuntu16.04-v11.0-test-x86_64:
   needs: ["ubuntu16.04-v11.0-x86_64"]
@@ -284,12 +308,20 @@ ubuntu16.04-v11.0-deploy-x86_64:
   <<: *deploy_definition
   <<: *ubuntu16_04_11_0_x86_64_only
 
+.centos8_11_0_x86_64_variables: &centos8_11_0_x86_64_variables
+  ARCH: "x86_64"
+  DIST_BASE_PATH: "dist/11.0"
+  IMAGE_NAME: "nvidia/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  IMAGE_TAG_SUFFIX: -rc
+  OS: "centos8"
+  OS_NAME: "centos"
+  OS_VERSION: "8"
+  CUDA_VERSION: "11.0"
+
 .centos8_11_0_x86_64_only: &centos8_11_0_x86_64_only
   variables:
-    ARCH: "x86_64"
-    DIST_BASE_PATH: "dist/11.0"
-    MANIFEST: "manifests/cuda.yaml"
-    IMAGE_TAG_SUFFIX: -rc
+    <<: *centos8_11_0_x86_64_variables
   only:
     variables:
       - $centos8_11_0_x86_64 == "true"
@@ -303,6 +335,10 @@ centos8-v11.0-cudnn8-x86_64:
   needs: ["centos8-v11.0-x86_64"]
   <<: *cudnn_definition
   <<: *centos8_11_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos8_11_0_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
 
 centos8-v11.0-test-x86_64:
   needs: ["centos8-v11.0-x86_64"]
@@ -319,12 +355,20 @@ centos8-v11.0-deploy-x86_64:
   <<: *deploy_definition
   <<: *centos8_11_0_x86_64_only
 
+.centos8_11_0_ppc64le_variables: &centos8_11_0_ppc64le_variables
+  ARCH: "ppc64le"
+  DIST_BASE_PATH: "dist/11.0"
+  IMAGE_NAME: "nvidia/cuda-ppc64le"
+  MANIFEST: "manifests/cuda.yaml"
+  IMAGE_TAG_SUFFIX: -rc
+  OS: "centos8"
+  OS_NAME: "centos"
+  OS_VERSION: "8"
+  CUDA_VERSION: "11.0"
+
 .centos8_11_0_ppc64le_only: &centos8_11_0_ppc64le_only
   variables:
-    ARCH: "ppc64le"
-    DIST_BASE_PATH: "dist/11.0"
-    MANIFEST: "manifests/cuda.yaml"
-    IMAGE_TAG_SUFFIX: -rc
+    <<: *centos8_11_0_ppc64le_variables
   only:
     variables:
       - $centos8_11_0_ppc64le == "true"
@@ -338,6 +382,10 @@ centos8-v11.0-cudnn8-ppc64le:
   needs: ["centos8-v11.0-ppc64le"]
   <<: *cudnn_definition
   <<: *centos8_11_0_ppc64le_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos8_11_0_ppc64le_variables
+    CUDNN_VERSION: "cudnn8"
 
 centos8-v11.0-test-ppc64le:
   needs: ["centos8-v11.0-ppc64le"]
@@ -354,12 +402,20 @@ centos8-v11.0-deploy-ppc64le:
   <<: *deploy_definition
   <<: *centos8_11_0_ppc64le_only
 
+.ubi8_11_0_x86_64_variables: &ubi8_11_0_x86_64_variables
+  ARCH: "x86_64"
+  DIST_BASE_PATH: "dist/11.0"
+  IMAGE_NAME: "nvidia/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  IMAGE_TAG_SUFFIX: -rc
+  OS: "ubi8"
+  OS_NAME: "ubi"
+  OS_VERSION: "8"
+  CUDA_VERSION: "11.0"
+
 .ubi8_11_0_x86_64_only: &ubi8_11_0_x86_64_only
   variables:
-    ARCH: "x86_64"
-    DIST_BASE_PATH: "dist/11.0"
-    MANIFEST: "manifests/cuda.yaml"
-    IMAGE_TAG_SUFFIX: -rc
+    <<: *ubi8_11_0_x86_64_variables
   only:
     variables:
       - $ubi8_11_0_x86_64 == "true"
@@ -373,6 +429,10 @@ ubi8-v11.0-cudnn8-x86_64:
   needs: ["ubi8-v11.0-x86_64"]
   <<: *cudnn_definition
   <<: *ubi8_11_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi8_11_0_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
 
 ubi8-v11.0-test-x86_64:
   needs: ["ubi8-v11.0-x86_64"]
@@ -389,12 +449,20 @@ ubi8-v11.0-deploy-x86_64:
   <<: *deploy_definition
   <<: *ubi8_11_0_x86_64_only
 
+.ubi8_11_0_ppc64le_variables: &ubi8_11_0_ppc64le_variables
+  ARCH: "ppc64le"
+  DIST_BASE_PATH: "dist/11.0"
+  IMAGE_NAME: "nvidia/cuda-ppc64le"
+  MANIFEST: "manifests/cuda.yaml"
+  IMAGE_TAG_SUFFIX: -rc
+  OS: "ubi8"
+  OS_NAME: "ubi"
+  OS_VERSION: "8"
+  CUDA_VERSION: "11.0"
+
 .ubi8_11_0_ppc64le_only: &ubi8_11_0_ppc64le_only
   variables:
-    ARCH: "ppc64le"
-    DIST_BASE_PATH: "dist/11.0"
-    MANIFEST: "manifests/cuda.yaml"
-    IMAGE_TAG_SUFFIX: -rc
+    <<: *ubi8_11_0_ppc64le_variables
   only:
     variables:
       - $ubi8_11_0_ppc64le == "true"
@@ -408,6 +476,10 @@ ubi8-v11.0-cudnn8-ppc64le:
   needs: ["ubi8-v11.0-ppc64le"]
   <<: *cudnn_definition
   <<: *ubi8_11_0_ppc64le_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi8_11_0_ppc64le_variables
+    CUDNN_VERSION: "cudnn8"
 
 ubi8-v11.0-test-ppc64le:
   needs: ["ubi8-v11.0-ppc64le"]
@@ -424,12 +496,20 @@ ubi8-v11.0-deploy-ppc64le:
   <<: *deploy_definition
   <<: *ubi8_11_0_ppc64le_only
 
+.centos7_11_0_x86_64_variables: &centos7_11_0_x86_64_variables
+  ARCH: "x86_64"
+  DIST_BASE_PATH: "dist/11.0"
+  IMAGE_NAME: "nvidia/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  IMAGE_TAG_SUFFIX: -rc
+  OS: "centos7"
+  OS_NAME: "centos"
+  OS_VERSION: "7"
+  CUDA_VERSION: "11.0"
+
 .centos7_11_0_x86_64_only: &centos7_11_0_x86_64_only
   variables:
-    ARCH: "x86_64"
-    DIST_BASE_PATH: "dist/11.0"
-    MANIFEST: "manifests/cuda.yaml"
-    IMAGE_TAG_SUFFIX: -rc
+    <<: *centos7_11_0_x86_64_variables
   only:
     variables:
       - $centos7_11_0_x86_64 == "true"
@@ -443,6 +523,10 @@ centos7-v11.0-cudnn8-x86_64:
   needs: ["centos7-v11.0-x86_64"]
   <<: *cudnn_definition
   <<: *centos7_11_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos7_11_0_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
 
 centos7-v11.0-test-x86_64:
   needs: ["centos7-v11.0-x86_64"]
@@ -459,12 +543,20 @@ centos7-v11.0-deploy-x86_64:
   <<: *deploy_definition
   <<: *centos7_11_0_x86_64_only
 
+.ubi7_11_0_x86_64_variables: &ubi7_11_0_x86_64_variables
+  ARCH: "x86_64"
+  DIST_BASE_PATH: "dist/11.0"
+  IMAGE_NAME: "nvidia/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  IMAGE_TAG_SUFFIX: -rc
+  OS: "ubi7"
+  OS_NAME: "ubi"
+  OS_VERSION: "7"
+  CUDA_VERSION: "11.0"
+
 .ubi7_11_0_x86_64_only: &ubi7_11_0_x86_64_only
   variables:
-    ARCH: "x86_64"
-    DIST_BASE_PATH: "dist/11.0"
-    MANIFEST: "manifests/cuda.yaml"
-    IMAGE_TAG_SUFFIX: -rc
+    <<: *ubi7_11_0_x86_64_variables
   only:
     variables:
       - $ubi7_11_0_x86_64 == "true"
@@ -478,6 +570,10 @@ ubi7-v11.0-cudnn8-x86_64:
   needs: ["ubi7-v11.0-x86_64"]
   <<: *cudnn_definition
   <<: *ubi7_11_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi7_11_0_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
 
 ubi7-v11.0-test-x86_64:
   needs: ["ubi7-v11.0-x86_64"]
@@ -494,12 +590,20 @@ ubi7-v11.0-deploy-x86_64:
   <<: *deploy_definition
   <<: *ubi7_11_0_x86_64_only
 
+.ubuntu18_04_10_2_x86_64_variables: &ubuntu18_04_10_2_x86_64_variables
+  ARCH: "x86_64"
+  DIST_BASE_PATH: "dist/10.2"
+  IMAGE_NAME: "nvidia/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  NO_OS_SUFFIX: "true"
+  OS: "ubuntu18.04"
+  OS_NAME: "ubuntu"
+  OS_VERSION: "18.04"
+  CUDA_VERSION: "10.2"
+
 .ubuntu18_04_10_2_x86_64_only: &ubuntu18_04_10_2_x86_64_only
   variables:
-    ARCH: "x86_64"
-    DIST_BASE_PATH: "dist/10.2"
-    MANIFEST: "manifests/cuda.yaml"
-    NO_OS_SUFFIX: "true"
+    <<: *ubuntu18_04_10_2_x86_64_variables
   only:
     variables:
       - $ubuntu18_04_10_2_x86_64 == "true"
@@ -513,11 +617,19 @@ ubuntu18.04-v10.2-cudnn7-x86_64:
   needs: ["ubuntu18.04-v10.2-x86_64"]
   <<: *cudnn_definition
   <<: *ubuntu18_04_10_2_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu18_04_10_2_x86_64_variables
+    CUDNN_VERSION: "cudnn7"
 
 ubuntu18.04-v10.2-cudnn8-x86_64:
   needs: ["ubuntu18.04-v10.2-x86_64"]
   <<: *cudnn_definition
   <<: *ubuntu18_04_10_2_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu18_04_10_2_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
 
 ubuntu18.04-v10.2-test-x86_64:
   needs: ["ubuntu18.04-v10.2-x86_64"]
@@ -534,12 +646,20 @@ ubuntu18.04-v10.2-deploy-x86_64:
   <<: *deploy_definition
   <<: *ubuntu18_04_10_2_x86_64_only
 
+.ubuntu18_04_10_2_ppc64le_variables: &ubuntu18_04_10_2_ppc64le_variables
+  ARCH: "ppc64le"
+  DIST_BASE_PATH: "dist/10.2"
+  IMAGE_NAME: "nvidia/cuda-ppc64le"
+  MANIFEST: "manifests/cuda.yaml"
+  NO_OS_SUFFIX: "true"
+  OS: "ubuntu18.04"
+  OS_NAME: "ubuntu"
+  OS_VERSION: "18.04"
+  CUDA_VERSION: "10.2"
+
 .ubuntu18_04_10_2_ppc64le_only: &ubuntu18_04_10_2_ppc64le_only
   variables:
-    ARCH: "ppc64le"
-    DIST_BASE_PATH: "dist/10.2"
-    MANIFEST: "manifests/cuda.yaml"
-    NO_OS_SUFFIX: "true"
+    <<: *ubuntu18_04_10_2_ppc64le_variables
   only:
     variables:
       - $ubuntu18_04_10_2_ppc64le == "true"
@@ -553,11 +673,19 @@ ubuntu18.04-v10.2-cudnn7-ppc64le:
   needs: ["ubuntu18.04-v10.2-ppc64le"]
   <<: *cudnn_definition
   <<: *ubuntu18_04_10_2_ppc64le_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu18_04_10_2_ppc64le_variables
+    CUDNN_VERSION: "cudnn7"
 
 ubuntu18.04-v10.2-cudnn8-ppc64le:
   needs: ["ubuntu18.04-v10.2-ppc64le"]
   <<: *cudnn_definition
   <<: *ubuntu18_04_10_2_ppc64le_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu18_04_10_2_ppc64le_variables
+    CUDNN_VERSION: "cudnn8"
 
 ubuntu18.04-v10.2-test-ppc64le:
   needs: ["ubuntu18.04-v10.2-ppc64le"]
@@ -574,46 +702,19 @@ ubuntu18.04-v10.2-deploy-ppc64le:
   <<: *deploy_definition
   <<: *ubuntu18_04_10_2_ppc64le_only
 
-.ubuntu18_04_10_2_arm64_only: &ubuntu18_04_10_2_arm64_only
-  variables:
-    ARCH: "arm64"
-    DIST_BASE_PATH: "dist/10.2"
-    MANIFEST: "manifests/cuda.yaml"
-    NO_OS_SUFFIX: "true"
-  only:
-    variables:
-      - $ubuntu18_04_10_2_arm64 == "true"
-      - $all == "true"
-
-ubuntu18.04-v10.2-arm64:
-  <<: *cuda_base_definition
-  <<: *ubuntu18_04_10_2_arm64_only
-
-ubuntu18.04-v10.2-cudnn8-arm64:
-  needs: ["ubuntu18.04-v10.2-arm64"]
-  <<: *cudnn_definition
-  <<: *ubuntu18_04_10_2_arm64_only
-
-ubuntu18.04-v10.2-test-arm64:
-  needs: ["ubuntu18.04-v10.2-arm64"]
-  <<: *test_definition
-  <<: *ubuntu18_04_10_2_arm64_only
-
-ubuntu18.04-v10.2-scan-arm64:
-  needs: ["ubuntu18.04-v10.2-arm64", "ubuntu18.04-v10.2-test-arm64"]
-  <<: *scan_definition
-  <<: *ubuntu18_04_10_2_arm64_only
-
-ubuntu18.04-v10.2-deploy-arm64:
-  needs: ["ubuntu18.04-v10.2-cudnn8-arm64", "ubuntu18.04-v10.2-test-arm64", "ubuntu18.04-v10.2-scan-arm64"]
-  <<: *deploy_definition
-  <<: *ubuntu18_04_10_2_arm64_only
+.ubuntu16_04_10_2_x86_64_variables: &ubuntu16_04_10_2_x86_64_variables
+  ARCH: "x86_64"
+  DIST_BASE_PATH: "dist/10.2"
+  IMAGE_NAME: "nvidia/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  OS: "ubuntu16.04"
+  OS_NAME: "ubuntu"
+  OS_VERSION: "16.04"
+  CUDA_VERSION: "10.2"
 
 .ubuntu16_04_10_2_x86_64_only: &ubuntu16_04_10_2_x86_64_only
   variables:
-    ARCH: "x86_64"
-    DIST_BASE_PATH: "dist/10.2"
-    MANIFEST: "manifests/cuda.yaml"
+    <<: *ubuntu16_04_10_2_x86_64_variables
   only:
     variables:
       - $ubuntu16_04_10_2_x86_64 == "true"
@@ -627,11 +728,19 @@ ubuntu16.04-v10.2-cudnn7-x86_64:
   needs: ["ubuntu16.04-v10.2-x86_64"]
   <<: *cudnn_definition
   <<: *ubuntu16_04_10_2_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu16_04_10_2_x86_64_variables
+    CUDNN_VERSION: "cudnn7"
 
 ubuntu16.04-v10.2-cudnn8-x86_64:
   needs: ["ubuntu16.04-v10.2-x86_64"]
   <<: *cudnn_definition
   <<: *ubuntu16_04_10_2_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu16_04_10_2_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
 
 ubuntu16.04-v10.2-test-x86_64:
   needs: ["ubuntu16.04-v10.2-x86_64"]
@@ -648,11 +757,19 @@ ubuntu16.04-v10.2-deploy-x86_64:
   <<: *deploy_definition
   <<: *ubuntu16_04_10_2_x86_64_only
 
+.centos8_10_2_x86_64_variables: &centos8_10_2_x86_64_variables
+  ARCH: "x86_64"
+  DIST_BASE_PATH: "dist/10.2"
+  IMAGE_NAME: "nvidia/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  OS: "centos8"
+  OS_NAME: "centos"
+  OS_VERSION: "8"
+  CUDA_VERSION: "10.2"
+
 .centos8_10_2_x86_64_only: &centos8_10_2_x86_64_only
   variables:
-    ARCH: "x86_64"
-    DIST_BASE_PATH: "dist/10.2"
-    MANIFEST: "manifests/cuda.yaml"
+    <<: *centos8_10_2_x86_64_variables
   only:
     variables:
       - $centos8_10_2_x86_64 == "true"
@@ -666,11 +783,19 @@ centos8-v10.2-cudnn7-x86_64:
   needs: ["centos8-v10.2-x86_64"]
   <<: *cudnn_definition
   <<: *centos8_10_2_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos8_10_2_x86_64_variables
+    CUDNN_VERSION: "cudnn7"
 
 centos8-v10.2-cudnn8-x86_64:
   needs: ["centos8-v10.2-x86_64"]
   <<: *cudnn_definition
   <<: *centos8_10_2_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos8_10_2_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
 
 centos8-v10.2-test-x86_64:
   needs: ["centos8-v10.2-x86_64"]
@@ -687,11 +812,19 @@ centos8-v10.2-deploy-x86_64:
   <<: *deploy_definition
   <<: *centos8_10_2_x86_64_only
 
+.ubi8_10_2_x86_64_variables: &ubi8_10_2_x86_64_variables
+  ARCH: "x86_64"
+  DIST_BASE_PATH: "dist/10.2"
+  IMAGE_NAME: "nvidia/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  OS: "ubi8"
+  OS_NAME: "ubi"
+  OS_VERSION: "8"
+  CUDA_VERSION: "10.2"
+
 .ubi8_10_2_x86_64_only: &ubi8_10_2_x86_64_only
   variables:
-    ARCH: "x86_64"
-    DIST_BASE_PATH: "dist/10.2"
-    MANIFEST: "manifests/cuda.yaml"
+    <<: *ubi8_10_2_x86_64_variables
   only:
     variables:
       - $ubi8_10_2_x86_64 == "true"
@@ -705,11 +838,19 @@ ubi8-v10.2-cudnn7-x86_64:
   needs: ["ubi8-v10.2-x86_64"]
   <<: *cudnn_definition
   <<: *ubi8_10_2_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi8_10_2_x86_64_variables
+    CUDNN_VERSION: "cudnn7"
 
 ubi8-v10.2-cudnn8-x86_64:
   needs: ["ubi8-v10.2-x86_64"]
   <<: *cudnn_definition
   <<: *ubi8_10_2_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi8_10_2_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
 
 ubi8-v10.2-test-x86_64:
   needs: ["ubi8-v10.2-x86_64"]
@@ -726,11 +867,19 @@ ubi8-v10.2-deploy-x86_64:
   <<: *deploy_definition
   <<: *ubi8_10_2_x86_64_only
 
+.centos7_10_2_x86_64_variables: &centos7_10_2_x86_64_variables
+  ARCH: "x86_64"
+  DIST_BASE_PATH: "dist/10.2"
+  IMAGE_NAME: "nvidia/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  OS: "centos7"
+  OS_NAME: "centos"
+  OS_VERSION: "7"
+  CUDA_VERSION: "10.2"
+
 .centos7_10_2_x86_64_only: &centos7_10_2_x86_64_only
   variables:
-    ARCH: "x86_64"
-    DIST_BASE_PATH: "dist/10.2"
-    MANIFEST: "manifests/cuda.yaml"
+    <<: *centos7_10_2_x86_64_variables
   only:
     variables:
       - $centos7_10_2_x86_64 == "true"
@@ -744,11 +893,19 @@ centos7-v10.2-cudnn7-x86_64:
   needs: ["centos7-v10.2-x86_64"]
   <<: *cudnn_definition
   <<: *centos7_10_2_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos7_10_2_x86_64_variables
+    CUDNN_VERSION: "cudnn7"
 
 centos7-v10.2-cudnn8-x86_64:
   needs: ["centos7-v10.2-x86_64"]
   <<: *cudnn_definition
   <<: *centos7_10_2_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos7_10_2_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
 
 centos7-v10.2-test-x86_64:
   needs: ["centos7-v10.2-x86_64"]
@@ -765,11 +922,19 @@ centos7-v10.2-deploy-x86_64:
   <<: *deploy_definition
   <<: *centos7_10_2_x86_64_only
 
+.centos7_10_2_ppc64le_variables: &centos7_10_2_ppc64le_variables
+  ARCH: "ppc64le"
+  DIST_BASE_PATH: "dist/10.2"
+  IMAGE_NAME: "nvidia/cuda-ppc64le"
+  MANIFEST: "manifests/cuda.yaml"
+  OS: "centos7"
+  OS_NAME: "centos"
+  OS_VERSION: "7"
+  CUDA_VERSION: "10.2"
+
 .centos7_10_2_ppc64le_only: &centos7_10_2_ppc64le_only
   variables:
-    ARCH: "ppc64le"
-    DIST_BASE_PATH: "dist/10.2"
-    MANIFEST: "manifests/cuda.yaml"
+    <<: *centos7_10_2_ppc64le_variables
   only:
     variables:
       - $centos7_10_2_ppc64le == "true"
@@ -783,11 +948,19 @@ centos7-v10.2-cudnn7-ppc64le:
   needs: ["centos7-v10.2-ppc64le"]
   <<: *cudnn_definition
   <<: *centos7_10_2_ppc64le_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos7_10_2_ppc64le_variables
+    CUDNN_VERSION: "cudnn7"
 
 centos7-v10.2-cudnn8-ppc64le:
   needs: ["centos7-v10.2-ppc64le"]
   <<: *cudnn_definition
   <<: *centos7_10_2_ppc64le_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos7_10_2_ppc64le_variables
+    CUDNN_VERSION: "cudnn8"
 
 centos7-v10.2-test-ppc64le:
   needs: ["centos7-v10.2-ppc64le"]
@@ -804,11 +977,19 @@ centos7-v10.2-deploy-ppc64le:
   <<: *deploy_definition
   <<: *centos7_10_2_ppc64le_only
 
+.ubi7_10_2_x86_64_variables: &ubi7_10_2_x86_64_variables
+  ARCH: "x86_64"
+  DIST_BASE_PATH: "dist/10.2"
+  IMAGE_NAME: "nvidia/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  OS: "ubi7"
+  OS_NAME: "ubi"
+  OS_VERSION: "7"
+  CUDA_VERSION: "10.2"
+
 .ubi7_10_2_x86_64_only: &ubi7_10_2_x86_64_only
   variables:
-    ARCH: "x86_64"
-    DIST_BASE_PATH: "dist/10.2"
-    MANIFEST: "manifests/cuda.yaml"
+    <<: *ubi7_10_2_x86_64_variables
   only:
     variables:
       - $ubi7_10_2_x86_64 == "true"
@@ -822,11 +1003,19 @@ ubi7-v10.2-cudnn7-x86_64:
   needs: ["ubi7-v10.2-x86_64"]
   <<: *cudnn_definition
   <<: *ubi7_10_2_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi7_10_2_x86_64_variables
+    CUDNN_VERSION: "cudnn7"
 
 ubi7-v10.2-cudnn8-x86_64:
   needs: ["ubi7-v10.2-x86_64"]
   <<: *cudnn_definition
   <<: *ubi7_10_2_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi7_10_2_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
 
 ubi7-v10.2-test-x86_64:
   needs: ["ubi7-v10.2-x86_64"]
@@ -842,4 +1031,53 @@ ubi7-v10.2-deploy-x86_64:
   needs: ["ubi7-v10.2-cudnn7-x86_64","ubi7-v10.2-cudnn8-x86_64", "ubi7-v10.2-test-x86_64", "ubi7-v10.2-scan-x86_64"]
   <<: *deploy_definition
   <<: *ubi7_10_2_x86_64_only
+
+.ubuntu18_04_10_2_l4t_arm64_variables: &ubuntu18_04_10_2_l4t_arm64_variables
+  ARCH: "arm64"
+  DIST_BASE_PATH: "dist/10.2/l4t"
+  IMAGE_NAME: "nvidia/l4t-cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  LATEST: "true"
+  NO_OS_SUFFIX: "true"
+  OS: "ubuntu18.04"
+  OS_NAME: "ubuntu"
+  OS_VERSION: "18.04"
+  CUDA_VERSION: "10.2"
+  PIPELINE_NAME: "l4t"
+
+.ubuntu18_04_10_2_l4t_arm64_only: &ubuntu18_04_10_2_l4t_arm64_only
+  variables:
+    <<: *ubuntu18_04_10_2_l4t_arm64_variables
+  only:
+    variables:
+      - $ubuntu18_04_10_2_l4t_arm64 == "true"
+      - $all == "true"
+
+ubuntu18.04-v10.2-l4t-arm64:
+  <<: *cuda_base_definition
+  <<: *ubuntu18_04_10_2_l4t_arm64_only
+
+ubuntu18.04-v10.2-l4t-cudnn8-arm64:
+  needs: ["ubuntu18.04-v10.2-l4t-arm64"]
+  <<: *cudnn_definition
+  <<: *ubuntu18_04_10_2_l4t_arm64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu18_04_10_2_l4t_arm64_variables
+    CUDNN_VERSION: "cudnn8"
+
+ubuntu18.04-v10.2-l4t-test-arm64:
+  needs: ["ubuntu18.04-v10.2-l4t-arm64"]
+  <<: *test_definition
+  <<: *ubuntu18_04_10_2_l4t_arm64_only
+
+ubuntu18.04-v10.2-l4t-scan-arm64:
+  needs: ["ubuntu18.04-v10.2-l4t-arm64", "ubuntu18.04-v10.2-l4t-test-arm64"]
+  <<: *scan_definition
+  <<: *ubuntu18_04_10_2_l4t_arm64_only
+
+ubuntu18.04-v10.2-l4t-deploy-arm64:
+  needs: ["ubuntu18.04-v10.2-l4t-cudnn8-arm64", "ubuntu18.04-v10.2-l4t-test-arm64", "ubuntu18.04-v10.2-l4t-scan-arm64"]
+  <<: *deploy_definition
+  <<: *ubuntu18_04_10_2_l4t_arm64_only
 

@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 ENV CUDA_VERSION 10.2.89
 ENV CUDA_PKG_VERSION 10-2=$CUDA_VERSION-1
+
 # For libraries in the cuda-compat-* package: https://docs.nvidia.com/cuda/eula/index.html#attachment-a
 RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-cudart-$CUDA_PKG_VERSION \

@@ -13,7 +13,6 @@ push_repos:
       x86_64: gitlab-master.nvidia.com:5005/cuda-installer/cuda
       ppc64le: gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le
       arm64: gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-arm64
-  # Staging
   artifactory:
     only_if: NV_ARTIFACTORY
     user: ARTIFACTORY_USER
@@ -22,6 +21,13 @@ push_repos:
       x86_64: urm.nvidia.com/sw-gpu-cuda-installer-docker-local/cuda
       ppc64le: urm.nvidia.com/sw-gpu-cuda-installer-docker-local/cuda/cuda-ppc64le
       arm64: urm.nvidia.com/sw-gpu-cuda-installer-docker-local/cuda/cuda-arm64
+  # TODO: allow merging name pipeline repos so we don't duplicate too much
+  artifactory_l4t:
+    only_if: NV_ARTIFACTORY
+    user: ARTIFACTORY_USER
+    pass: ARTIFACTORY_PASS
+    registry:
+      arm64: urm.nvidia.com/sw-gpu-cuda-installer-docker-local/cuda/l4t-cuda
   # EA and GA
   nvcr.io:
     only_if: NVCR_TOKEN
@@ -87,6 +93,7 @@ cuda_v11.0:
       - docker.io
       - nvcr.io
     x86_64:
+      image_name: nvidia/cuda
       base_image: ubuntu:18.04
       latest: True
       no_os_suffix: True
@@ -104,29 +111,9 @@ cuda_v11.0:
           version: 2.7.3
           sha256sum: d112b722bf557cff96d571ac3386e4f539be7b3e9412561bde59b0ad6e59263d
           source: https://developer.download.nvidia.com/compute/redist/nccl/v2.7/nccl_2.7.3-1+cuda11.0_x86_64.txz
-    # # CAREFUL! Mixing up the arch and the base_image arch image will lead to hard to debug build issues!
-    # arm64:
-    #   base_image: arm64v8/ubuntu:18.04
-    #   latest: True
-    #   no_os_suffix: True
-    #   requires: "cuda>=11.0"
-    #   exclude_repos:
-    #     - nvcr.io
-    #   components:
-    #     <<: *cuda11_0_components
-    #     # cudnn8:
-    #     #   version: 8.0.0.180
-    #     #   sha256sum:
-    #     #   source:
-    #     #   dev:
-    #     #     sha256sum:
-    #     #     source:
-    #     libnccl2:
-    #       version: 2.7.3
-    #       sha256sum: eebbaf4d040a0254e1cb9cc23ed46a1ed37fba3686e9d86d541f5b3aa43c0ecb
-    #       source: https://developer.download.nvidia.com/compute/redist/nccl/v2.7/nccl_2.7.3-1+cuda11.0_aarch64.txz
     # CAREFUL! Mixing up the arch and the base_image arch image will lead to hard to debug build issues!
     ppc64le:
+      image_name: nvidia/cuda-ppc64le
       base_image: ppc64le/ubuntu:18.04
       latest: True
       no_os_suffix: True
@@ -148,13 +135,13 @@ cuda_v11.0:
           source: https://developer.download.nvidia.com/compute/redist/nccl/v2.7/nccl_2.7.3-1+cuda11.0_ppc64le.txz
   ubuntu16.04:
     template_path: templates/ubuntu
-    # skip_tests: True
     image_tag_suffix: "-rc"
     push_repos:
       - artifactory
       - docker.io
       - nvcr.io
     x86_64:
+      image_name: nvidia/cuda
       base_image: ubuntu:16.04
       <<: *cuda11_0_requires
       components:
@@ -172,13 +159,13 @@ cuda_v11.0:
           source: https://developer.download.nvidia.com/compute/redist/nccl/v2.7/nccl_2.7.3-1+cuda11.0_x86_64.txz
   centos8:
     template_path: templates/redhat
-    # skip_tests: True
     image_tag_suffix: "-rc"
     push_repos:
       - artifactory
       - docker.io
       - nvcr.io
     x86_64:
+      image_name: nvidia/cuda
       base_image: centos:8
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64
       <<: *cuda11_0_requires
@@ -195,21 +182,8 @@ cuda_v11.0:
           version: 2.7.3
           sha256sum: d112b722bf557cff96d571ac3386e4f539be7b3e9412561bde59b0ad6e59263d
           source: https://developer.download.nvidia.com/compute/redist/nccl/v2.7/nccl_2.7.3-1+cuda11.0_x86_64.txz
-    # # CAREFUL! Mixing up the arch "arm64" and the base_image arch image will lead to hard to debug build issues!
-    # arm64:
-    #   base_image: arm64v8/centos:8
-    #   repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8/sbsa
-    #   requires: "cuda>=11.0"
-    #   exclude_repos:
-    #     - nvcr.io
-    #   components:
-    #     <<: *cuda11_0_components
-    #     libnccl2:
-    #       version: 2.7.3
-    #       sha256sum: eebbaf4d040a0254e1cb9cc23ed46a1ed37fba3686e9d86d541f5b3aa43c0ecb
-    #       source: https://developer.download.nvidia.com/compute/redist/nccl/v2.7/nccl_2.7.3-1+cuda11.0_aarch64.txz
-    # CAREFUL! Mixing up the arch and the base_image arch image will lead to hard to debug build issues!
     ppc64le:
+      image_name: nvidia/cuda-ppc64le
       base_image: ppc64le/centos:8
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8/ppc64le
       requires: "cuda>=11.0"
@@ -230,13 +204,13 @@ cuda_v11.0:
           source: https://developer.download.nvidia.com/compute/redist/nccl/v2.7/nccl_2.7.3-1+cuda11.0_ppc64le.txz
   ubi8:
     template_path: templates/redhat
-    # skip_tests: True
     image_tag_suffix: "-rc"
     push_repos:
       - artifactory
       - docker.io
       - nvcr.io
     x86_64:
+      image_name: nvidia/cuda
       base_image: registry.access.redhat.com/ubi8/ubi:latest
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64
       <<: *cuda11_0_requires
@@ -253,21 +227,9 @@ cuda_v11.0:
           version: 2.7.3
           sha256sum: d112b722bf557cff96d571ac3386e4f539be7b3e9412561bde59b0ad6e59263d
           source: https://developer.download.nvidia.com/compute/redist/nccl/v2.7/nccl_2.7.3-1+cuda11.0_x86_64.txz
-    # # CAREFUL! Mixing up the arch and the base_image arch image will lead to hard to debug build issues!
-    # arm64:
-    #   base_image: registry.access.redhat.com/ubi8/ubi@sha256:6f261450afcc6d29198d7fa6deb1b8f36e0e40573d05ca3ca8d89e16a25302b0
-    #   repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8/sbsa
-    #   requires: "cuda>=11.0"
-    #   exclude_repos:
-    #     - nvcr.io
-    #   components:
-    #     <<: *cuda11_0_components
-    #     libnccl2:
-    #       version: 2.7.3
-    #       sha256sum: eebbaf4d040a0254e1cb9cc23ed46a1ed37fba3686e9d86d541f5b3aa43c0ecb
-    #       source: https://developer.download.nvidia.com/compute/redist/nccl/v2.7/nccl_2.7.3-1+cuda11.0_aarch64.txz
     # CAREFUL! Mixing up the arch and the base_image arch image will lead to hard to debug build issues!
     ppc64le:
+      image_name: nvidia/cuda-ppc64le
       base_image: registry.access.redhat.com/ubi8/ubi@sha256:0615adcd8ae2778d6394d1fb6b96ff67165318da5fd6667d450504acb6050d97
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8/ppc64le
       requires: "cuda>=11.0"
@@ -294,6 +256,7 @@ cuda_v11.0:
       - docker.io
       - nvcr.io
     x86_64:
+      image_name: nvidia/cuda
       base_image: centos:7
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64
       <<: *cuda11_0_requires
@@ -318,6 +281,7 @@ cuda_v11.0:
       - docker.io
       - nvcr.io
     x86_64:
+      image_name: nvidia/cuda
       base_image: registry.access.redhat.com/ubi7/ubi:latest
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64
       <<: *cuda11_0_requires
@@ -356,6 +320,7 @@ cuda_v10.2:
       - docker.io
       - nvcr.io
     x86_64:
+      image_name: nvidia/cuda
       base_image: ubuntu:18.04
       no_os_suffix: True
       <<: *cuda10_2_requires
@@ -372,8 +337,9 @@ cuda_v10.2:
           version: 2.7.3
           sha256sum: a9ee790c3fc64b0ecbb00db92eddc1525552eda10a8656ff4b7380f66d81bda1
           source: https://developer.download.nvidia.com/compute/redist/nccl/v2.7/nccl_2.7.3-1+cuda10.2_x86_64.txz
+    # CAREFUL! Mixing up the arch and the base_image arch image will lead to hard to debug build issues!
     ppc64le:
-      # CAREFUL! Mixing up the arch and the base_image arch image will lead to hard to debug build issues!
+      image_name: nvidia/cuda-ppc64le
       base_image: ppc64le/ubuntu:18.04
       no_os_suffix: True
       requires: "cuda>=10.2"
@@ -392,36 +358,6 @@ cuda_v10.2:
           version: 2.7.3
           sha256sum: ccd4960ef3eb22f0ed8fcb91d3b8ae71e7c88cf8fb6eca8f5c039d0acf1bdac8
           source: https://developer.download.nvidia.com/compute/redist/nccl/v2.7/nccl_2.7.3-1+cuda10.2_ppc64le.txz
-    arm64:
-      # CAREFUL! Mixing up the arch and the base_image arch image will lead to hard to debug build issues!
-      base_image: arm64v8/ubuntu:18.04
-      no_os_suffix: True
-      repo_url: http://cuda-repo.nvidia.com/release-candidates/kitbundles/r10.2/20200604/repos/ubuntu1804/arm64
-      requires: "cuda>=10.2"
-      exclude_repos:
-        - docker.io
-        - nvcr.io
-      components:
-        build_version: 184
-        command_line_tools:
-          version: 10.2.20200604-1
-        libnpp:
-          version: 10.2.1.184-1
-        libnpp_dev:
-          version: 10.2.1.184-1
-        libraries:
-          version: 10.2.20200604-1
-        libraries_dev:
-          version: 10.2.20200604-1
-        minimal_build:
-          version: 10.2.20200604-1
-        cudnn8:
-          version: 8.0.0.180
-          sha256sum: 899405cf41d55e11b9000a25ac70c5523307b06eaad90ef603468bc08c7e0ddb
-          source: http://cuda-repo/release-candidates/Libraries/cuDNN/v8.0/8.0.0.180_20200523_28443629/10.2.89-r440/Installer/Ubuntu18_04-aarch64/libcudnn8_8.0.0.180-1+cuda10.2_arm64.deb
-          dev:
-            sha256sum: 4b581303d1515d9a204b6639dd0bfee3b27571602f289abe707350abbe3a268d
-            source: http://cuda-repo/release-candidates/Libraries/cuDNN/v8.0/8.0.0.180_20200523_28443629/10.2.89-r440/Installer/Ubuntu18_04-aarch64/libcudnn8-dev_8.0.0.180-1+cuda10.2_arm64.deb
   ubuntu16.04:
     template_path: templates/ubuntu
     push_repos:
@@ -429,6 +365,7 @@ cuda_v10.2:
       - docker.io
       - nvcr.io
     x86_64:
+      image_name: nvidia/cuda
       base_image: ubuntu:16.04
       <<: *cuda10_2_requires
       components:
@@ -451,6 +388,7 @@ cuda_v10.2:
       - docker.io
       - nvcr.io
     x86_64:
+      image_name: nvidia/cuda
       base_image: centos:8
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64
       <<: *cuda10_2_requires
@@ -477,6 +415,7 @@ cuda_v10.2:
       - docker.io
       - nvcr.io
     x86_64:
+      image_name: nvidia/cuda
       base_image: registry.access.redhat.com/ubi8/ubi:latest
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64
       <<: *cuda10_2_requires
@@ -503,6 +442,7 @@ cuda_v10.2:
       - docker.io
       - nvcr.io
     x86_64:
+      image_name: nvidia/cuda
       base_image: centos:7
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64
       <<: *cuda10_2_requires
@@ -522,8 +462,9 @@ cuda_v10.2:
           version: 2.7.3
           sha256sum: a9ee790c3fc64b0ecbb00db92eddc1525552eda10a8656ff4b7380f66d81bda1
           source: https://developer.download.nvidia.com/compute/redist/nccl/v2.7/nccl_2.7.3-1+cuda10.2_x86_64.txz
+    # CAREFUL! Mixing up the arch and the base_image arch image will lead to hard to debug build issues!
     ppc64le:
-      # CAREFUL! Mixing up the arch and the base_image arch image will lead to hard to debug build issues!
+      image_name: nvidia/cuda-ppc64le
       base_image: ppc64le/centos:7
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7/ppc64le
       requires: "cuda>=10.2"
@@ -552,6 +493,7 @@ cuda_v10.2:
       - docker.io
       - nvcr.io
     x86_64:
+      image_name: nvidia/cuda
       base_image: registry.access.redhat.com/ubi7/ubi:latest
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64
       <<: *cuda10_2_requires
@@ -571,3 +513,39 @@ cuda_v10.2:
           version: 2.7.3
           sha256sum: a9ee790c3fc64b0ecbb00db92eddc1525552eda10a8656ff4b7380f66d81bda1
           source: https://developer.download.nvidia.com/compute/redist/nccl/v2.7/nccl_2.7.3-1+cuda10.2_x86_64.txz
+
+cuda_v10.2_l4t:
+  dist_base_path: dist/10.2/l4t
+  ubuntu18.04:
+    template_path: templates/ubuntu
+    push_repos:
+      - artifactory_l4t
+    # CAREFUL! Mixing up the arch and the base_image arch image will lead to hard to debug build issues!
+    arm64:
+      image_name: nvidia/l4t-cuda
+      base_image: nvcr.io/nvidia/l4t-base:r32.4.2
+      no_os_suffix: True
+      latest: True
+      repo_url: http://cuda-repo.nvidia.com/release-candidates/kitbundles/r10.2/20200624/repos/l4t/arm64
+      requires: "cuda>=10.2"
+      components:
+        build_version: 195
+        command_line_tools:
+          version: 10.2.20200624-1
+        libnpp:
+          version: 10.2.1.195-1
+        libnpp_dev:
+          version: 10.2.1.195-1
+        libraries:
+          version: 10.2.20200624-1
+        libraries_dev:
+          version: 10.2.20200624-1
+        minimal_build:
+          version: 10.2.20200624-1
+        cudnn8:
+          version: 8.0.0.180
+          sha256sum: 899405cf41d55e11b9000a25ac70c5523307b06eaad90ef603468bc08c7e0ddb
+          source: http://cuda-repo/release-candidates/Libraries/cuDNN/v8.0/8.0.0.180_20200523_28443629/10.2.89-r440/Installer/Ubuntu18_04-aarch64/libcudnn8_8.0.0.180-1+cuda10.2_arm64.deb
+          dev:
+            sha256sum: 4b581303d1515d9a204b6639dd0bfee3b27571602f289abe707350abbe3a268d
+            source: http://cuda-repo/release-candidates/Libraries/cuDNN/v8.0/8.0.0.180_20200523_28443629/10.2.89-r440/Installer/Ubuntu18_04-aarch64/libcudnn8-dev_8.0.0.180-1+cuda10.2_arm64.deb
