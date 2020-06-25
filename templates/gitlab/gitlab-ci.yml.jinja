@@ -23,7 +23,6 @@ image: docker:stable
 variables:
   # Need a value of two here for checking the manifest in the last commit
   GIT_DEPTH: "2"
-  IMAGE_NAME: "nvidia/cuda"
 
 before_script:
   - apk add --no-cache git bash findutils python3 python3-dev curl g++ libmagic
@@ -35,20 +34,6 @@ before_script:
   - curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python
   - source $HOME/.poetry/env
   - poetry config virtualenvs.create false && poetry install
-  {# Uncomment this to not push to the contanier registries, don't forget to regenerate the gitlab pipelines with `manager.py generate --ci` #}
-  {# - export DRY_RUN=1 #}
-  - export OS="$(echo ${CI_JOB_NAME} | cut -f1 -d-)"
-  - export OS_NAME="$(echo ${CI_JOB_NAME} | cut -f1 -d-| sed 's/[[:digit:]\.]*//g')"
-  - export OS_VERSION="$(echo ${CI_JOB_NAME} | cut -f1 -d- | sed -n 's/[[:alpha:]]\+\([[:digit:]\.]\+\)/\1/p')"
-  - export CUDA_VERSION="$(echo ${CI_JOB_NAME} | cut -f2 -d- | awk -Fv '{ print $2 }')"
-  - export CUDNN_VERSION="$(echo ${CI_JOB_NAME} | cut -f3 -d-)"
-  - if [[ ! -z ${ARCH} ]] && [[ "${ARCH}" != "x86_64" ]]; then
-      if [[ ${ARCH} == "ppc64le" ]]; then
-        export IMAGE_NAME="nvidia/cuda-ppc64le";
-      else
-        export IMAGE_NAME="nvidia/cuda-arm64";
-      fi
-    fi
   - 'echo "ARCH: $ARCH"'
   - 'echo "OS: $OS"'
   - 'echo "IMAGE_NAME: $IMAGE_NAME"'
@@ -163,6 +148,7 @@ stages:
         --os-version "${OS_VERSION}"
         --cuda-version "${CUDA_VERSION}"
         --arch "${ARCH}"
+        ${PIPELINE_NAME:+`echo "--pipeline-name ${PIPELINE_NAME}"`}
         ${IMAGE_TAG_SUFFIX:+`echo "--tag-suffix ${IMAGE_TAG_SUFFIX}"`} ${DRY_RUN:+"-n"}
 
 trigger:
@@ -178,57 +164,80 @@ trigger:
       - $TRIGGER_OVERRIDE
 
 {% for cuda_version in cuda if not cuda_version.startswith("manifest") %}
-{% for distro in cuda[cuda_version] %}
-{% for arch in cuda[cuda_version][distro]["arches"] %}
-{% set cuda_version_yaml_safe = cuda[cuda_version]["yaml_safe"] %}
-{% set distro_yaml_safe = cuda[cuda_version][distro]["yaml_safe"] -%}
-{% set image_tag_suffix = cuda[cuda_version][distro]["image_tag_suffix"] -%}
+{% for pipeline in cuda[cuda_version] %}
+{% for distro in cuda[cuda_version][pipeline] %}
+{% for arch in cuda[cuda_version][pipeline][distro]["arches"] -%}
 
-.{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}_{{ arch }}_only: &{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}_{{ arch }}_only
+{% set cuda_version_yaml_safe = cuda[cuda_version][pipeline]["yaml_safe"] %}
+{% set distro_yaml_safe = cuda[cuda_version][pipeline][distro]["yaml_safe"] -%}
+{% set image_tag_suffix = cuda[cuda_version][pipeline][distro]["image_tag_suffix"] -%}
+{% set pipeline_name_us = "_" + pipeline if pipeline != "default" else "" -%}
+{% set pipeline_name_hyp = "-" + pipeline if pipeline != "default" else "" -%}
+
+.{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_variables: &{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_variables
+  ARCH: "{{ arch }}"
+  DIST_BASE_PATH: "{{ cuda[cuda_version][pipeline]["dist_base_path"] }}"
+  IMAGE_NAME: "{{ cuda[cuda_version][pipeline][distro]["image_name"][arch] }}"
+  MANIFEST: "{{ cuda.manifest_path }}"
+  {% if image_tag_suffix %}
+  IMAGE_TAG_SUFFIX: {{ image_tag_suffix }}
+  {% endif %}
+  {% if cuda[cuda_version][pipeline][distro]["latest"][arch] %}
+  LATEST: "true"
+  {% endif %}
+  {% if cuda[cuda_version][pipeline][distro]["no_os_suffix"][arch] %}
+  NO_OS_SUFFIX: "true"
+  {% endif %}
+  OS: "{{ distro }}"
+  OS_NAME: "{{ cuda[cuda_version][pipeline][distro]["name"] }}"
+  OS_VERSION: "{{ cuda[cuda_version][pipeline][distro]["version"] }}"
+  CUDA_VERSION: "{{ cuda_version }}"
+  {% if pipeline != "default" %}
+  PIPELINE_NAME: "{{ pipeline }}"
+  {% endif %}
+
+.{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only: &{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
   variables:
-    ARCH: "{{ arch }}"
-    DIST_BASE_PATH: "dist/{{ cuda_version }}"
-    MANIFEST: "{{ cuda.manifest_path }}"
-    {% if image_tag_suffix %}
-    IMAGE_TAG_SUFFIX: {{ image_tag_suffix }}
-    {% endif %}
-    {% if cuda[cuda_version][distro]["latest"][arch] %}
-    LATEST: "true"
-    {% endif %}
-    {% if cuda[cuda_version][distro]["no_os_suffix"][arch] %}
-    NO_OS_SUFFIX: "true"
-    {% endif %}
+    <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_variables
   only:
     variables:
-      - ${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}_{{ arch }} == "true"
+      - ${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true"
       - $all == "true"
 
-{{ distro }}-v{{ cuda_version }}-{{ arch }}:
+{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ arch }}:
   <<: *cuda_base_definition
-  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}_{{ arch }}_only
+  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
 
 {% set cudnn_stages = [] %}
-{% if cuda[cuda_version][distro]["cudnn"] %}
-{% for cudnn in cuda[cuda_version][distro]["cudnn"][arch] -%}
+{% if cuda[cuda_version][pipeline][distro]["cudnn"] %}
+{% for cudnn in cuda[cuda_version][pipeline][distro]["cudnn"][arch] -%}
 
-{{ distro }}-v{{ cuda_version }}-{{ cudnn }}-{{ arch }}:
-  needs: ["{{ distro }}-v{{ cuda_version }}-{{ arch }}"]
+{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ cudnn }}-{{ arch }}:
+  needs: ["{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ arch }}"]
   <<: *cudnn_definition
-  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}_{{ arch }}_only
+  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_variables
+    CUDNN_VERSION: "{{ cudnn }}"
 
-{% do cudnn_stages.append(distro + "-v" + cuda_version + "-" + cudnn + "-" + arch) %}
+{% if pipeline and pipeline != "default" %}
+  {% do cudnn_stages.append(distro + "-v" + cuda_version + "-" + pipeline + "-" + cudnn + "-" + arch) %}
+{% else %}
+  {% do cudnn_stages.append(distro + "-v" + cuda_version + "-" + cudnn + "-" + arch) %}
+{% endif %}
 {% endfor %}
 {% endif -%}
 
-{{ distro }}-v{{ cuda_version }}-test-{{ arch }}:
-  needs: ["{{ distro }}-v{{ cuda_version }}-{{ arch }}"]
+{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-test-{{ arch }}:
+  needs: ["{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ arch }}"]
   <<: *test_definition
-  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}_{{ arch }}_only
+  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
 
-{{ distro }}-v{{ cuda_version }}-scan-{{ arch }}:
-  needs: ["{{ distro }}-v{{ cuda_version }}-{{ arch }}", "{{ distro }}-v{{ cuda_version }}-test-{{ arch }}"]
+{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-scan-{{ arch }}:
+  needs: ["{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ arch }}", "{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-test-{{ arch }}"]
   <<: *scan_definition
-  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}_{{ arch }}_only
+  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
 
 {% set cudnn_stages_final = "" %}
 {% if cudnn_stages %}
@@ -242,11 +251,12 @@ trigger:
     {% endif %}
 {% endif -%}
 
-{{ distro }}-v{{ cuda_version }}-deploy-{{ arch }}:
-  needs: [{{ cudnn_stages_final }}"{{ distro }}-v{{ cuda_version }}-test-{{ arch }}", "{{ distro }}-v{{ cuda_version }}-scan-{{ arch }}"]
+{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-deploy-{{ arch }}:
+  needs: [{{ cudnn_stages_final }}"{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-test-{{ arch }}", "{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-scan-{{ arch }}"]
   <<: *deploy_definition
-  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}_{{ arch }}_only
+  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
 
 {% endfor -%}
+{% endfor %}
 {% endfor %}
 {% endfor %}
