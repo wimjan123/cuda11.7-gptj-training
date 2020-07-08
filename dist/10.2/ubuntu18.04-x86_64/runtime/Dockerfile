@@ -3,17 +3,14 @@ FROM ${IMAGE_NAME}:10.2-base-ubuntu18.04
 
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 
+ENV NCCL_VERSION 2.7.6
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-libraries-$CUDA_PKG_VERSION \
     cuda-npp-$CUDA_PKG_VERSION \
     cuda-nvtx-$CUDA_PKG_VERSION \
     libcublas10=10.2.2.89-1 \
+    libnccl2=$NCCL_VERSION-1+cuda10.2 \
+    && apt-mark hold libnccl2 \
     && rm -rf /var/lib/apt/lists/*
 
-RUN apt update && apt install curl xz-utils -y --no-install-recommends && NCCL_DOWNLOAD_SUM=a9ee790c3fc64b0ecbb00db92eddc1525552eda10a8656ff4b7380f66d81bda1 && \
-    curl -fsSL https://developer.download.nvidia.com/compute/redist/nccl/v2.7/nccl_2.7.3-1+cuda10.2_x86_64.txz -O && \
-    echo "$NCCL_DOWNLOAD_SUM  nccl_2.7.3-1+cuda10.2_x86_64.txz" | sha256sum -c - && \
-    tar --no-same-owner --keep-old-files --lzma -xvf nccl_2.7.3-1+cuda10.2_x86_64.txz -C /usr/local/cuda/lib64/ --strip-components=2 --wildcards '*/lib/libnccl.so.*' && \
-    tar --no-same-owner --keep-old-files --lzma -xvf  nccl_2.7.3-1+cuda10.2_x86_64.txz -C /usr/lib/pkgconfig/ --strip-components=3 --wildcards '*/lib/pkgconfig/*' && \
-    rm nccl_2.7.3-1+cuda10.2_x86_64.txz && \
-    ldconfig && rm -rf /var/lib/apt/lists/*

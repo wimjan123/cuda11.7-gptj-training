@@ -8,19 +8,19 @@ LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 {% elif cuda.arch == "arm64" and "repo_url" not in cuda %}
     {% set arch = cuda.arch | replace("arm64", "sbsa") %}
 {% endif %}
-{% set repo_url = cuda.repo_url if "repo_url" in cuda else "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/" + arch -%}
+{% set repo_url = cuda.repo_url if "repo_url" in cuda else "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/" + arch %}
+{% set os_version_stripped = cuda.os.version | replace(".", "") -%}
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-{% if cuda.os.version == "18.04" %}
+{% if cuda.os.version in ["18.04", "20.04"] %}
     gnupg2 curl ca-certificates && \
     curl -fsSL {{ repo_url }}/7fa2af80.pub | apt-key add - && \
     echo "deb {{ repo_url }} /" > /etc/apt/sources.list.d/cuda.list && \
     {% if cuda.use_ml_repo %}
-    echo "deb https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/{{ arch }} /" > /etc/apt/sources.list.d/nvidia-ml.list && \
+    echo "deb {{ cuda.ml_repo_url }} /" > /etc/apt/sources.list.d/nvidia-ml.list && \
     {% endif %}
-    apt-get purge --autoremove -y curl && \
+    apt-get purge --autoremove -y curl \
 {% elif cuda.os.version == "14.04" or cuda.os.version == "16.04" %}
-    {% set os_version_stripped = cuda.os.version | replace(".", "") %}
     ca-certificates apt-transport-https gnupg-curl && \
     NVIDIA_GPGKEY_SUM=d1be581509378368edeec8c1eb2958702feedf3bc3d17011adbf24efacce4ab5 && \
     NVIDIA_GPGKEY_FPR=ae09fe4bbd223a84b2ccfce3f60f4b3d7fa2af80 && \
@@ -29,11 +29,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     echo "$NVIDIA_GPGKEY_SUM  cudasign.pub" | sha256sum -c --strict - && rm cudasign.pub && \
     echo "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu{{ os_version_stripped }}/{{ arch }} /" > /etc/apt/sources.list.d/cuda.list && \
     {% if cuda.use_ml_repo and cuda.version.major | int > 8 %}
-    echo "deb https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu{{ os_version_stripped }}/{{ arch }} /" > /etc/apt/sources.list.d/nvidia-ml.list && \
+    echo "deb {{ cuda.ml_repo_url }} /" > /etc/apt/sources.list.d/nvidia-ml.list && \
     {% endif %}
-    apt-get purge --auto-remove -y gnupg-curl && \
+    apt-get purge --auto-remove -y gnupg-curl \
 {% endif %}
-    rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
 
 {% if cuda.version.major | int != 11 %}
 ENV CUDA_VERSION {{ cuda.version.full }}

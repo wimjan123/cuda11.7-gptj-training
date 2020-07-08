@@ -3,13 +3,18 @@ FROM ${IMAGE_NAME}:{{ cuda.version.major }}.{{ cuda.version.minor }}-base-{{ cud
 
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 
-{% if "libnccl2" in cuda.components and "source" not in cuda.components.libnccl2 %}
-{% set nccl_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.libnccl.version %}
-ENV NCCL_VERSION {{ cuda.components.libnccl.version }}
+{% if "libnccl2" in cuda.components  %}
+{% set nccl_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.libnccl2.version %}
+{% set nccl_component_version_without_pkgrel = cuda.components.libnccl2.version[:-2] if "-" in cuda.components.libnccl2.version else cuda.components.libnccl2.version %}
+ENV NCCL_VERSION {{ nccl_component_version_without_pkgrel }}
+
 {% endif -%}
 
 {% if "libnpp" in cuda.components %}
     {% set libnpp_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.libnpp.version %}
+{% endif %}
+{% if "libcublas" in cuda.components %}
+    {% set libcublas_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.libcublas.version %}
 {% endif %}
 {% if "libraries" in cuda.components %}
     {% set libraries_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.libraries.version %}
@@ -19,24 +24,27 @@ ENV NCCL_VERSION {{ cuda.components.libnccl.version }}
 {% endif -%}
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    cuda-libraries-{{ libraries_component_version if libraries_component_version is defined and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
+    cuda-libraries-{{ libraries_component_version if libraries_component_version and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
     {% if cuda.arch != "arm64" and cuda.version.major | int <= 10 %}
-    cuda-npp-{{ libnpp_component_version if libnpp_component_version is defined and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
+    cuda-npp-{{ libnpp_component_version if libnpp_component_version and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
     {% else %}
-    libnpp-{{ libnpp_component_version if libnpp_component_version is defined and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
+    libnpp-{{ libnpp_component_version if libnpp_component_version and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
     {% endif %}
     {% if cuda.version.major | int == 9 and cuda.version.minor | int == 0 %}
     cuda-cublas-{{ cuda.version.major }}-{{ cuda.version.minor }}={{ cuda.version.full }}.4-1 \
     {% endif %}
     {% if (cuda.version.major | int == 9 and cuda.version.minor | int == 2) or cuda.version.major | int >= 10 %}
-    cuda-nvtx-{{ nvtx_component_version if nvtx_component_version is defined and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
+    cuda-nvtx-{{ nvtx_component_version if nvtx_component_version and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
     {% endif %}
     {% if cuda.version.major | int == 10 and cuda.version.minor | int >= 1 %}
-    {% set haz10_2 = "-10-2" if cuda.arch == "arm64" else "10" %}
+        {% set haz10_2 = "-10-2" if cuda.arch == "arm64" else "10" %}
     libcublas{{ haz10_2 }}=10.2.{{ cuda.version.minor }}.{{ cuda.version.build }}-1 \
+    {% elif cuda.version.major | int > 10 %}
+    libcublas-{{ libcublas_component_version }} \
     {% endif %}
     {% if "libnccl2" in cuda.components and "source" not in cuda.components.libnccl2 %}
-    libnccl2=$NCCL_VERSION-1+cuda{{ cuda.version.major }}.{{ cuda.version.minor }} && apt-mark hold libnccl2 \
+    libnccl2=$NCCL_VERSION-1+cuda{{ cuda.version.major }}.{{ cuda.version.minor }} \
+    && apt-mark hold libnccl2 \
     {% endif %}
     && rm -rf /var/lib/apt/lists/*
 

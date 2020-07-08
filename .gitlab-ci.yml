@@ -129,7 +129,7 @@ stages:
     - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab-master.nvidia.com/sectooling/scanning/contamer.git
     - cd contamer
     - pip3 install -r requirements.txt
-    - python3 contamer.py -ls ${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}
+    - python3 contamer.py -ls --fail-on-non-os ${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}
     - export CONTAMER_RET=$?
     - >-
       if [[ $CONTAMER_RET -ne 0 ]]; then
@@ -163,14 +163,50 @@ trigger:
       - $TRIGGER == null
       - $TRIGGER_OVERRIDE
 
+.ubuntu20_04_11_0_x86_64_variables: &ubuntu20_04_11_0_x86_64_variables
+  ARCH: "x86_64"
+  DIST_BASE_PATH: "dist/11.0"
+  IMAGE_NAME: "nvidia/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  LATEST: "true"
+  NO_OS_SUFFIX: "true"
+  OS: "ubuntu20.04"
+  OS_NAME: "ubuntu"
+  OS_VERSION: "20.04"
+  CUDA_VERSION: "11.0"
+
+.ubuntu20_04_11_0_x86_64_only: &ubuntu20_04_11_0_x86_64_only
+  variables:
+    <<: *ubuntu20_04_11_0_x86_64_variables
+  only:
+    variables:
+      - $ubuntu20_04_11_0_x86_64 == "true"
+      - $all == "true"
+
+ubuntu20.04-v11.0-x86_64:
+  <<: *cuda_base_definition
+  <<: *ubuntu20_04_11_0_x86_64_only
+
+ubuntu20.04-v11.0-test-x86_64:
+  needs: ["ubuntu20.04-v11.0-x86_64"]
+  <<: *test_definition
+  <<: *ubuntu20_04_11_0_x86_64_only
+
+ubuntu20.04-v11.0-scan-x86_64:
+  needs: ["ubuntu20.04-v11.0-x86_64", "ubuntu20.04-v11.0-test-x86_64"]
+  <<: *scan_definition
+  <<: *ubuntu20_04_11_0_x86_64_only
+
+ubuntu20.04-v11.0-deploy-x86_64:
+  needs: ["ubuntu20.04-v11.0-test-x86_64", "ubuntu20.04-v11.0-scan-x86_64"]
+  <<: *deploy_definition
+  <<: *ubuntu20_04_11_0_x86_64_only
+
 .ubuntu18_04_11_0_x86_64_variables: &ubuntu18_04_11_0_x86_64_variables
   ARCH: "x86_64"
   DIST_BASE_PATH: "dist/11.0"
   IMAGE_NAME: "nvidia/cuda"
   MANIFEST: "manifests/cuda.yaml"
-  IMAGE_TAG_SUFFIX: -rc
-  LATEST: "true"
-  NO_OS_SUFFIX: "true"
   OS: "ubuntu18.04"
   OS_NAME: "ubuntu"
   OS_VERSION: "18.04"
@@ -217,7 +253,6 @@ ubuntu18.04-v11.0-deploy-x86_64:
   DIST_BASE_PATH: "dist/11.0"
   IMAGE_NAME: "nvidia/cuda-ppc64le"
   MANIFEST: "manifests/cuda.yaml"
-  IMAGE_TAG_SUFFIX: -rc
   LATEST: "true"
   NO_OS_SUFFIX: "true"
   OS: "ubuntu18.04"
@@ -261,12 +296,50 @@ ubuntu18.04-v11.0-deploy-ppc64le:
   <<: *deploy_definition
   <<: *ubuntu18_04_11_0_ppc64le_only
 
+.ubuntu18_04_11_0_arm64_variables: &ubuntu18_04_11_0_arm64_variables
+  ARCH: "arm64"
+  DIST_BASE_PATH: "dist/11.0"
+  IMAGE_NAME: "nvidia/cuda-arm64"
+  MANIFEST: "manifests/cuda.yaml"
+  LATEST: "true"
+  NO_OS_SUFFIX: "true"
+  OS: "ubuntu18.04"
+  OS_NAME: "ubuntu"
+  OS_VERSION: "18.04"
+  CUDA_VERSION: "11.0"
+
+.ubuntu18_04_11_0_arm64_only: &ubuntu18_04_11_0_arm64_only
+  variables:
+    <<: *ubuntu18_04_11_0_arm64_variables
+  only:
+    variables:
+      - $ubuntu18_04_11_0_arm64 == "true"
+      - $all == "true"
+
+ubuntu18.04-v11.0-arm64:
+  <<: *cuda_base_definition
+  <<: *ubuntu18_04_11_0_arm64_only
+
+ubuntu18.04-v11.0-test-arm64:
+  needs: ["ubuntu18.04-v11.0-arm64"]
+  <<: *test_definition
+  <<: *ubuntu18_04_11_0_arm64_only
+
+ubuntu18.04-v11.0-scan-arm64:
+  needs: ["ubuntu18.04-v11.0-arm64", "ubuntu18.04-v11.0-test-arm64"]
+  <<: *scan_definition
+  <<: *ubuntu18_04_11_0_arm64_only
+
+ubuntu18.04-v11.0-deploy-arm64:
+  needs: ["ubuntu18.04-v11.0-test-arm64", "ubuntu18.04-v11.0-scan-arm64"]
+  <<: *deploy_definition
+  <<: *ubuntu18_04_11_0_arm64_only
+
 .ubuntu16_04_11_0_x86_64_variables: &ubuntu16_04_11_0_x86_64_variables
   ARCH: "x86_64"
   DIST_BASE_PATH: "dist/11.0"
   IMAGE_NAME: "nvidia/cuda"
   MANIFEST: "manifests/cuda.yaml"
-  IMAGE_TAG_SUFFIX: -rc
   OS: "ubuntu16.04"
   OS_NAME: "ubuntu"
   OS_VERSION: "16.04"
@@ -313,7 +386,6 @@ ubuntu16.04-v11.0-deploy-x86_64:
   DIST_BASE_PATH: "dist/11.0"
   IMAGE_NAME: "nvidia/cuda"
   MANIFEST: "manifests/cuda.yaml"
-  IMAGE_TAG_SUFFIX: -rc
   OS: "centos8"
   OS_NAME: "centos"
   OS_VERSION: "8"
@@ -360,7 +432,6 @@ centos8-v11.0-deploy-x86_64:
   DIST_BASE_PATH: "dist/11.0"
   IMAGE_NAME: "nvidia/cuda-ppc64le"
   MANIFEST: "manifests/cuda.yaml"
-  IMAGE_TAG_SUFFIX: -rc
   OS: "centos8"
   OS_NAME: "centos"
   OS_VERSION: "8"
@@ -402,12 +473,48 @@ centos8-v11.0-deploy-ppc64le:
   <<: *deploy_definition
   <<: *centos8_11_0_ppc64le_only
 
+.centos8_11_0_arm64_variables: &centos8_11_0_arm64_variables
+  ARCH: "arm64"
+  DIST_BASE_PATH: "dist/11.0"
+  IMAGE_NAME: "nvidia/cuda-arm64"
+  MANIFEST: "manifests/cuda.yaml"
+  OS: "centos8"
+  OS_NAME: "centos"
+  OS_VERSION: "8"
+  CUDA_VERSION: "11.0"
+
+.centos8_11_0_arm64_only: &centos8_11_0_arm64_only
+  variables:
+    <<: *centos8_11_0_arm64_variables
+  only:
+    variables:
+      - $centos8_11_0_arm64 == "true"
+      - $all == "true"
+
+centos8-v11.0-arm64:
+  <<: *cuda_base_definition
+  <<: *centos8_11_0_arm64_only
+
+centos8-v11.0-test-arm64:
+  needs: ["centos8-v11.0-arm64"]
+  <<: *test_definition
+  <<: *centos8_11_0_arm64_only
+
+centos8-v11.0-scan-arm64:
+  needs: ["centos8-v11.0-arm64", "centos8-v11.0-test-arm64"]
+  <<: *scan_definition
+  <<: *centos8_11_0_arm64_only
+
+centos8-v11.0-deploy-arm64:
+  needs: ["centos8-v11.0-test-arm64", "centos8-v11.0-scan-arm64"]
+  <<: *deploy_definition
+  <<: *centos8_11_0_arm64_only
+
 .ubi8_11_0_x86_64_variables: &ubi8_11_0_x86_64_variables
   ARCH: "x86_64"
   DIST_BASE_PATH: "dist/11.0"
   IMAGE_NAME: "nvidia/cuda"
   MANIFEST: "manifests/cuda.yaml"
-  IMAGE_TAG_SUFFIX: -rc
   OS: "ubi8"
   OS_NAME: "ubi"
   OS_VERSION: "8"
@@ -454,7 +561,6 @@ ubi8-v11.0-deploy-x86_64:
   DIST_BASE_PATH: "dist/11.0"
   IMAGE_NAME: "nvidia/cuda-ppc64le"
   MANIFEST: "manifests/cuda.yaml"
-  IMAGE_TAG_SUFFIX: -rc
   OS: "ubi8"
   OS_NAME: "ubi"
   OS_VERSION: "8"
@@ -496,12 +602,48 @@ ubi8-v11.0-deploy-ppc64le:
   <<: *deploy_definition
   <<: *ubi8_11_0_ppc64le_only
 
+.ubi8_11_0_arm64_variables: &ubi8_11_0_arm64_variables
+  ARCH: "arm64"
+  DIST_BASE_PATH: "dist/11.0"
+  IMAGE_NAME: "nvidia/cuda-arm64"
+  MANIFEST: "manifests/cuda.yaml"
+  OS: "ubi8"
+  OS_NAME: "ubi"
+  OS_VERSION: "8"
+  CUDA_VERSION: "11.0"
+
+.ubi8_11_0_arm64_only: &ubi8_11_0_arm64_only
+  variables:
+    <<: *ubi8_11_0_arm64_variables
+  only:
+    variables:
+      - $ubi8_11_0_arm64 == "true"
+      - $all == "true"
+
+ubi8-v11.0-arm64:
+  <<: *cuda_base_definition
+  <<: *ubi8_11_0_arm64_only
+
+ubi8-v11.0-test-arm64:
+  needs: ["ubi8-v11.0-arm64"]
+  <<: *test_definition
+  <<: *ubi8_11_0_arm64_only
+
+ubi8-v11.0-scan-arm64:
+  needs: ["ubi8-v11.0-arm64", "ubi8-v11.0-test-arm64"]
+  <<: *scan_definition
+  <<: *ubi8_11_0_arm64_only
+
+ubi8-v11.0-deploy-arm64:
+  needs: ["ubi8-v11.0-test-arm64", "ubi8-v11.0-scan-arm64"]
+  <<: *deploy_definition
+  <<: *ubi8_11_0_arm64_only
+
 .centos7_11_0_x86_64_variables: &centos7_11_0_x86_64_variables
   ARCH: "x86_64"
   DIST_BASE_PATH: "dist/11.0"
   IMAGE_NAME: "nvidia/cuda"
   MANIFEST: "manifests/cuda.yaml"
-  IMAGE_TAG_SUFFIX: -rc
   OS: "centos7"
   OS_NAME: "centos"
   OS_VERSION: "7"
@@ -548,7 +690,6 @@ centos7-v11.0-deploy-x86_64:
   DIST_BASE_PATH: "dist/11.0"
   IMAGE_NAME: "nvidia/cuda"
   MANIFEST: "manifests/cuda.yaml"
-  IMAGE_TAG_SUFFIX: -rc
   OS: "ubi7"
   OS_NAME: "ubi"
   OS_VERSION: "7"

@@ -2,6 +2,19 @@
 
 The tags still exist but are un-supported and may contain critical vulnerabilities. Use at your own risk.
 
+### Ubuntu 18.04
+
+#### CUDA 11.0 RC
+
+- `11.0-base-rc`
+- `11.0-base-ubuntu18.04-rc`
+- `11.0-devel-rc`
+- `11.0-devel-ubuntu18.04-rc`
+- `11.0-cudnn8-devel-rc`
+- `11.0-runtime-rc`
+- `11.0-runtime-ubuntu18.04-rc`
+- `11.0-cudnn8-runtime-rc`
+
 ### Ubuntu 17.04
 
 #### CUDA 9.1
@@ -15,6 +28,16 @@ The tags still exist but are un-supported and may contain critical vulnerabiliti
 - `9.0-base-ubuntu17.04`
 - `9.0-devel-ubuntu17.04`
 - `9.0-runtime-ubuntu17.04`
+
+### Ubuntu 16.04
+
+#### CUDA 11.0 RC
+
+- `11.0-base-ubuntu16.04-rc`
+- `11.0-devel-ubuntu16.04-rc`
+- `11.0-cudnn8-devel-ubuntu16.04-rc`
+- `11.0-runtime-ubuntu16.04-rc`
+- `11.0-cudnn8-runtime-ubuntu16.04-rc`
 
 ### Ubuntu 14.04
 

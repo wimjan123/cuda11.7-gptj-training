@@ -7,7 +7,12 @@ RUN echo "deb https://developer.download.nvidia.com/compute/machine-learning/rep
 
 {% endif -%}
 
-ENV CUDNN_VERSION {{ cuda.cudnn.version }}
+{% set cudnn_version = cuda.cudnn.version %}
+{% if "-" in cuda.cudnn.version %}
+  {% set cudnn_version = cuda.cudnn.version[:-2] %}
+{% endif -%}
+
+ENV CUDNN_VERSION {{ cudnn_version }}
 
 LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
 
@@ -21,19 +26,21 @@ RUN CUDNN_DOWNLOAD_SUM={{ cuda.cudnn.sha256sum }} && \
     dpkg -i {{ cuda.cudnn.basename }} && \
     rm -f {{ cuda.cudnn.basename }}
 
-{% if cuda.cudnn.target == "devel" -%}
+  {% if cuda.cudnn.target == "devel" -%}
 RUN CUDNN_DEV_DOWNLOAD_SUM={{ cuda.cudnn.dev.sha256sum }} && \
     curl -fsSL {{ cuda.cudnn.dev.source }} -O && \
     echo "$CUDNN_DEV_DOWNLOAD_SUM  {{ cuda.cudnn.dev.basename }}" | sha256sum -c - && \
     dpkg -i {{ cuda.cudnn.dev.basename }} && \
     rm -f {{ cuda.cudnn.dev.basename }}
 
-{% endif %}
+  {% endif %}
 RUN rm -rf /var/lib/apt/lists/*
 {% else %}
 RUN apt-get update && apt-get install -y --no-install-recommends \
+{% if cuda.cudnn.target == "runtime" %}
     libcudnn{{ cuda.cudnn.version[0] }}=$CUDNN_VERSION-1+cuda{{ cuda.version.major }}.{{ cuda.version.minor }} \
-{% if cuda.cudnn.target == "devel" %}
+{% else %}
+    libcudnn{{ cuda.cudnn.version[0] }}=$CUDNN_VERSION-1+cuda{{ cuda.version.major }}.{{ cuda.version.minor }} \
     libcudnn{{ cuda.cudnn.version[0] }}-dev=$CUDNN_VERSION-1+cuda{{ cuda.version.major }}.{{ cuda.version.minor }} \
 {% endif %}
     && apt-mark hold libcudnn{{ cuda.cudnn.version[0] }} && \

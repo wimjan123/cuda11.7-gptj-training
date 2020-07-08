@@ -10,12 +10,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-key adv --export --no-emit-version -a $NVIDIA_GPGKEY_FPR | tail -n +5 > cudasign.pub && \
     echo "$NVIDIA_GPGKEY_SUM  cudasign.pub" | sha256sum -c --strict - && rm cudasign.pub && \
     echo "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64 /" > /etc/apt/sources.list.d/cuda.list && \
-    apt-get purge --auto-remove -y gnupg-curl && \
-    rm -rf /var/lib/apt/lists/*
+    echo "deb https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604/x86_64 /" > /etc/apt/sources.list.d/nvidia-ml.list && \
+    apt-get purge --auto-remove -y gnupg-curl \
+    && rm -rf /var/lib/apt/lists/*
 
 # For libraries in the cuda-compat-* package: https://docs.nvidia.com/cuda/eula/index.html#attachment-a
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    cuda-cudart-11-0=11.0.171-1 \
+    cuda-cudart-11-0=11.0.194-1 \
     cuda-compat-11-0 \
     && ln -s cuda-11.0 /usr/local/cuda && \
     rm -rf /var/lib/apt/lists/*

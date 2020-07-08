@@ -34,6 +34,7 @@ before_script:
   - curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python
   - source $HOME/.poetry/env
   - poetry config virtualenvs.create false && poetry install
+  {# - DRY_RUN=1 #}
   - 'echo "ARCH: $ARCH"'
   - 'echo "OS: $OS"'
   - 'echo "IMAGE_NAME: $IMAGE_NAME"'
@@ -129,7 +130,7 @@ stages:
     - git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab-master.nvidia.com/sectooling/scanning/contamer.git
     - cd contamer
     - pip3 install -r requirements.txt
-    - python3 contamer.py -ls ${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}
+    - python3 contamer.py -ls --fail-on-non-os ${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}
     - export CONTAMER_RET=$?
     - >-
       if [[ $CONTAMER_RET -ne 0 ]]; then

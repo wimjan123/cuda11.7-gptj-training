@@ -143,6 +143,9 @@ Keys:
 * `push_repos`: The repos to push the images to. See [Container Repositories](#container-repositories).
 * `exclude_repos`: The repos to push the images to. See [Container Repositories](#container-repositories).
 * `components`: Is a list of cuda components to install in the distro. See [CUDA Component Selection](#cuda-component-selection).
+  * `source`: The component will be fetched from source and verified to match sha256sum. Will also need to be sepecified for the `dev` components.
+  * `sha256sum`: Used to verify the fetched component. Can be used without `source` for centos cudnn
+                 components.
 
 The [Implementation](#implementation) section contains clues on how manager.py is implemented.
 

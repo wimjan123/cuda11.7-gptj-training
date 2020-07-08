@@ -105,6 +105,8 @@ class ManagerTrigger(Manager):
     changed = set()
     trigger_all = False
     trigger_explicit = []
+    key = ""
+    pipeline_name = "default"
 
     dry_run = cli.Flag(
         ["-n", "--dry-run"], help="Show output but don't make any changes."
@@ -216,9 +218,14 @@ class ManagerTrigger(Manager):
             for job in jobs:
                 version = self.get_cuda_version_from_trigger(job)
                 if not version:
-                    pipeline_name = self.get_pipeline_name_from_trigger(job)
+                    self.pipeline_name = self.get_pipeline_name_from_trigger(job)
 
-                log.debug("pipeline_name: '%s'" % pipeline_name)
+                log.debug("cuda_version: %s" % version)
+                log.debug("pipeline_name: '%s'" % self.pipeline_name)
+
+                self.key = f"cuda_v{version}"
+                if self.pipeline_name != "default":
+                    self.key = f"cuda_v{version}_{self.pipeline_name}"
 
                 distro_list = ["ubuntu", "ubi", "centos"]
                 if version:
@@ -234,7 +241,7 @@ class ManagerTrigger(Manager):
                 )
 
                 log.debug(
-                    f"job: '{job}' name: {pipeline_name} version: {version} distro: {distro} arch: {arch}"
+                    f"job: '{job}' name: {self.pipeline_name} version: {version} distro: {distro} arch: {arch}"
                 )
 
                 log.debug(f"distro_list: '{distro_list}'")
@@ -253,8 +260,8 @@ class ManagerTrigger(Manager):
                                 version, distro2, "\w+",
                             )
                         )
-                elif pipeline_name:
-                    cijobs = self.ci_pipeline_variables(pipeline_name)
+                elif self.pipeline_name:
+                    cijobs = self.ci_pipeline_variables(self.pipeline_name)
                 else:
                     cijobs = self.ci_distro_variables(job)
 
@@ -587,7 +594,6 @@ class ManagerGenerate(Manager):
     cuda = {}
     output_path = {}
     dist_base_path = ""
-    pipeline_name = ""
     key = ""
 
     template_env = Environment(
@@ -639,6 +645,16 @@ class ManagerGenerate(Manager):
         group="Targeted",
         requires=["--os", "--os-version", "--cuda-version"],
         help="Generate container scripts for a particular architecture.",
+    )
+
+    pipeline_name = cli.SwitchAttr(
+        "--pipeline-name",
+        str,
+        excludes=["--all"],
+        group="Targeted",
+        requires=["--os", "--os-version", "--cuda-version"],
+        help="Use a pipeline name for manifest matching.",
+        default="default",
     )
 
     def supported_distro_list_by_cuda_version(self, version):
@@ -712,27 +728,10 @@ class ManagerGenerate(Manager):
 
     def output_template(self, template_path, output_path, ctx=None):
         ctx = ctx if ctx is not None else self.cuda
-        rgx = re.compile(r"^[\w]+-")
-        # If the template path contains "{distro_name}-" and it does not match the target distro, skip the template
-        if any(
-            distro in template_path.name
-            for distro in self.supported_distro_list_by_cuda_version(self.cuda_version)
-        ):
-            if not rgx.match(template_path.name):
-                # The template is for a specific distro and not the current target, so skip it
-                log.debug(
-                    "Skipping template '%s', distro requirement '%s' not met",
-                    template_path,
-                    self.distro,
-                )
-                return
         with open(template_path) as f:
             log.debug("Processing template %s", template_path)
             new_output_path = pathlib.Path(output_path)
             new_filename = template_path.name[:-6]
-            if rgx.match(template_path.name):
-                new_filename = template_path.name[len(f"{self.distro}-") : -6]
-                log.debug("'%s' is renamed to '%s'", template_path.name, new_filename)
             template = self.template_env.from_string(f.read())
             if not new_output_path.exists():
                 log.debug(f"Creating {new_output_path}")
@@ -749,7 +748,9 @@ class ManagerGenerate(Manager):
             # learning repo
             # If any of the cudnn components lack the source key, then the ML repo should be used
             for comp, val in self.cuda["components"].items():
-                if "cudnn" in comp:
+                if next(
+                    (True for mlcomp in ["cudnn", "nccl"] if mlcomp in comp), False
+                ):
                     if "source" not in val:
                         use_ml_repo = True
             return use_ml_repo
@@ -1017,9 +1018,9 @@ class ManagerGenerate(Manager):
             self.targeted()
 
         if not self.dist_base_path:
-            self.dist_base_path = "dist"
+            log.error("dist_base_path not set!")
 
-        sys.exit()
+        #  sys.exit()
 
     def targeted(self):
         arches = []
@@ -1030,13 +1031,22 @@ class ManagerGenerate(Manager):
         for arch in arches:
             self.arch = arch
             log.debug(
-                "Have distro: '%s' version: '%s' arch: '%s' cuda: '%s",
+                "Have distro: '%s' version: '%s' arch: '%s' cuda: '%s' pipeline: '%s'",
                 self.distro,
                 self.distro_version,
                 self.arch,
                 self.cuda_version,
+                self.pipeline_name,
             )
             target = f"{self.distro}{self.distro_version}"
+            self.key = f"cuda_v{self.cuda_version}"
+            if self.pipeline_name and self.pipeline_name != "default":
+                self.key = f"cuda_v{self.cuda_version}_{self.pipeline_name}"
+
+            self.dist_base_path = self.parent.get_data(
+                self.parent.manifest, self.key, "dist_base_path", can_skip=False,
+            )
+
             self.output_path = pathlib.Path(
                 f"{self.dist_base_path}/{target}-{self.arch}"
             )

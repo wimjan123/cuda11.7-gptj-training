@@ -1,18 +1,15 @@
 ARG IMAGE_NAME
-FROM ${IMAGE_NAME}:11.0-base-centos7-rc
+FROM ${IMAGE_NAME}:11.0-base-centos7
 
 LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 
+ENV NCCL_VERSION 2.7.6
+
 RUN yum install -y \
-    cuda-libraries-11-0-11.0.1-1 \
+    cuda-libraries-11-0-11.0.2-1 \
     cuda-nvtx-11-0-11.0.167-1 \
+    libnpp-11-0-11.1.0.218-1 \
+    libcublas-11-0-11.1.0.229-1 \
+    libnccl-2.7.6-1+cuda11.0 \
     && rm -rf /var/cache/yum/*
 
-RUN yum install -y xz && NCCL_DOWNLOAD_SUM=d112b722bf557cff96d571ac3386e4f539be7b3e9412561bde59b0ad6e59263d && \
-    curl -fsSL https://developer.download.nvidia.com/compute/redist/nccl/v2.7/nccl_2.7.3-1+cuda11.0_x86_64.txz -O && \
-    echo "$NCCL_DOWNLOAD_SUM  nccl_2.7.3-1+cuda11.0_x86_64.txz" | sha256sum -c - && \
-    unxz nccl_2.7.3-1+cuda11.0_x86_64.txz && \
-    tar --no-same-owner --keep-old-files --no-overwrite-dir -xvf nccl_2.7.3-1+cuda11.0_x86_64.tar -C /usr/local/cuda/lib64/ --strip-components=2 --wildcards '*/lib/libnccl.so.*' && \
-    tar --no-same-owner --keep-old-files --no-overwrite-dir -xvf  nccl_2.7.3-1+cuda11.0_x86_64.tar -C /usr/lib64/pkgconfig/ --strip-components=3 --wildcards '*/lib/pkgconfig/*' && \
-    rm -f nccl_2.7.3-1+cuda11.0_x86_64.tar && \
-    ldconfig

@@ -27,9 +27,6 @@ LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 {% if "libnpp_dev" in cuda.components %}
     {% set libnpp_dev_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.libnpp_dev.version %}
 {% endif -%}
-{% if "nvcc" in cuda.components %}
-    {% set nvcc_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.nvcc.version %}
-{% endif -%}
 {% if "nvprof" in cuda.components %}
     {% set nvprof_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.nvprof.version %}
 {% endif -%}
@@ -37,7 +34,6 @@ LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-nvml-dev-{{ nvml_dev_component_version if nvml_dev_component_version is defined and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
     cuda-command-line-tools-{{ cmdline_tools_component_version if cmdline_tools_component_version is defined and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
-    cuda-nvcc-{{ nvcc_component_version if nvcc_component_version is defined and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
     cuda-nvprof-{{ nvprof_component_version if nvprof_component_version is defined and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
     {% if (cuda.arch != "arm64" or cuda.arch == "ppc64le") and cuda.version.major | int <= 10 %}
     cuda-npp-dev-{{ libnpp_component_version if libnpp_component_version is defined and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
@@ -47,7 +43,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 {% if cuda.version.major | int >= 9 and cuda.version.major | int >= 1 %}
     cuda-libraries-dev-{{ libraries_dev_component_version if libraries_dev_component_version is defined and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
     cuda-minimal-build-{{ minimal_build_component_version if minimal_build_component_version is defined and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
-    {# libnccl-dev=$NCCL_VERSION-1+cuda{{ cuda.version.major }}.{{ cuda.version.minor }} \ #}
 {% endif %}
 {% if cuda.version.major | int > 10 %}
     libcublas-dev-{{ libcublas_dev_component_version if libcublas_dev_component_version is defined and cuda.version.major | int >= 10 else "10.2." + cuda.version.minor + "." + cuda.version.build + "-1" }} \
@@ -88,6 +83,6 @@ RUN apt update && apt install curl xz-utils -y --no-install-recommends && NCCL_D
     tar --no-same-owner --keep-old-files --lzma -xvf  {{ basename }} -C /usr/local/cuda/lib64/ --strip-components=2 --wildcards '*/lib/libnccl.so' && \
     rm {{ basename }} && \
     ldconfig && rm -rf /var/lib/apt/lists/*
-{% endif %}
 
+{% endif %}
 ENV LIBRARY_PATH /usr/local/cuda/lib64/stubs

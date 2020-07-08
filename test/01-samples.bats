@@ -18,7 +18,7 @@ function dq_ubuntu() {
 
 function dq_rhel() {
     pkgmgr="yum"
-    pkgcomp="gcc+c++"
+    pkgcomp="gcc-c++"
     if [[ "${OS_VERSION}" == "8" ]]; then
         pkgmgr="dnf"
     fi

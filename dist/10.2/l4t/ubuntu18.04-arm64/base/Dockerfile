@@ -1,15 +1,15 @@
-FROM nvcr.io/nvidia/l4t-base:r32.4.2
+FROM nvcr.io/nvidia/l4t-base:r32.4.3
 
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gnupg2 curl ca-certificates && \
-    curl -fsSL http://cuda-repo.nvidia.com/release-candidates/kitbundles/r10.2/20200624/repos/l4t/arm64/7fa2af80.pub | apt-key add - && \
-    echo "deb http://cuda-repo.nvidia.com/release-candidates/kitbundles/r10.2/20200624/repos/l4t/arm64 /" > /etc/apt/sources.list.d/cuda.list && \
-    apt-get purge --autoremove -y curl && \
-    rm -rf /var/lib/apt/lists/*
+    curl -fsSL http://cuda-repo.nvidia.com/release-candidates/kitbundles/r10.2/20200708/repos/ubuntu1804/arm64//7fa2af80.pub | apt-key add - && \
+    echo "deb http://cuda-repo.nvidia.com/release-candidates/kitbundles/r10.2/20200708/repos/ubuntu1804/arm64/ /" > /etc/apt/sources.list.d/cuda.list && \
+    apt-get purge --autoremove -y curl \
+    && rm -rf /var/lib/apt/lists/*
 
-ENV CUDA_VERSION 10.2.195
+ENV CUDA_VERSION 10.2.201
 ENV CUDA_PKG_VERSION 10-2=$CUDA_VERSION-1
 
 # For libraries in the cuda-compat-* package: https://docs.nvidia.com/cuda/eula/index.html#attachment-a

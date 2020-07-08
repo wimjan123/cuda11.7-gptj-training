@@ -7,9 +7,11 @@ RUN NVIDIA_GPGKEY_SUM=d1be581509378368edeec8c1eb2958702feedf3bc3d17011adbf24efac
     echo "$NVIDIA_GPGKEY_SUM  /etc/pki/rpm-gpg/RPM-GPG-KEY-NVIDIA" | sha256sum -c --strict  -
 
 COPY cuda.repo /etc/yum.repos.d/cuda.repo
+COPY nvidia-ml.repo /etc/yum.repos.d/nvidia-ml.repo
 
 ENV CUDA_VERSION 10.2.89
 ENV CUDA_PKG_VERSION 10-2-$CUDA_VERSION-1
+
 # For libraries in the cuda-compat-* package: https://docs.nvidia.com/cuda/eula/index.html#attachment-a
 RUN yum install -y \
     cuda-cudart-$CUDA_PKG_VERSION \
