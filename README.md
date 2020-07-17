@@ -7,6 +7,13 @@ Container images are available from:
 - https://ngc.nvidia.com/catalog/containers/nvidia:cuda
 - https://hub.docker.com/r/nvidia/cuda
 
+## LD_LIBRARY_PATH NOTICE
+
+The `LD_LIBRARY_PATH` is set inside the container to legacy nvidia-docker v1 paths that do not exist
+on newer installations. This is done to maintain compatibility for our partners that still use
+nvidia-docker v1 and this will not be changed for the forseable future. [There is a chance this might
+cause issues for some.](https://gitlab.com/nvidia/container-images/cuda/-/issues/47)
+
 ## Building from source
 
 The container image scripts are archived in the `dist/` directory and are available for all supported distros and cuda versions.
