@@ -56,11 +56,11 @@ Visit [OpenSource @ Nvidia](https://developer.download.nvidia.com/compute/cuda/o
 
 ### Ubuntu 18.04
 
-- [`11.0-base-ubuntu18.04` (*11.0/ubuntu18.04-ppc64le/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu18.04-ppc64le/base/Dockerfile)
-- [`11.0-runtime-ubuntu18.04` (*11.0/ubuntu18.04-ppc64le/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu18.04-ppc64le/runtime/Dockerfile)
-- [`11.0-cudnn8-runtime-ubuntu18.04` (*11.0/ubuntu18.04-ppc64le/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu18.04-ppc64le/runtime/cudnn8/Dockerfile)
-- [`11.0-devel-ubuntu18.04` (*11.0/ubuntu18.04-ppc64le/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu18.04-ppc64le/devel/Dockerfile)
-- [`11.0-cudnn8-devel-ubuntu18.04` (*11.0/ubuntu18.04-ppc64le/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu18.04-ppc64le/devel/cudnn8/Dockerfile)
+- [`11.0-base`, `11.0-base-ubuntu18.04` (*11.0/ubuntu18.04-ppc64le/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu18.04-ppc64le/base/Dockerfile)
+- [`11.0-runtime`, `11.0-runtime-ubuntu18.04` (*11.0/ubuntu18.04-ppc64le/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu18.04-ppc64le/runtime/Dockerfile)
+- [`11.0-cudnn8-runtime`, `11.0-cudnn8-runtime-ubuntu18.04` (*11.0/ubuntu18.04-ppc64le/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu18.04-ppc64le/runtime/cudnn8/Dockerfile)
+- [`latest`, `11.0-devel`, `11.0-devel-ubuntu18.04` (*11.0/ubuntu18.04-ppc64le/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu18.04-ppc64le/devel/Dockerfile)
+- [`11.0-cudnn8-devel`, `11.0-cudnn8-devel-ubuntu18.04` (*11.0/ubuntu18.04-ppc64le/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu18.04-ppc64le/devel/cudnn8/Dockerfile)
 
 ### RHEL8 based distros
 
