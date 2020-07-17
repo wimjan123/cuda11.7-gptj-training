@@ -37,6 +37,8 @@ push_repos:
     user: $oauthtoken
     registry:
       x86_64: nvcr.io/nvidia/cuda
+      ppc64le: nvcr.io/cuda/cuda-ppc64le
+      arm64: nvcr.io/cuda/cuda-arm64
   # GA only
   docker.io:
     # Will only use this repo if the REGISTRY_TOKEN environment variable is set
@@ -142,8 +144,6 @@ cuda_v11.0:
       latest: True
       no_os_suffix: True
       requires: "cuda>=11.0"
-      exclude_repos:
-        - nvcr.io
       components:
         <<: *cuda11_0_components
         cudnn8:
@@ -162,8 +162,6 @@ cuda_v11.0:
       latest: True
       no_os_suffix: True
       requires: "cuda>=11.0"
-      exclude_repos:
-        - nvcr.io
       components:
         <<: *cuda11_0_components
         libnccl2:
@@ -219,8 +217,6 @@ cuda_v11.0:
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8/ppc64le
       ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel8/ppc64le
       requires: "cuda>=11.0"
-      exclude_repos:
-        - nvcr.io
       components:
         <<: *cuda11_0_components
         cudnn8:
@@ -238,8 +234,6 @@ cuda_v11.0:
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8/sbsa
       ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel8/sbsa
       requires: "cuda>=11.0"
-      exclude_repos:
-        - nvcr.io
       components:
         <<: *cuda11_0_components
         libnccl2:
@@ -274,8 +268,6 @@ cuda_v11.0:
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8/ppc64le
       ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel8/ppc64le
       requires: "cuda>=11.0"
-      exclude_repos:
-        - nvcr.io
       components:
         <<: *cuda11_0_components
         cudnn8:
@@ -294,8 +286,6 @@ cuda_v11.0:
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8/sbsa
       ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel8/sbsa
       requires: "cuda>=11.0"
-      exclude_repos:
-        - nvcr.io
       components:
         <<: *cuda11_0_components
         libnccl2:
@@ -393,8 +383,6 @@ cuda_v10.2:
       ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/ppc64el
       no_os_suffix: True
       requires: "cuda>=10.2"
-      exclude_repos:
-        - nvcr.io
       components:
         <<: *cuda10_2_components
         cudnn8:
@@ -499,8 +487,6 @@ cuda_v10.2:
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7/ppc64le
       ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7/ppc64le
       requires: "cuda>=10.2"
-      exclude_repos:
-        - nvcr.io
       components:
         <<: *cuda10_2_components
         # NOTE: no cudnn8 8.0.1.13 for 10.2 in redist or ml repo
