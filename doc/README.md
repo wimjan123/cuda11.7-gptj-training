@@ -58,9 +58,7 @@ Visit [OpenSource @ Nvidia](https://developer.download.nvidia.com/compute/cuda/o
 
 - [`11.0-base`, `11.0-base-ubuntu20.04` (*11.0/ubuntu20.04-x86_64/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu20.04-x86_64/base/Dockerfile)
 - [`11.0-runtime`, `11.0-runtime-ubuntu20.04` (*11.0/ubuntu20.04-x86_64/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu20.04-x86_64/runtime/Dockerfile)
-- [`11.0-cudnn8-runtime`, `11.0-cudnn8-runtime-ubuntu20.04` (*11.0/ubuntu20.04-x86_64/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu20.04-x86_64/runtime/cudnn8/Dockerfile)
 - [`latest`, `11.0-devel`, `11.0-devel-ubuntu20.04` (*11.0/ubuntu20.04-x86_64/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu20.04-x86_64/devel/Dockerfile)
-- [`11.0-cudnn8-devel`, `11.0-cudnn8-devel-ubuntu20.04` (*11.0/ubuntu20.04-x86_64/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu20.04-x86_64/devel/cudnn8/Dockerfile)
 
 ### Ubuntu 18.04
 
