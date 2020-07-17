@@ -2,15 +2,17 @@
 
 A full list of tags that are supproted with CUDA, cuDNN, and CVE updates.
 
-### Ubuntu 18.04
+### Ubuntu 20.04
 
 #### CUDA 11.0 RC
 
-- [`11.0-base-rc`, `11.0-base-ubuntu18.04-rc` (*11.0/ubuntu18.04-x86_64/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu18.04-x86_64/base/Dockerfile)
-- [`11.0-runtime-rc`, `11.0-runtime-ubuntu18.04-rc` (*11.0/ubuntu18.04-x86_64/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu18.04-x86_64/runtime/Dockerfile)
-- [`11.0-cudnn8-runtime-rc`, `11.0-cudnn8-runtime-ubuntu18.04-rc` (*11.0/ubuntu18.04-x86_64/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu18.04-x86_64/runtime/cudnn8/Dockerfile)
-- [`latest`, `11.0-devel-rc`, `11.0-devel-ubuntu18.04-rc` (*11.0/ubuntu18.04-x86_64/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu18.04-x86_64/devel/Dockerfile)
-- [`11.0-cudnn8-devel-rc`, `11.0-cudnn8-devel-ubuntu18.04-rc` (*11.0/ubuntu18.04-x86_64/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu18.04-x86_64/devel/cudnn8/Dockerfile)
+- [`11.0-base`, `11.0-base-ubuntu18.04` (*11.0/ubuntu18.04-x86_64/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu18.04-x86_64/base/Dockerfile)
+- [`11.0-runtime`, `11.0-runtime-ubuntu18.04` (*11.0/ubuntu18.04-x86_64/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu18.04-x86_64/runtime/Dockerfile)
+- [`11.0-cudnn8-runtime`, `11.0-cudnn8-runtime-ubuntu18.04` (*11.0/ubuntu18.04-x86_64/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu18.04-x86_64/runtime/cudnn8/Dockerfile)
+- [`latest`, `11.0-devel`, `11.0-devel-ubuntu18.04` (*11.0/ubuntu18.04-x86_64/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu18.04-x86_64/devel/Dockerfile)
+- [`11.0-cudnn8-devel`, `11.0-cudnn8-devel-ubuntu18.04` (*11.0/ubuntu18.04-x86_64/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu18.04-x86_64/devel/cudnn8/Dockerfile)
+
+### Ubuntu 18.04
 
 #### CUDA 10.2
 
