@@ -58,9 +58,7 @@ Visit [OpenSource @ Nvidia](https://developer.download.nvidia.com/compute/cuda/o
 
 - [`11.0-base`, `11.0-base-ubuntu18.04` (*11.0/ubuntu18.04-arm64/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu18.04-arm64/base/Dockerfile)
 - [`11.0-runtime`, `11.0-runtime-ubuntu18.04` (*11.0/ubuntu18.04-arm64/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu18.04-arm64/runtime/Dockerfile)
-- [`11.0-cudnn8-runtime`, `11.0-cudnn8-runtime-ubuntu18.04` (*11.0/ubuntu18.04-arm64/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu18.04-arm64/runtime/cudnn8/Dockerfile)
 - [`latest`, `11.0-devel`, `11.0-devel-ubuntu18.04` (*11.0/ubuntu18.04-arm64/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu18.04-arm64/devel/Dockerfile)
-- [`11.0-cudnn8-devel`, `11.0-cudnn8-devel-ubuntu18.04` (*11.0/ubuntu18.04-arm64/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu18.04-arm64/devel/cudnn8/Dockerfile)
 
 ### RHEL8 based distros
 
