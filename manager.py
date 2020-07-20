@@ -751,7 +751,7 @@ class ManagerGenerate(Manager):
                 if next(
                     (True for mlcomp in ["cudnn", "nccl"] if mlcomp in comp), False
                 ):
-                    if "source" not in val:
+                    if val and "source" not in val:
                         use_ml_repo = True
             return use_ml_repo
 
