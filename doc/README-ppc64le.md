@@ -36,7 +36,7 @@ To view the license for the cuDNN Toolkit included in this image, click [*here*]
 
 The [NVIDIA Container Toolkit](https://github.com/NVIDIA/nvidia-docker) for Docker is required to run CUDA images.
 
-For CUDA 10.0, `nvida-docker2` (v2.1.0) or greater is recommended. It is also recommended to use Docker 19.03.
+For CUDA 10.0, `nvidia-docker2` (v2.1.0) or greater is recommended. It is also recommended to use Docker 19.03.
 
 ### How to report a problem
 
