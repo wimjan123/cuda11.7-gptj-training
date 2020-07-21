@@ -8,8 +8,8 @@ LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 {% elif cuda.arch == "arm64" and "repo_url" not in cuda %}
     {% set arch = cuda.arch | replace("arm64", "sbsa") %}
 {% endif %}
-{% set repo_url = cuda.repo_url if "repo_url" in cuda else "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/" + arch %}
-{% set os_version_stripped = cuda.os.version | replace(".", "") -%}
+{% set os_version_stripped = cuda.os.version | replace(".", "") %}
+{% set repo_url = cuda.repo_url if "repo_url" in cuda else "https://developer.download.nvidia.com/compute/cuda/repos/ubuntu" + os_version_stripped + "/" + arch -%}
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
 {% if cuda.os.version in ["18.04", "20.04"] %}
