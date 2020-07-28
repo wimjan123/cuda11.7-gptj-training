@@ -3,7 +3,7 @@ FROM ${IMAGE_NAME}:11.0-base-ubuntu16.04
 
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 
-ENV NCCL_VERSION 2.7.6
+ENV NCCL_VERSION 2.7.8
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-libraries-11-0=11.0.2-1 \

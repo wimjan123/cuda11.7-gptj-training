@@ -41,14 +41,9 @@ LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
   {% set nvprof_component_version = cuda.version.major + "-" + cuda.version.minor + "-" + cuda.components.nvprof.version -%}
 {% endif %}
 {% if "libnccl2" in cuda.components %}
-  {# {% if cuda.version.major | int <= 10 or ( cuda.version.major | int == 11 and (cuda.arch == "x86_64" or cuda.arch == "ppc64le") ) %} #}
     {% set libnccl2_component_version = cuda.components.libnccl2.version + "+cuda" + cuda.version.major + "." + cuda.version.minor %}
-  {# {% else %} #}
-  {#   {% set libnccl2_component_version = cuda.version.major + "-" + cuda.version.minor + "-" + cuda.components.libnccl2.version %} #}
-  {# {% endif %} #}
-ENV NCCL_VERSION {{ cuda.components.libnccl2.version[:-2] }}
-
 {% endif -%}
+ENV NCCL_VERSION {{ cuda.components.libnccl2.version[:-2] }}
 
 {% if cuda.version.major | int <= 10 %}
   {% set cuda_pkg_version = "$CUDA_PKG_VERSION" %}
@@ -90,6 +85,7 @@ RUN yum install -y \
     libnccl-devel-{{ libnccl2_component_version }} \
     {% endif %}
 {% endif %}
+    && yum clean all \
     && rm -rf /var/cache/yum/*
 
 {% if "libnccl2" in cuda.components and "source" in cuda.components.libnccl2 %}

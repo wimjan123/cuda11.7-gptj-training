@@ -2,13 +2,10 @@ ARG IMAGE_NAME
 FROM ${IMAGE_NAME}:10.2-devel-centos8
 LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 
-ENV CUDNN_VERSION 8.0.1.13
+ENV CUDNN_VERSION 8.0.2.39
 LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
 
-# cuDNN license: https://developer.nvidia.com/cudnn/license_agreement
-RUN CUDNN_DOWNLOAD_SUM=03cbe5844ff01b3550ba5d0bbf6eab1c33630f18669978af2a7ebf7366a5c442 && \
-    curl -fsSL http://developer.download.nvidia.com/compute/redist/cudnn/v8.0.1/cudnn-10.2-linux-x64-v8.0.1.13.tgz -O && \
-    echo "$CUDNN_DOWNLOAD_SUM  cudnn-10.2-linux-x64-v8.0.1.13.tgz" | sha256sum -c - && \
-    tar --no-same-owner -xzf cudnn-10.2-linux-x64-v8.0.1.13.tgz -C /usr/local && \
-    rm cudnn-10.2-linux-x64-v8.0.1.13.tgz && \
-    ldconfig
+RUN yum install -y \
+    libcudnn8-devel-${CUDNN_VERSION}-1.cuda10.2 \
+    && yum clean all \
+    && rm -rf /var/cache/yum/*

@@ -6,4 +6,6 @@ ENV CUDNN_VERSION 7.6.5.32
 LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
 
 RUN yum install -y \
-    libcudnn7-${CUDNN_VERSION}-1.cuda10.2
+    libcudnn7-${CUDNN_VERSION}-1.cuda10.2 \
+    && yum clean all \
+    && rm -rf /var/cache/yum/*

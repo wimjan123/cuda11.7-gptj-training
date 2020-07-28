@@ -36,6 +36,7 @@ LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 {% if "nvprof" in cuda.components %}
     {% set nvprof_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.nvprof.version %}
 {% endif -%}
+ENV NCCL_VERSION {{ cuda.components.libnccl2_dev.version[:-2] }}
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-nvml-dev-{{ nvml_dev_component_version if nvml_dev_component_version and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
@@ -52,9 +53,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 {% endif %}
 {% if cuda.version.major | int > 10 %}
     {# libnccl2_dev can be unset if libnccl2.source is being used #}
-    {% if cuda.components.libnccl2_dev %}
+    {% if cuda.components.libnccl2_dev and not "source" in cuda.components.libnccl2 %}
     libnccl-dev={{ libnccl2_dev_component_version }} \
-{% endif %}
+    {% endif %}
     libcublas-dev-{{ libcublas_dev_component_version if libcublas_dev_component_version and cuda.version.major | int >= 10 else "10.2." + cuda.version.minor + "." + cuda.version.build + "-1" }} \
     libcusparse-{{ libcusparse_component_version if libcusparse_component_version and cuda.version.major | int >= 10 else "10.2." + cuda.version.minor + "." + cuda.version.build + "-1" }} \
     libcusparse-dev-{{ libcusparse_dev_component_version if libcusparse_dev_component_version and cuda.version.major | int >= 10 else "10.2." + cuda.version.minor + "." + cuda.version.build + "-1" }} \
@@ -81,6 +82,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-cudart-dev-$CUDA_PKG_VERSION \
     cuda-driver-dev-$CUDA_PKG_VERSION \
 {% endif %}
+    {% if cuda.components.libnccl2_dev and not "source" in cuda.components.libnccl2 %}
+    && apt-mark hold libnccl-dev \
+    {% endif %}
     && rm -rf /var/lib/apt/lists/*
 
 {% if "libnccl2" in cuda.components and "source" in cuda.components.libnccl2 %}

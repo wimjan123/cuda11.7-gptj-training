@@ -682,8 +682,8 @@ class ManagerGenerate(Manager):
 
     def cudnn_versions(self):
         obj = []
-        for k, _ in self.cuda["components"].items():
-            if k.startswith("cudnn"):
+        for k, v in self.cuda["components"].items():
+            if k.startswith("cudnn") and v:
                 obj.append(k)
         return obj
 
@@ -744,6 +744,16 @@ class ManagerGenerate(Manager):
         # checks the cudnn components and ensures at least one is installed from the public "machine-learning" repo
         def use_ml_repo():
             use_ml_repo = False
+            # First check the manifest to see if a ml repo url is specified
+            if not self.get_data(
+                self.parent.manifest,
+                self.key,
+                f"{self.distro}{self.distro_version}",
+                self.arch,
+                "ml_repo_url",
+                can_skip=True,
+            ):
+                return use_ml_repo
             # if a cudnn component contains "source", then it is installed from a different source than the public machine
             # learning repo
             # If any of the cudnn components lack the source key, then the ML repo should be used
@@ -888,7 +898,7 @@ class ManagerGenerate(Manager):
         def get_cudnn_components(key, distro, arch):
             comps = {}
             for comp, val in manifest[key][distro][arch]["components"].items():
-                if "cudnn" in comp:
+                if "cudnn" in comp and val:
                     #  print(comp, val)
                     comps[comp] = {}
                     comps[comp]["version"] = val["version"]

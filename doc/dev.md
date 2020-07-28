@@ -94,6 +94,16 @@ The manifest is also used to generate gitlab pipelines.
 To define a new image and pipeline:
 
 ```
+.components_v11.0: &cuda11_0_components
+  build_version: 194
+  # ... truncated
+  libnccl2:
+    version: 2.7.8-1
+  libnccl2_dev:
+    version: 2.7.8-1
+  cudnn8:
+    version: 8.0.2.39-1
+
 cuda_v11.0:
   dist_base_path: dist/11.0
   image_name: nvidia/cuda
@@ -112,6 +122,8 @@ cuda_v11.0:
       no_os_suffix: True
       <<: *cuda11_0_requires
       components:
+        # Component versions can be shared across architectures and overidden where they differ
+        # this is a feature of yaml called "Merge Key Language-Independent Type" https://yaml.org/type/merge.html
         <<: *cuda11_0_components
         cudnn8:
           version: 8.0.0.180
@@ -130,6 +142,13 @@ cuda_v11.0:
       # base_image: ppc64le/ubuntu:18.04
       exclude_repos:
         - nvcr.io
+    arm64:
+      components:
+        <<: *cuda11_0_components
+        # cudnn8 is unset because it does not exist for arm64
+        # It is still set, but we empty it because yaml doesn't give a better way to do this. The
+        # templates will check the value.
+        cudnn8:
 ```
 
 A pipeline definition will allow the creation of container image scripts and gitlab pipelines to build, test, scan, and ship CUDA images for all supported platforms and architectures.

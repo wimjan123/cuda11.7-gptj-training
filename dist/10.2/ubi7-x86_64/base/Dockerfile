@@ -16,8 +16,9 @@ ENV CUDA_PKG_VERSION 10-2-$CUDA_VERSION-1
 RUN yum install -y \
     cuda-cudart-$CUDA_PKG_VERSION \
     cuda-compat-10-2 \
-    && ln -s cuda-10.2 /usr/local/cuda && \
-    rm -rf /var/cache/yum/*
+    && ln -s cuda-10.2 /usr/local/cuda \
+    && yum clean all \
+    && rm -rf /var/cache/yum/*
 
 # nvidia-docker 1.0
 RUN echo "/usr/local/nvidia/lib" >> /etc/ld.so.conf.d/nvidia.conf && \

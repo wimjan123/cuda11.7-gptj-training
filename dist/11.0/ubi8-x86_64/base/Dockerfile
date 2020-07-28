@@ -14,8 +14,9 @@ COPY nvidia-ml.repo /etc/yum.repos.d/nvidia-ml.repo
 RUN yum install -y \
     cuda-cudart-11-0-11.0.194-1 \
     cuda-compat-11-0 \
-    && ln -s cuda-11.0 /usr/local/cuda && \
-    rm -rf /var/cache/yum/*
+    && ln -s cuda-11.0 /usr/local/cuda \
+    && yum clean all \
+    && rm -rf /var/cache/yum/*
 
 # nvidia-docker 1.0
 RUN echo "/usr/local/nvidia/lib" >> /etc/ld.so.conf.d/nvidia.conf && \
