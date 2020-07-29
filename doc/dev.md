@@ -101,12 +101,13 @@ cuda_v11.0:
     template_path: templates/ubuntu
     skip_tests: True
     image_tag_suffix: "-rc"
+    # base_image defined at this level will indicate the image manifest supports multi-arch
+    base_image: ubuntu:18.04
     push_repos:
       - artifactory
       - docker.io
       - nvcr.io
     x86_64:
-      base_image: ubuntu:18.04
       latest: True
       no_os_suffix: True
       <<: *cuda11_0_requires
@@ -124,6 +125,9 @@ cuda_v11.0:
           sha256sum: d112b722bf557cff96d571ac3386e4f539be7b3e9412561bde59b0ad6e59263d
           source: https://developer.download.nvidia.com/compute/redist/nccl/v2.7/nccl_2.7.3-1+cuda11.0_x86_64.txz
     ppc64le:
+      # Re-defining base_image at this level will force the ppc64le templates to use this base_image
+      # instead of the multi-arch ubuntu18.04 base image
+      # base_image: ppc64le/ubuntu:18.04
       exclude_repos:
         - nvcr.io
 ```
@@ -141,6 +145,7 @@ Keys:
 * `template_path`: The path to search in for templates for this image. The path should be relative to manager.py.
 * `skip_tests`: Optional boolean - Don't generate tests for the cuda version.
 * `image_tag_suffix`: Optional string - The image name will have this value appended to them.
+* `base_image`: The image to base the cuda images off of. By default, multi-arch base images should be used.
 * `push_repos`: The repos to push the images to. See [Container Repositories](#container-repositories).
 * `exclude_repos`: The repos to push the images to. See [Container Repositories](#container-repositories).
 * `components`: Is a list of cuda components to install in the distro. See [CUDA Component Selection](#cuda-component-selection).

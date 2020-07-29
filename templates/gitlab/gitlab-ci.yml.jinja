@@ -4,7 +4,12 @@ image: docker:stable
 # NOTE: The docker:stable-dind service is not used here because --add-runtime=nvidia does not work from DIND and we need the
 #       runtime to perform tests
 
-# For multi-arch pipeline stages on x86_64, qemu-user-static and systemd are required with the following configuration:
+# Important gitlab-runner considerations
+#
+# Docker buildx is used for multi-arch images builds. This feature is currently experimental and
+# must be explicitly enabled on the docker daemon performing the image builds.
+#
+# To run multi-arch images on x86_64, qemu-user-static and systemd are required with the following configuration:
 #
 # $ cat /etc/binfmt.d/qemu-static.conf
 # :qemu-aarch64:M::\x7fELF\x02\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\xb7:\xff\xff\xff\xff\xff\xff\xff\x00\xff\xff\xff\xff\xff\xff\xff\xff\xfe\xff\xff:/usr/bin/qemu-aarch64-static:CF
@@ -12,7 +17,7 @@ image: docker:stable
 #
 # < reboot or start systemd-binfmt.service >
 #
-# Check with (on x86_64):
+# Check with:
 #
 # $ systemctl status systemd-binfmt.service
 # < service should be started >
@@ -23,8 +28,14 @@ image: docker:stable
 variables:
   # Need a value of two here for checking the manifest in the last commit
   GIT_DEPTH: "2"
+  DOCKER_TLS_CERTDIR: "/certs"
+  DOCKER_CLI_EXPERIMENTAL: enabled
+  BUILDX_URL: https://github.com/docker/buildx/releases/download/v0.4.1/buildx-v0.4.1.linux-amd64
 
 before_script:
+  - mkdir -p $HOME/.docker/cli-plugins/
+  - wget -O $HOME/.docker/cli-plugins/docker-buildx $BUILDX_URL
+  - chmod a+x $HOME/.docker/cli-plugins/docker-buildx
   - apk add --no-cache git bash findutils python3 python3-dev curl g++ libmagic
   - python3 -m ensurepip && \
   - rm -r /usr/lib/python*/ensurepip && \
@@ -93,9 +104,9 @@ stages:
       fi
     - 'echo "DIST_BASE_PATH: ${DIST_BASE_PATH}"'
     - 'echo "TAG_LATEST: ${TAG_LATEST}"'
-    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_BASE} "${DIST_BASE_PATH}/base"
-    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_RUNTIME} --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/runtime"
-    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_DEVEL} ${TAG_LATEST} --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel"
+    - docker buildx build --load -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_BASE} "${DIST_BASE_PATH}/base"
+    - docker buildx build --load -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_RUNTIME} --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/runtime"
+    - docker buildx build --load -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_DEVEL} ${TAG_LATEST} --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel"
 
 .cudnn_template: &cudnn_definition
   stage: cudnn
@@ -111,9 +122,9 @@ stages:
         TAG_CUDNN_RUNTIME=" -t ${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime${IMAGE_TAG_SUFFIX} ";
         TAG_CUDNN_DEVEL=" -t ${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel${IMAGE_TAG_SUFFIX} ";
       fi
-    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_RUNTIME}
+    - docker buildx build --load -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_RUNTIME}
                    --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/runtime/${CUDNN_VERSION}"
-    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_DEVEL}
+    - docker buildx build --load -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_DEVEL}
                    --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel/${CUDNN_VERSION}"
 
 .test_template: &test_definition

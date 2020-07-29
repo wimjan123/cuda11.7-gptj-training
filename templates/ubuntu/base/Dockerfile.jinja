@@ -1,5 +1,10 @@
 {% set arch = cuda.arch %}
+{% if arch != "x86_64" %}
+# NOTICE: requires experimental features to be enabled on the docker daemon
+FROM --platform={{ arch }} {{ cuda.base_image }}
+{% else %}
 FROM {{ cuda.base_image }}
+{% endif %}
 
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 

@@ -1,4 +1,5 @@
-FROM arm64v8/centos:8
+# NOTICE: requires experimental features to be enabled on the docker daemon
+FROM --platform=arm64 centos:8
 
 LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 
