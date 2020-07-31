@@ -34,5 +34,4 @@ docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}" --build-arg "IMAGE_N
 
 ## Cuda Container Image Automation
 
-The [dev.md](https://gitlab.com/nvidia/container-images/cuda/blob/master/doc/dev.md) document
-provides details on how the gitlab pipelines work and how to control, modify, or debug them.
+The [dev.md](https://gitlab.com/nvidia/container-images/cuda/blob/master/doc/dev.md) document provides details on how the gitlab pipelines work and how to control, modify, or debug them.
