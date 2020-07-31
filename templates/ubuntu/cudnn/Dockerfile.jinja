@@ -40,7 +40,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     {% if cuda.cudnn.target == "runtime" %}
     libcudnn{{ cuda.cudnn.version[0] }}=$CUDNN_VERSION-1+cuda{{ cuda.version.major }}.{{ cuda.version.minor }} \
     {% else %}
-    libcudnn{{ cuda.cudnn.version[0] }}=$CUDNN_VERSION-1+cuda{{ cuda.version.major }}.{{ cuda.version.minor }} \
+    {# libcudnn{{ cuda.cudnn.version[0] }}=$CUDNN_VERSION-1+cuda{{ cuda.version.major }}.{{ cuda.version.minor }} \ #}
     libcudnn{{ cuda.cudnn.version[0] }}-dev=$CUDNN_VERSION-1+cuda{{ cuda.version.major }}.{{ cuda.version.minor }} \
     {% endif %}
     && apt-mark hold libcudnn{{ cuda.cudnn.version[0] }} && \
