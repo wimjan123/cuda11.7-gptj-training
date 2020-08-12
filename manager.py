@@ -151,6 +151,19 @@ class ManagerTrigger(Manager):
                     ci_vars.append(match.groups(0)[0])
         return ci_vars
 
+    def ci_distro_arch_variables(self, version, arch, distro, distro_version=None):
+        dver = ""
+        if distro_version:
+            dver = distro_version
+        rgx = re.compile(fr"^\s+- \$(?!all)({distro}{dver}.*.{arch}) == \"true\"$")
+        ci_vars = []
+        with open(".gitlab-ci.yml", "r") as fp:
+            for _, line in enumerate(fp):
+                match = rgx.match(line)
+                if match:
+                    ci_vars.append(match.groups(0)[0])
+        return ci_vars
+
     def get_cuda_version_from_trigger(self, trigger):
         rgx = re.compile(r".*cuda([\d\.]+).*$")
         match = rgx.match(trigger)
@@ -234,6 +247,7 @@ class ManagerTrigger(Manager):
                 distro = next(
                     (distro for distro in distro_list if distro in job), None,
                 )
+                distro_version = re.match(f"{distro}([\d\.]*)", job).groups(0)[0]
 
                 arch = next(
                     (arch for arch in ["x86_64", "ppc64le", "arm64"] if arch in job),
@@ -241,10 +255,10 @@ class ManagerTrigger(Manager):
                 )
 
                 log.debug(
-                    f"job: '{job}' name: {self.pipeline_name} version: {version} distro: {distro} arch: {arch}"
+                    f"job: '{job}' name: {self.pipeline_name} version: {version} distro: {distro} distro_version: {distro_version} arch: {arch}"
                 )
 
-                log.debug(f"distro_list: '{distro_list}'")
+                #  log.debug(f"distro_list: '{distro_list}'")
 
                 cijobs = []
                 if version and distro:
@@ -252,6 +266,10 @@ class ManagerTrigger(Manager):
                         arch = "\w+"
                     cijobs = self.ci_cuda_version_distro_arch_variables(
                         version, distro, arch
+                    )
+                elif distro and arch:
+                    cijobs = self.ci_distro_arch_variables(
+                        version, arch, distro, distro_version
                     )
                 elif version and not distro and not arch:
                     for distro2 in self.supported_distro_list_by_cuda_version(version):

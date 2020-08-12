@@ -27,7 +27,7 @@ ENV CUDA_PKG_VERSION {{ cuda.version.major }}-{{ cuda.version.minor }}-$CUDA_VER
 {% endif %}
 
 # For libraries in the cuda-compat-* package: https://docs.nvidia.com/cuda/eula/index.html#attachment-a
-RUN yum install -y \
+RUN yum upgrade -y && yum install -y \
 {% if cuda.version.major | int == 8 %}
     cuda-nvrtc-$CUDA_PKG_VERSION \
     cuda-nvgraph-$CUDA_PKG_VERSION \

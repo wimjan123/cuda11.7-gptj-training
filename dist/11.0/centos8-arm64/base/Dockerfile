@@ -1,5 +1,5 @@
 # NOTICE: requires experimental features to be enabled on the docker daemon
-FROM --platform=arm64 centos:8
+FROM --platform=linux/arm64 centos:8
 
 LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 
@@ -12,7 +12,7 @@ COPY nvidia-ml.repo /etc/yum.repos.d/nvidia-ml.repo
 
 
 # For libraries in the cuda-compat-* package: https://docs.nvidia.com/cuda/eula/index.html#attachment-a
-RUN yum install -y \
+RUN yum upgrade -y && yum install -y \
     cuda-cudart-11-0-11.0.194-1 \
     cuda-compat-11-0 \
     && ln -s cuda-11.0 /usr/local/cuda \
