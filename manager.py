@@ -1008,7 +1008,6 @@ class ManagerGenerate(Manager):
             template = self.template_env.from_string(f.read())
             with open(output_path, "w") as f2:
                 f2.write(template.render(cuda=ctx))
-
         #  sys.exit(1)
 
     # fmt: on
@@ -1094,13 +1093,12 @@ class ManagerGenerate(Manager):
 
     def main(self):
         self.generate_gitlab_pipelines()
-        if self.generate_ci:
-            sys.exit(1)
-        self.parent.load_ci_yaml()
-        if self.generate_all:
-            self.target_all()
-        else:
-            self.targeted()
+        if not self.generate_ci:
+            self.parent.load_ci_yaml()
+            if self.generate_all:
+                self.target_all()
+            else:
+                self.targeted()
         log.info("Done")
 
 

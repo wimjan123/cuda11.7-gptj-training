@@ -1,5 +1,4 @@
-# NOTICE: requires experimental features to be enabled on the docker daemon
-FROM --platform=ppc64le centos:7
+FROM centos:7
 
 LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 

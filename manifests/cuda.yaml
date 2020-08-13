@@ -106,7 +106,7 @@ cuda_v11.0:
       - docker.io
       - nvcr.io
     x86_64:
-      image_name: nvidia/cuda
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
       latest: True
       no_os_suffix: True
       # NOTE: Fri Jul 10 10:53 2020: ML repo for 20.04 does not exist
@@ -130,14 +130,14 @@ cuda_v11.0:
       - docker.io
       - nvcr.io
     x86_64:
-      image_name: nvidia/cuda
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
       ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/x86_64
       <<: *cuda11_0_requires
       components:
         <<: *cuda11_0_components
     # CAREFUL! Mixing up the arch and the base_image arch image will lead to hard to debug build issues!
     ppc64le:
-      image_name: nvidia/cuda-ppc64le
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le
       ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/ppc64el
       latest: True
       no_os_suffix: True
@@ -145,7 +145,7 @@ cuda_v11.0:
       components:
         <<: *cuda11_0_components
     arm64:
-      image_name: nvidia/cuda-arm64
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-arm64
       ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/sbsa
       latest: True
       no_os_suffix: True
@@ -161,7 +161,7 @@ cuda_v11.0:
       - docker.io
       - nvcr.io
     x86_64:
-      image_name: nvidia/cuda
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
       base_image: ubuntu:16.04
       ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604/x86_64
       <<: *cuda11_0_requires
@@ -175,21 +175,21 @@ cuda_v11.0:
       - docker.io
       - nvcr.io
     x86_64:
-      image_name: nvidia/cuda
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64
       ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel8/x86_64
       <<: *cuda11_0_requires
       components:
         <<: *cuda11_0_components
     ppc64le:
-      image_name: nvidia/cuda-ppc64le
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8/ppc64le
       ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel8/ppc64le
       requires: "cuda>=11.0"
       components:
         <<: *cuda11_0_components
     arm64:
-      image_name: nvidia/cuda-arm64
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-arm64
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8/sbsa
       ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel8/sbsa
       requires: "cuda>=11.0"
@@ -205,21 +205,21 @@ cuda_v11.0:
       - docker.io
       - nvcr.io
     x86_64:
-      image_name: nvidia/cuda
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64
       ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel8/x86_64
       <<: *cuda11_0_requires
       components:
         <<: *cuda11_0_components
     ppc64le:
-      image_name: nvidia/cuda-ppc64le
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8/ppc64le
       ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel8/ppc64le
       requires: "cuda>=11.0"
       components:
         <<: *cuda11_0_components
     arm64:
-      image_name: nvidia/cuda-arm64
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-arm64
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8/sbsa
       ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel8/sbsa
       requires: "cuda>=11.0"
@@ -234,7 +234,7 @@ cuda_v11.0:
       - docker.io
       - nvcr.io
     x86_64:
-      image_name: nvidia/cuda
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
       base_image: centos:7
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64
       ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7/x86_64
@@ -248,7 +248,7 @@ cuda_v11.0:
       - docker.io
       - nvcr.io
     x86_64:
-      image_name: nvidia/cuda
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
       base_image: registry.access.redhat.com/ubi7/ubi:latest
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64
       ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7/x86_64
@@ -287,14 +287,14 @@ cuda_v10.2:
       - docker.io
       - nvcr.io
     x86_64:
-      image_name: nvidia/cuda
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
       ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/x86_64
       no_os_suffix: True
       <<: *cuda10_2_requires
       components:
         <<: *cuda10_2_components
     ppc64le:
-      image_name: nvidia/cuda-ppc64le
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le
       ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/ppc64el
       no_os_suffix: True
       requires: "cuda>=10.2"
@@ -308,7 +308,7 @@ cuda_v10.2:
       - docker.io
       - nvcr.io
     x86_64:
-      image_name: nvidia/cuda
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
       ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604/x86_64
       <<: *cuda10_2_requires
       components:
@@ -321,7 +321,7 @@ cuda_v10.2:
       - docker.io
       - nvcr.io
     x86_64:
-      image_name: nvidia/cuda
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64
       ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel8/x86_64
       <<: *cuda10_2_requires
@@ -339,7 +339,7 @@ cuda_v10.2:
       - docker.io
       - nvcr.io
     x86_64:
-      image_name: nvidia/cuda
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64
       ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel8/x86_64
       <<: *cuda10_2_requires
@@ -357,7 +357,7 @@ cuda_v10.2:
       - docker.io
       - nvcr.io
     x86_64:
-      image_name: nvidia/cuda
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64
       ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7/x86_64
       <<: *cuda10_2_requires
@@ -367,7 +367,7 @@ cuda_v10.2:
         cudnn7:
           version: 7.6.5.33-1
     ppc64le:
-      image_name: nvidia/cuda-ppc64le
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7/ppc64le
       ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7/ppc64le
       requires: "cuda>=10.2"
@@ -381,7 +381,7 @@ cuda_v10.2:
       - docker.io
       - nvcr.io
     x86_64:
-      image_name: nvidia/cuda
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64
       ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7/x86_64
       <<: *cuda10_2_requires

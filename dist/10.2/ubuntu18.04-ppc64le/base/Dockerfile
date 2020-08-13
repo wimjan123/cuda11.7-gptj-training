@@ -1,5 +1,4 @@
-# NOTICE: requires experimental features to be enabled on the docker daemon
-FROM --platform=ppc64le ubuntu:18.04
+FROM ubuntu:18.04
 
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 

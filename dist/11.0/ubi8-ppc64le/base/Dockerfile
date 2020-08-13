@@ -1,5 +1,4 @@
-# NOTICE: requires experimental features to be enabled on the docker daemon
-FROM --platform=ppc64le registry.access.redhat.com/ubi8/ubi:latest
+FROM registry.access.redhat.com/ubi8/ubi:latest
 
 LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 
