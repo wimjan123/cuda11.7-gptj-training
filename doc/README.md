@@ -76,9 +76,24 @@ Visit [OpenSource @ Nvidia](https://developer.download.nvidia.com/compute/cuda/o
 - [`11.0-devel-ubuntu16.04` (*11.0/ubuntu18.04-x86_64/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu16.04-x86_64/devel/Dockerfile)
 - [`11.0-cudnn8-devel-ubuntu16.04` (*11.0/ubuntu18.04-x86_64/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu16.04-x86_64/devel/cudnn8/Dockerfile)
 
-### Centos 7
+### Centos 8
 
-NOT YET AVAILABLE
+- [`11.0-base-centos8` (*11.0/ubuntu18.04-x86_64/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos8-x86_64/base/Dockerfile)
+- [`11.0-runtime-centos8` (*11.0/ubuntu18.04-x86_64/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos8-x86_64/runtime/Dockerfile)
+- [`11.0-cudnn8-runtime-centos8` (*11.0/ubuntu18.04-x86_64/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos8-x86_64/runtime/cudnn8/Dockerfile)
+- [`11.0-devel-centos8` (*11.0/ubuntu18.04-x86_64/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos8-x86_64/devel/Dockerfile)
+- [`11.0-cudnn8-devel-centos8` (*11.0/ubuntu18.04-x86_64/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos8-x86_64/devel/cudnn8/Dockerfile)
+
+#### CVE Warning
+
+At the time of release 2020-08-17 the following critical vulneralbilities were detected in the upstream Centos 8 base image:
+
+```
+vulnerabilities        package                    HIGH Vulnerability found in os package type (rpm) - librepo (CVE-2020-14352 - https://access.redhat.com/security/cve/CVE-2020-14352)
+vulnerabilities        package                    HIGH Vulnerability found in os package type (rpm) - lua-libs (CVE-2020-15888 - https://access.redhat.com/security/cve/CVE-2020-15888)
+```
+
+### Centos 7
 
 - [`11.0-base-centos7` (*11.0/ubuntu18.04-x86_64/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos7-x86_64/base/Dockerfile)
 - [`11.0-runtime-centos7` (*11.0/ubuntu18.04-x86_64/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos7-x86_64/runtime/Dockerfile)
@@ -86,9 +101,34 @@ NOT YET AVAILABLE
 - [`11.0-devel-centos7` (*11.0/ubuntu18.04-x86_64/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos7-x86_64/devel/Dockerfile)
 - [`11.0-cudnn8-devel-centos7` (*11.0/ubuntu18.04-x86_64/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos7-x86_64/devel/cudnn8/Dockerfile)
 
-### UBI 7
+#### CVE Warning
 
-NOT YET AVAILABLE
+At the time of release 2020-08-17 the following critical vulneralbilities were detected in the upstream Centos 7 base image:
+
+```
+vulnerabilities        package                      HIGH Vulnerability found in os package type (rpm) - dbus (CVE-2019-12749 - https://access.redhat.com/security/cve/CVE-2019-12749)
+vulnerabilities        package                      HIGH Vulnerability found in os package type (rpm) - dbus-libs (CVE-2019-12749 - https://access.redhat.com/security/cve/CVE-2019-12749)
+```
+
+### UBI 8
+
+- [`11.0-base-ubi8` (*11.0/ubuntu18.04-x86_64/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubi8-x86_64/base/Dockerfile)
+- [`11.0-runtime-ubi8` (*11.0/ubuntu18.04-x86_64/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubi8-x86_64/runtime/Dockerfile)
+- [`11.0-cudnn8-runtime-ubi8` (*11.0/ubuntu18.04-x86_64/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubi8-x86_64/runtime/cudnn8/Dockerfile)
+- [`11.0-devel-ubi8` (*11.0/ubuntu18.04-x86_64/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubi8-x86_64/devel/Dockerfile)
+- [`11.0-cudnn8-devel-ubi8` (*11.0/ubuntu18.04-x86_64/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubi8-x86_64/devel/cudnn8/Dockerfile)
+
+#### CVE Warning
+
+At the time of release 2020-08-17 the following critical vulneralbilities were detected in the upstream UBI 8 base image:
+
+```
+vulnerabilities        package                      HIGH Vulnerability found in os package type (rpm) - librepo (CVE-2020-14352 - https://access.redhat.com/security/cve/CVE-2020-14352)
+vulnerabilities        package                      HIGH Vulnerability found in os package type (rpm) - lua-libs (CVE-2020-15888 - https://access.redhat.com/security/cve/CVE-2020-15888)
+vulnerabilities        package                      HIGH Vulnerability found in os package type (rpm) - python3-librepo (CVE-2020-14352 - https://access.redhat.com/security/cve/CVE-2020-14352)
+```
+
+### UBI 7
 
 - [`11.0-base-ubi7` (*11.0/ubuntu18.04-x86_64/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubi7-x86_64/base/Dockerfile)
 - [`11.0-runtime-ubi7` (*11.0/ubuntu18.04-x86_64/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubi7-x86_64/runtime/Dockerfile)
@@ -96,9 +136,14 @@ NOT YET AVAILABLE
 - [`11.0-devel-ubi7` (*11.0/ubuntu18.04-x86_64/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubi7-x86_64/devel/Dockerfile)
 - [`11.0-cudnn8-devel-ubi7` (*11.0/ubuntu18.04-x86_64/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubi7-x86_64/devel/cudnn8/Dockerfile)
 
-### RHEL8 based distros
+#### CVE Warning
 
-CUDA images based on UBI 8 and CentOS 8 are not available due to known CVE vulnerabilities in these operating system images. We are working to address these issues ASAP.
+At the time of release 2020-08-17 the following critical vulneralbilities were detected in the upstream UBI 7 base image:
+
+```
+vulnerabilities        package                      HIGH Vulnerability found in os package type (rpm) - dbus (CVE-2019-12749 - https://access.redhat.com/security/cve/CVE-2019-12749)
+vulnerabilities        package                      HIGH Vulnerability found in os package type (rpm) - dbus-libs (CVE-2019-12749 - https://access.redhat.com/security/cve/CVE-2019-12749)
+```
 
 ### Unsupported tags
 
