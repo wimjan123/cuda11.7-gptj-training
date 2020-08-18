@@ -6,10 +6,10 @@ LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 ENV NCCL_VERSION 2.7.8
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    cuda-libraries-11-0=11.0.2-1 \
-    libnpp-11-0=11.1.0.218-1 \
+    cuda-libraries-11-0=11.0.3-1 \
+    libnpp-11-0=11.1.0.245-1 \
     cuda-nvtx-11-0=11.0.167-1 \
-    libcublas-11-0=11.1.0.229-1 \
+    libcublas-11-0=11.2.0.252-1 \
     && rm -rf /var/lib/apt/lists/*
 
 RUN apt update && apt install curl xz-utils -y --no-install-recommends && NCCL_DOWNLOAD_SUM=34000cbe6a0118bfd4ad898ebc5f59bf5d532bbf2453793891fa3f1621e25653 && \

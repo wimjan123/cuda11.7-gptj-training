@@ -10,7 +10,6 @@ function setup() {
 
 function teardown() {
     cleanup
-    docker rmi -f ${image}
 }
 
 function dq_ubuntu() {

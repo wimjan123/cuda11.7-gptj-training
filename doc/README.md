@@ -50,7 +50,7 @@ Supported tags are updated to the latest CUDA and cuDNN versions. These tags are
 
 For a full list of supported tags, click [*here*](https://gitlab.com/nvidia/container-images/cuda/blob/master/doc/supported-tags.md).
 
-## LATEST CUDA 11.0
+## LATEST CUDA 11.0 Update 1
 
 Visit [OpenSource @ Nvidia](https://developer.download.nvidia.com/compute/cuda/opensource/image/11.0/) for the GPL sources of the packages contained in the CUDA base image layers.
 
@@ -86,7 +86,7 @@ Visit [OpenSource @ Nvidia](https://developer.download.nvidia.com/compute/cuda/o
 
 #### CVE Warning
 
-At the time of release 2020-08-17 the following critical vulneralbilities were detected in the upstream Centos 8 base image:
+At the time of release 2020-08-19 the following critical vulneralbilities were detected in the upstream Centos 8 base image:
 
 ```
 vulnerabilities        package                    HIGH Vulnerability found in os package type (rpm) - librepo (CVE-2020-14352 - https://access.redhat.com/security/cve/CVE-2020-14352)
@@ -103,7 +103,7 @@ vulnerabilities        package                    HIGH Vulnerability found in os
 
 #### CVE Warning
 
-At the time of release 2020-08-17 the following critical vulneralbilities were detected in the upstream Centos 7 base image:
+At the time of release 2020-08-19 the following critical vulneralbilities were detected in the upstream Centos 7 base image:
 
 ```
 vulnerabilities        package                      HIGH Vulnerability found in os package type (rpm) - dbus (CVE-2019-12749 - https://access.redhat.com/security/cve/CVE-2019-12749)
@@ -120,7 +120,7 @@ vulnerabilities        package                      HIGH Vulnerability found in 
 
 #### CVE Warning
 
-At the time of release 2020-08-17 the following critical vulneralbilities were detected in the upstream UBI 8 base image:
+At the time of release 2020-08-19 the following critical vulneralbilities were detected in the upstream UBI 8 base image:
 
 ```
 vulnerabilities        package                      HIGH Vulnerability found in os package type (rpm) - librepo (CVE-2020-14352 - https://access.redhat.com/security/cve/CVE-2020-14352)
@@ -138,7 +138,7 @@ vulnerabilities        package                      HIGH Vulnerability found in 
 
 #### CVE Warning
 
-At the time of release 2020-08-17 the following critical vulneralbilities were detected in the upstream UBI 7 base image:
+At the time of release 2020-08-19 the following critical vulneralbilities were detected in the upstream UBI 7 base image:
 
 ```
 vulnerabilities        package                      HIGH Vulnerability found in os package type (rpm) - dbus (CVE-2019-12749 - https://access.redhat.com/security/cve/CVE-2019-12749)

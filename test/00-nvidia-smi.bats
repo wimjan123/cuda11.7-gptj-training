@@ -19,6 +19,5 @@ function teardown() {
 
 @test "nvidia-smi" {
     docker_run --rm --gpus 0 ${image} nvidia-smi
-    docker rmi -f ${image}
     [ "$status" -eq 0 ]
 }

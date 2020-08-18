@@ -13,7 +13,7 @@ RUN wget -O $HOME/.docker/cli-plugins/docker-buildx $BUILDX_URL
 
 RUN chmod a+x $HOME/.docker/cli-plugins/docker-buildx
 
-RUN apk add --no-cache git bash findutils python3 python3-dev curl g++ libmagic
+RUN apk add --no-cache git bash findutils python3 python3-dev curl g++ libmagic skopeo
 
 RUN python3 -m ensurepip
 
@@ -32,5 +32,3 @@ COPY pyproject.toml /root/
 WORKDIR /root
 
 RUN source $HOME/.poetry/env && poetry config virtualenvs.create false && poetry install
-
-RUN docker buildx

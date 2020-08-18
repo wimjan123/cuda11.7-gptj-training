@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # For libraries in the cuda-compat-* package: https://docs.nvidia.com/cuda/eula/index.html#attachment-a
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    cuda-cudart-11-0=11.0.194-1 \
+    cuda-cudart-11-0=11.0.221-1 \
     cuda-compat-11-0 \
     && ln -s cuda-11.0 /usr/local/cuda && \
     rm -rf /var/lib/apt/lists/*

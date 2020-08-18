@@ -12,7 +12,7 @@ COPY nvidia-ml.repo /etc/yum.repos.d/nvidia-ml.repo
 
 # For libraries in the cuda-compat-* package: https://docs.nvidia.com/cuda/eula/index.html#attachment-a
 RUN yum upgrade -y && yum install -y \
-    cuda-cudart-11-0-11.0.194-1 \
+    cuda-cudart-11-0-11.0.221-1 \
     cuda-compat-11-0 \
     && ln -s cuda-11.0 /usr/local/cuda \
     && yum clean all \

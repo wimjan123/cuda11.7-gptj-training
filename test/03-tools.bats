@@ -10,12 +10,10 @@ function setup() {
 
 @test "check_nvcc_installed" {
     docker_run --rm --gpus 0 ${image} bash -c "stat /usr/local/cuda/bin/nvcc"
-    docker rmi -f ${image}
     [ "$status" -eq 0 ]
 }
 
 @test "check_gcc_installed" {
     docker_run --rm --gpus 0 ${image} bash -c "gcc --version"
-    docker rmi -f ${image}
     [ "$status" -eq 0 ]
 }

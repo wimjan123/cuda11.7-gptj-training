@@ -50,7 +50,7 @@ Supported tags are updated to the latest CUDA and cuDNN versions. These tags are
 
 For a full list of supported tags, click [*here*](https://gitlab.com/nvidia/container-images/cuda/blob/master/doc/supported-tags.md).
 
-## LATEST CUDA 11.0
+## LATEST CUDA 11.0 Update 1
 
 Visit [OpenSource @ Nvidia](https://developer.download.nvidia.com/compute/cuda/opensource/image/11.0/) for the GPL sources of the packages contained in the CUDA base image layers.
 
@@ -64,45 +64,23 @@ Visit [OpenSource @ Nvidia](https://developer.download.nvidia.com/compute/cuda/o
 
 ### Centos 8
 
-- [`11.0-base`, `11.0-base-centos8` (*11.0/centos8-ppc64le/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos8-ppc64le/base/Dockerfile)
-- [`11.0-runtime`, `11.0-runtime-centos8` (*11.0/centos8-ppc64le/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos8-ppc64le/runtime/Dockerfile)
-- [`11.0-cudnn8-runtime`, `11.0-cudnn8-runtime-centos8` (*11.0/centos8-ppc64le/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos8-ppc64le/runtime/cudnn8/Dockerfile)
-- [`latest`, `11.0-devel`, `11.0-devel-centos8` (*11.0/centos8-ppc64le/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos8-ppc64le/devel/Dockerfile)
-- [`11.0-cudnn8-devel`, `11.0-cudnn8-devel-centos8` (*11.0/centos8-ppc64le/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos8-ppc64le/devel/cudnn8/Dockerfile)
-
-#### CVE Warning
-
-At the time of release 2020-08-17 the following critical vulneralbilities were detected in the upstream Centos 8 base image:
-
-```
-vulnerabilities        package                      HIGH Vulnerability found in os package type (rpm) - librepo (CVE-2020-14352 - https://access.redhat.com/security/cve/CVE-2020-14352)
-vulnerabilities        package                      HIGH Vulnerability found in os package type (rpm) - lua-libs (CVE-2020-15888 - https://access.redhat.com/security/cve/CVE-2020-15888)
-```
-
-### Centos 7
-
-- [`11.0-base`, `11.0-base-centos7` (*11.0/centos7-ppc64le/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos7-ppc64le/base/Dockerfile)
-- [`11.0-runtime`, `11.0-runtime-centos7` (*11.0/centos7-ppc64le/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos7-ppc64le/runtime/Dockerfile)
-- [`11.0-cudnn8-runtime`, `11.0-cudnn8-runtime-centos7` (*11.0/centos7-ppc64le/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos7-ppc64le/runtime/cudnn8/Dockerfile)
-- [`latest`, `11.0-devel`, `11.0-devel-centos7` (*11.0/centos7-ppc64le/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos7-ppc64le/devel/Dockerfile)
-- [`11.0-cudnn8-devel`, `11.0-cudnn8-devel-centos7` (*11.0/centos7-ppc64le/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos7-ppc64le/devel/cudnn8/Dockerfile)
-
-#### CVE Warning
-
-At the time of release 2020-08-17 the following critical vulneralbilities were detected in the upstream Centos 7 base image:
-
-```
-vulnerabilities        package                      HIGH Vulnerability found in os package type (rpm) - dbus (CVE-2019-12749 - https://access.redhat.com/security/cve/CVE-2019-12749)
-vulnerabilities        package                      HIGH Vulnerability found in os package type (rpm) - dbus-libs (CVE-2019-12749 - https://access.redhat.com/security/cve/CVE-2019-12749)
-```
+- [`11.0-base-centos8` (*11.0/centos8-ppc64le/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos8-ppc64le/base/Dockerfile)
+- [`11.0-runtime-centos8` (*11.0/centos8-ppc64le/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos8-ppc64le/runtime/Dockerfile)
+- [`11.0-cudnn8-runtime-centos8` (*11.0/centos8-ppc64le/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos8-ppc64le/runtime/cudnn8/Dockerfile)
+- [`11.0-devel-centos8` (*11.0/centos8-ppc64le/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos8-ppc64le/devel/Dockerfile)
+- [`11.0-cudnn8-devel-centos8` (*11.0/centos8-ppc64le/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos8-ppc64le/devel/cudnn8/Dockerfile)
 
 ### UBI 8
 
-CUDA images based on UBI 8 and CentOS 8 are not available due to known CVE vulnerabilities in these operating system images. We are working to address these issues ASAP.
+- [`11.0-base-ubi8` (*11.0/ubi8-ppc64le/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubi8-ppc64le/base/Dockerfile)
+- [`11.0-runtime-ubi8` (*11.0/ubi8-ppc64le/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubi8-ppc64le/runtime/Dockerfile)
+- [`11.0-cudnn8-runtime-ubi8` (*11.0/ubi8-ppc64le/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubi8-ppc64le/runtime/cudnn8/Dockerfile)
+- [`11.0-devel-ubi8` (*11.0/ubi8-ppc64le/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubi8-ppc64le/devel/Dockerfile)
+- [`11.0-cudnn8-devel-ubi8` (*11.0/ubi8-ppc64le/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubi8-ppc64le/devel/cudnn8/Dockerfile)
 
 #### CVE Warning
 
-At the time of release 2020-08-17 the following critical vulneralbilities were detected in the upstream UBI 8 base image:
+At the time of release 2020-08-19 the following critical vulneralbilities were detected in the upstream UBI 8 base image:
 
 ```
 vulnerabilities        package                      HIGH Vulnerability found in os package type (rpm) - librepo (CVE-2020-14352 - https://access.redhat.com/security/cve/CVE-2020-14352)

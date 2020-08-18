@@ -247,7 +247,9 @@ class ManagerTrigger(Manager):
                 distro = next(
                     (distro for distro in distro_list if distro in job), None,
                 )
-                distro_version = re.match(f"{distro}([\d\.]*)", job).groups(0)[0]
+                distro_version = None
+                if distro:
+                    distro_version = re.match(f"{distro}([\d\.]*)", job).groups(0)[0]
 
                 arch = next(
                     (arch for arch in ["x86_64", "ppc64le", "arm64"] if arch in job),

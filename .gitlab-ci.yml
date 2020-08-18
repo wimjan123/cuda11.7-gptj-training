@@ -29,7 +29,6 @@ variables:
   GIT_DEPTH: "2"
 
 before_script:
-  - DRY_RUN=1
   - 'echo "ARCH: $ARCH"'
   - 'echo "OS: $OS"'
   - 'echo "IMAGE_NAME: $IMAGE_NAME"'
@@ -52,6 +51,7 @@ stages:
   - test
   - scan
   - deploy
+  - cleanup
 
 # builds the gitlab-cuda-builder image
 prepare:
@@ -91,6 +91,7 @@ prepare:
 .cuda_base_template: &cuda_base_definition
   image: gitlab-cuda-builder
   stage: cuda
+  retry: 2
   <<: *tags_definition
   script:
     - if [[ "${NO_OS_SUFFIX}" == "true" ]]; then
@@ -109,21 +110,21 @@ prepare:
     - 'echo "DIST_BASE_PATH: ${DIST_BASE_PATH}"'
     - 'echo "TAG_LATEST: ${TAG_LATEST}"'
     - docker manifest inspect centos:8 # for debugging
-    - docker buildx create --use --platform linux/${ARCH} --name cuda-${CI_JOB_NAME}
-    - docker buildx build --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_BASE} "${DIST_BASE_PATH}/base"
+    - docker buildx create --use --platform linux/${ARCH} --name cuda-${ARCH}
+    - docker buildx build --load --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_BASE} "${DIST_BASE_PATH}/base"
                           --cache-from=type=registry,ref=${CACHE_NAME}:${CUDA_VERSION}-${OS}-${ARCH}-base
                           --cache-to=type=registry,ref=${CACHE_NAME}:${CUDA_VERSION}-${OS}-${ARCH}-base
-    - docker buildx build --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_RUNTIME} --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/runtime"
+    - docker buildx build --load --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_RUNTIME} --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/runtime"
                           --cache-from=type=registry,ref=${CACHE_NAME}:${CUDA_VERSION}-${OS}-${ARCH}-runtime
                           --cache-to=type=registry,ref=${CACHE_NAME}:${CUDA_VERSION}-${OS}-${ARCH}-runtime
-    - docker buildx build --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_DEVEL} ${TAG_LATEST} --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel"
+    - docker buildx build --load --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_DEVEL} ${TAG_LATEST} --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel"
                           --cache-from=type=registry,ref=${CACHE_NAME}:${CUDA_VERSION}-${OS}-${ARCH}-devel
                           --cache-to=type=registry,ref=${CACHE_NAME}:${CUDA_VERSION}-${OS}-${ARCH}-devel
-    - docker buildx rm cuda-${CI_JOB_NAME}
 
 .cudnn_template: &cudnn_definition
   image: gitlab-cuda-builder
   stage: cudnn
+  retry: 2
   <<: *tags_definition
   script:
     - if [[ -z $DIST_BASE_PATH ]]; then
@@ -136,16 +137,15 @@ prepare:
         TAG_CUDNN_RUNTIME=" -t ${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime${IMAGE_TAG_SUFFIX} ";
         TAG_CUDNN_DEVEL=" -t ${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel${IMAGE_TAG_SUFFIX} ";
       fi
-    - docker buildx create --use --platform linux/${ARCH} --name cuda-${CUDNN_VERSION}-${CI_JOB_NAME}
-    - docker buildx build --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_RUNTIME}
+    - docker buildx create --use --platform linux/${ARCH} --name cuda-${ARCH}
+    - docker buildx build --load --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_RUNTIME}
                    --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/runtime/${CUDNN_VERSION}"
                    --cache-from=type=registry,ref=${CACHE_NAME}:${CUDA_VERSION}-${OS}-${ARCH}-${CUDNN_VERSION}-runtime
                    --cache-to=type=registry,ref=${CACHE_NAME}:${CUDA_VERSION}-${OS}-${ARCH}-${CUDNN_VERSION}-runtime
-    - docker buildx build --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_DEVEL}
+    - docker buildx build --load --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_DEVEL}
                    --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel/${CUDNN_VERSION}"
                    --cache-from=type=registry,ref=${CACHE_NAME}:${CUDA_VERSION}-${OS}-${ARCH}-${CUDNN_VERSION}-devel
                    --cache-to=type=registry,ref=${CACHE_NAME}:${CUDA_VERSION}-${OS}-${ARCH}-${CUDNN_VERSION}-devel
-    - docker buildx rm cuda-${CUDNN_VERSION}-${CI_JOB_NAME}
 
 .test_template: &test_definition
   image: gitlab-cuda-builder
@@ -205,6 +205,17 @@ trigger:
       - $TRIGGER == null
       - $TRIGGER_OVERRIDE
 
+cleanup:
+  image: gitlab-cuda-builder
+  stage: cleanup
+  <<: *tags_definition
+  script:
+    - docker ps | grep "buildkit" | awk '{ print $1 }' | xargs docker rm -f
+    - docker system prune -f
+  rules:
+    - if: '$TRIGGER == "true"'
+      when: always
+
 .ubuntu20_04_11_0_x86_64_variables: &ubuntu20_04_11_0_x86_64_variables
   ARCH: "x86_64"
   DIST_BASE_PATH: "dist/11.0"
@@ -241,7 +252,7 @@ ubuntu20.04-v11.0-scan-x86_64:
   <<: *ubuntu20_04_11_0_x86_64_only
 
 ubuntu20.04-v11.0-deploy-x86_64:
-  needs: ["ubuntu20.04-v11.0-test-x86_64", "ubuntu20.04-v11.0-scan-x86_64"]
+  needs: ["ubuntu20.04-v11.0-x86_64"]
   <<: *deploy_definition
   <<: *ubuntu20_04_11_0_x86_64_only
 
@@ -377,7 +388,7 @@ ubuntu18.04-v11.0-scan-arm64:
   <<: *ubuntu18_04_11_0_arm64_only
 
 ubuntu18.04-v11.0-deploy-arm64:
-  needs: ["ubuntu18.04-v11.0-test-arm64", "ubuntu18.04-v11.0-scan-arm64"]
+  needs: ["ubuntu18.04-v11.0-arm64"]
   <<: *deploy_definition
   <<: *ubuntu18_04_11_0_arm64_only
 
@@ -556,7 +567,7 @@ centos8-v11.0-scan-arm64:
   <<: *centos8_11_0_arm64_only
 
 centos8-v11.0-deploy-arm64:
-  needs: ["centos8-v11.0-test-arm64", "centos8-v11.0-scan-arm64"]
+  needs: ["centos8-v11.0-arm64"]
   <<: *deploy_definition
   <<: *centos8_11_0_arm64_only
 
@@ -688,7 +699,7 @@ ubi8-v11.0-scan-arm64:
   <<: *ubi8_11_0_arm64_only
 
 ubi8-v11.0-deploy-arm64:
-  needs: ["ubi8-v11.0-test-arm64", "ubi8-v11.0-scan-arm64"]
+  needs: ["ubi8-v11.0-arm64"]
   <<: *deploy_definition
   <<: *ubi8_11_0_arm64_only
 
