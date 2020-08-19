@@ -10,6 +10,7 @@ function setup() {
 
 function teardown() {
     cleanup
+    docker rmi -f ${image}
 }
 
 function dq_ubuntu() {
@@ -42,6 +43,7 @@ function dq_rhel() {
     printf "%s\n" "CMD ./deviceQuery" >> Dockerfile
     docker_build -t "${image}-${BATS_TEST_NAME}" .
     docker_run --rm --gpus 0 ${image}-${BATS_TEST_NAME}
+    docker rmi -f ${image}-${BATS_TEST_NAME}
     [ "$status" -eq 0 ]
 }
 
@@ -59,6 +61,7 @@ function dq_rhel() {
     printf "%s\n" "CMD ./vectorAdd_nvrtc" >> Dockerfile
     docker_build -t "${image}-${BATS_TEST_NAME}" .
     docker_run --rm --gpus 0 ${image}-${BATS_TEST_NAME}
+    docker rmi -f ${image}-${BATS_TEST_NAME}
     [ "$status" -eq 0 ]
 }
 
@@ -76,5 +79,6 @@ function dq_rhel() {
     printf "%s\n" "CMD ./matrixMulDrv" >> Dockerfile
     docker_build -t "${image}-${BATS_TEST_NAME}" .
     docker_run --rm --gpus 0 ${image}-${BATS_TEST_NAME}
+    docker rmi -f ${image}-${BATS_TEST_NAME}
     [ "$status" -eq 0 ]
 }

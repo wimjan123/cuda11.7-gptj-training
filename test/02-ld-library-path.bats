@@ -10,5 +10,6 @@ function setup() {
 
 @test "check_LD_LIBRARY_PATH" {
     docker_run --rm --gpus 0 ${image} bash -c "printenv | grep -q 'LD_LIBRARY_PATH=/usr/local/nvidia/lib:/usr/local/nvidia/lib64'"
+    docker rmi -f ${image}
     [ "$status" -eq 0 ]
 }
