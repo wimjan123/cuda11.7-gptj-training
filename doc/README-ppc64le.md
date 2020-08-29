@@ -22,7 +22,7 @@ The Dockerfiles for the images are open-source and licensed under 3-clause BSD. 
 ### End User License Agreements
 
 The images are governed by the following NVIDIA End User License Agreements. By pulling and using the CUDA images, you accept the terms and conditions of these licenses. 
-Since the images may include components licensed under open-source licenses such as GPL, the sources for these components are archived [here](https://developer.download.nvidia.com/compute/cuda/opensource/).
+Since the images may include components licensed under open-source licenses such as GPL, the sources for these components are archived [here](https://developer.download.nvidia.com/compute/cuda/opensource/image).
 
 #### CUDA Toolkit EULA
 
