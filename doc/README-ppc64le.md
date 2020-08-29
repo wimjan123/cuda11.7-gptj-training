@@ -80,7 +80,7 @@ Visit [OpenSource @ Nvidia](https://developer.download.nvidia.com/compute/cuda/o
 
 #### CVE Warning
 
-At the time of release 2020-08-19 the following critical vulneralbilities were detected in the upstream UBI 8 base image:
+At the time of release 2020-08-19 the following critical vulnerabilities were detected in the upstream UBI 8 base image:
 
 ```
 vulnerabilities        package                      HIGH Vulnerability found in os package type (rpm) - librepo (CVE-2020-14352 - https://access.redhat.com/security/cve/CVE-2020-14352)
