@@ -42,6 +42,8 @@ before_script:
   - 'echo "NO_OS_SUFFIX: $NO_OS_SUFFIX"'
   # Gitlab is used to stage images
   - docker login -u "gitlab-ci-token" -p $CI_JOB_TOKEN gitlab-master.nvidia.com:5005
+  # Login to NGC to pull images
+  - docker login -u '$oauthtoken' -p $NVCR_TOKEN nvcr.io
 
 stages:
   - prepare
@@ -112,17 +114,22 @@ prepare:
       fi
     - 'echo "DIST_BASE_PATH: ${DIST_BASE_PATH}"'
     - 'echo "TAG_LATEST: ${TAG_LATEST}"'
+    - 'echo "TAG_BASE: ${TAG_BASE}"'
+    - 'echo "TAG_RUNTIME: ${TAG_RUNTIME}"'
+    - 'echo "TAG_DEVEL: ${TAG_DEVEL}"'
     - docker manifest inspect centos:8 # for debugging
     - docker buildx create --use --platform linux/${ARCH} --name cuda-${ARCH}
-    - docker buildx build --load --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_BASE} "${DIST_BASE_PATH}/base"
-                          --cache-from=type=registry,ref=${CACHE_NAME}:${CUDA_VERSION}-${OS}-${ARCH}-base
-                          --cache-to=type=registry,ref=${CACHE_NAME}:${CUDA_VERSION}-${OS}-${ARCH}-base
-    - docker buildx build --load --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_RUNTIME} --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/runtime"
-                          --cache-from=type=registry,ref=${CACHE_NAME}:${CUDA_VERSION}-${OS}-${ARCH}-runtime
-                          --cache-to=type=registry,ref=${CACHE_NAME}:${CUDA_VERSION}-${OS}-${ARCH}-runtime
-    - docker buildx build --load --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_DEVEL} ${TAG_LATEST} --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel"
-                          --cache-from=type=registry,ref=${CACHE_NAME}:${CUDA_VERSION}-${OS}-${ARCH}-devel
-                          --cache-to=type=registry,ref=${CACHE_NAME}:${CUDA_VERSION}-${OS}-${ARCH}-devel
+    - docker buildx build --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_BASE} "${DIST_BASE_PATH}/base"
+                          --build-arg BUILDKIT_INLINE_CACHE=1
+                          --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}
+    - docker buildx build --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_RUNTIME}
+                          --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/runtime"
+                          --build-arg BUILDKIT_INLINE_CACHE=1
+                          --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}
+    - docker buildx build --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_DEVEL} ${TAG_LATEST}
+                          --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel"
+                          --build-arg BUILDKIT_INLINE_CACHE=1
+                          --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
 
 .cudnn_template: &cudnn_definition
   image: gitlab-cuda-builder
@@ -141,14 +148,14 @@ prepare:
         TAG_CUDNN_DEVEL=" -t ${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel${IMAGE_TAG_SUFFIX} ";
       fi
     - docker buildx create --use --platform linux/${ARCH} --name cuda-${ARCH}
-    - docker buildx build --load --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_RUNTIME}
-                   --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/runtime/${CUDNN_VERSION}"
-                   --cache-from=type=registry,ref=${CACHE_NAME}:${CUDA_VERSION}-${OS}-${ARCH}-${CUDNN_VERSION}-runtime
-                   --cache-to=type=registry,ref=${CACHE_NAME}:${CUDA_VERSION}-${OS}-${ARCH}-${CUDNN_VERSION}-runtime
-    - docker buildx build --load --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_DEVEL}
-                   --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel/${CUDNN_VERSION}"
-                   --cache-from=type=registry,ref=${CACHE_NAME}:${CUDA_VERSION}-${OS}-${ARCH}-${CUDNN_VERSION}-devel
-                   --cache-to=type=registry,ref=${CACHE_NAME}:${CUDA_VERSION}-${OS}-${ARCH}-${CUDNN_VERSION}-devel
+    - docker buildx build --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_RUNTIME}
+                  --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/runtime/${CUDNN_VERSION}"
+                  --build-arg BUILDKIT_INLINE_CACHE=1
+                  --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}
+    - docker buildx build --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_DEVEL}
+                  --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel/${CUDNN_VERSION}"
+                  --build-arg BUILDKIT_INLINE_CACHE=1
+                  --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
 
 .test_template: &test_definition
   image: gitlab-cuda-builder
@@ -238,7 +245,6 @@ cleanup:
   ARCH: "{{ arch }}"
   DIST_BASE_PATH: "{{ cuda[cuda_version][pipeline]["dist_base_path"] }}"
   IMAGE_NAME: "{{ cuda[cuda_version][pipeline][distro]["image_name"][arch] }}"
-  CACHE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cache"
   MANIFEST: "{{ cuda.manifest_path }}"
   {% if image_tag_suffix %}
   IMAGE_TAG_SUFFIX: {{ image_tag_suffix }}

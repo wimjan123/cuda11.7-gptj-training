@@ -41,6 +41,8 @@ before_script:
   - 'echo "NO_OS_SUFFIX: $NO_OS_SUFFIX"'
   # Gitlab is used to stage images
   - docker login -u "gitlab-ci-token" -p $CI_JOB_TOKEN gitlab-master.nvidia.com:5005
+  # Login to NGC to pull images
+  - docker login -u '$oauthtoken' -p $NVCR_TOKEN nvcr.io
 
 stages:
   - prepare
@@ -109,17 +111,22 @@ prepare:
       fi
     - 'echo "DIST_BASE_PATH: ${DIST_BASE_PATH}"'
     - 'echo "TAG_LATEST: ${TAG_LATEST}"'
+    - 'echo "TAG_BASE: ${TAG_BASE}"'
+    - 'echo "TAG_RUNTIME: ${TAG_RUNTIME}"'
+    - 'echo "TAG_DEVEL: ${TAG_DEVEL}"'
     - docker manifest inspect centos:8 # for debugging
     - docker buildx create --use --platform linux/${ARCH} --name cuda-${ARCH}
-    - docker buildx build --load --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_BASE} "${DIST_BASE_PATH}/base"
-                          --cache-from=type=registry,ref=${CACHE_NAME}:${CUDA_VERSION}-${OS}-${ARCH}-base
-                          --cache-to=type=registry,ref=${CACHE_NAME}:${CUDA_VERSION}-${OS}-${ARCH}-base
-    - docker buildx build --load --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_RUNTIME} --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/runtime"
-                          --cache-from=type=registry,ref=${CACHE_NAME}:${CUDA_VERSION}-${OS}-${ARCH}-runtime
-                          --cache-to=type=registry,ref=${CACHE_NAME}:${CUDA_VERSION}-${OS}-${ARCH}-runtime
-    - docker buildx build --load --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_DEVEL} ${TAG_LATEST} --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel"
-                          --cache-from=type=registry,ref=${CACHE_NAME}:${CUDA_VERSION}-${OS}-${ARCH}-devel
-                          --cache-to=type=registry,ref=${CACHE_NAME}:${CUDA_VERSION}-${OS}-${ARCH}-devel
+    - docker buildx build --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_BASE} "${DIST_BASE_PATH}/base"
+                          --build-arg BUILDKIT_INLINE_CACHE=1
+                          --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}
+    - docker buildx build --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_RUNTIME}
+                          --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/runtime"
+                          --build-arg BUILDKIT_INLINE_CACHE=1
+                          --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}
+    - docker buildx build --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_DEVEL} ${TAG_LATEST}
+                          --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel"
+                          --build-arg BUILDKIT_INLINE_CACHE=1
+                          --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
 
 .cudnn_template: &cudnn_definition
   image: gitlab-cuda-builder
@@ -138,14 +145,14 @@ prepare:
         TAG_CUDNN_DEVEL=" -t ${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel${IMAGE_TAG_SUFFIX} ";
       fi
     - docker buildx create --use --platform linux/${ARCH} --name cuda-${ARCH}
-    - docker buildx build --load --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_RUNTIME}
-                   --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/runtime/${CUDNN_VERSION}"
-                   --cache-from=type=registry,ref=${CACHE_NAME}:${CUDA_VERSION}-${OS}-${ARCH}-${CUDNN_VERSION}-runtime
-                   --cache-to=type=registry,ref=${CACHE_NAME}:${CUDA_VERSION}-${OS}-${ARCH}-${CUDNN_VERSION}-runtime
-    - docker buildx build --load --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_DEVEL}
-                   --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel/${CUDNN_VERSION}"
-                   --cache-from=type=registry,ref=${CACHE_NAME}:${CUDA_VERSION}-${OS}-${ARCH}-${CUDNN_VERSION}-devel
-                   --cache-to=type=registry,ref=${CACHE_NAME}:${CUDA_VERSION}-${OS}-${ARCH}-${CUDNN_VERSION}-devel
+    - docker buildx build --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_RUNTIME}
+                  --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/runtime/${CUDNN_VERSION}"
+                  --build-arg BUILDKIT_INLINE_CACHE=1
+                  --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}
+    - docker buildx build --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_DEVEL}
+                  --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel/${CUDNN_VERSION}"
+                  --build-arg BUILDKIT_INLINE_CACHE=1
+                  --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
 
 .test_template: &test_definition
   image: gitlab-cuda-builder
@@ -220,7 +227,6 @@ cleanup:
   ARCH: "x86_64"
   DIST_BASE_PATH: "dist/11.0"
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
-  CACHE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cache"
   MANIFEST: "manifests/cuda.yaml"
   LATEST: "true"
   NO_OS_SUFFIX: "true"
@@ -260,7 +266,6 @@ ubuntu20.04-v11.0-deploy-x86_64:
   ARCH: "x86_64"
   DIST_BASE_PATH: "dist/11.0"
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
-  CACHE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cache"
   MANIFEST: "manifests/cuda.yaml"
   OS: "ubuntu18.04"
   OS_NAME: "ubuntu"
@@ -307,7 +312,6 @@ ubuntu18.04-v11.0-deploy-x86_64:
   ARCH: "ppc64le"
   DIST_BASE_PATH: "dist/11.0"
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le"
-  CACHE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cache"
   MANIFEST: "manifests/cuda.yaml"
   LATEST: "true"
   NO_OS_SUFFIX: "true"
@@ -356,7 +360,6 @@ ubuntu18.04-v11.0-deploy-ppc64le:
   ARCH: "arm64"
   DIST_BASE_PATH: "dist/11.0"
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-arm64"
-  CACHE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cache"
   MANIFEST: "manifests/cuda.yaml"
   LATEST: "true"
   NO_OS_SUFFIX: "true"
@@ -396,7 +399,6 @@ ubuntu18.04-v11.0-deploy-arm64:
   ARCH: "x86_64"
   DIST_BASE_PATH: "dist/11.0"
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
-  CACHE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cache"
   MANIFEST: "manifests/cuda.yaml"
   OS: "ubuntu16.04"
   OS_NAME: "ubuntu"
@@ -443,7 +445,6 @@ ubuntu16.04-v11.0-deploy-x86_64:
   ARCH: "x86_64"
   DIST_BASE_PATH: "dist/11.0"
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
-  CACHE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cache"
   MANIFEST: "manifests/cuda.yaml"
   OS: "centos8"
   OS_NAME: "centos"
@@ -490,7 +491,6 @@ centos8-v11.0-deploy-x86_64:
   ARCH: "ppc64le"
   DIST_BASE_PATH: "dist/11.0"
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le"
-  CACHE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cache"
   MANIFEST: "manifests/cuda.yaml"
   OS: "centos8"
   OS_NAME: "centos"
@@ -537,7 +537,6 @@ centos8-v11.0-deploy-ppc64le:
   ARCH: "arm64"
   DIST_BASE_PATH: "dist/11.0"
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-arm64"
-  CACHE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cache"
   MANIFEST: "manifests/cuda.yaml"
   OS: "centos8"
   OS_NAME: "centos"
@@ -575,7 +574,6 @@ centos8-v11.0-deploy-arm64:
   ARCH: "x86_64"
   DIST_BASE_PATH: "dist/11.0"
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
-  CACHE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cache"
   MANIFEST: "manifests/cuda.yaml"
   OS: "ubi8"
   OS_NAME: "ubi"
@@ -622,7 +620,6 @@ ubi8-v11.0-deploy-x86_64:
   ARCH: "ppc64le"
   DIST_BASE_PATH: "dist/11.0"
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le"
-  CACHE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cache"
   MANIFEST: "manifests/cuda.yaml"
   OS: "ubi8"
   OS_NAME: "ubi"
@@ -669,7 +666,6 @@ ubi8-v11.0-deploy-ppc64le:
   ARCH: "arm64"
   DIST_BASE_PATH: "dist/11.0"
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-arm64"
-  CACHE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cache"
   MANIFEST: "manifests/cuda.yaml"
   OS: "ubi8"
   OS_NAME: "ubi"
@@ -707,7 +703,6 @@ ubi8-v11.0-deploy-arm64:
   ARCH: "x86_64"
   DIST_BASE_PATH: "dist/11.0"
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
-  CACHE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cache"
   MANIFEST: "manifests/cuda.yaml"
   OS: "centos7"
   OS_NAME: "centos"
@@ -754,7 +749,6 @@ centos7-v11.0-deploy-x86_64:
   ARCH: "x86_64"
   DIST_BASE_PATH: "dist/11.0"
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
-  CACHE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cache"
   MANIFEST: "manifests/cuda.yaml"
   OS: "ubi7"
   OS_NAME: "ubi"
@@ -801,7 +795,6 @@ ubi7-v11.0-deploy-x86_64:
   ARCH: "x86_64"
   DIST_BASE_PATH: "dist/10.2"
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
-  CACHE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cache"
   MANIFEST: "manifests/cuda.yaml"
   NO_OS_SUFFIX: "true"
   OS: "ubuntu18.04"
@@ -858,7 +851,6 @@ ubuntu18.04-v10.2-deploy-x86_64:
   ARCH: "ppc64le"
   DIST_BASE_PATH: "dist/10.2"
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le"
-  CACHE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cache"
   MANIFEST: "manifests/cuda.yaml"
   NO_OS_SUFFIX: "true"
   OS: "ubuntu18.04"
@@ -915,7 +907,6 @@ ubuntu18.04-v10.2-deploy-ppc64le:
   ARCH: "x86_64"
   DIST_BASE_PATH: "dist/10.2"
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
-  CACHE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cache"
   MANIFEST: "manifests/cuda.yaml"
   OS: "ubuntu16.04"
   OS_NAME: "ubuntu"
@@ -971,7 +962,6 @@ ubuntu16.04-v10.2-deploy-x86_64:
   ARCH: "x86_64"
   DIST_BASE_PATH: "dist/10.2"
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
-  CACHE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cache"
   MANIFEST: "manifests/cuda.yaml"
   OS: "centos8"
   OS_NAME: "centos"
@@ -1027,7 +1017,6 @@ centos8-v10.2-deploy-x86_64:
   ARCH: "x86_64"
   DIST_BASE_PATH: "dist/10.2"
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
-  CACHE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cache"
   MANIFEST: "manifests/cuda.yaml"
   OS: "ubi8"
   OS_NAME: "ubi"
@@ -1083,7 +1072,6 @@ ubi8-v10.2-deploy-x86_64:
   ARCH: "x86_64"
   DIST_BASE_PATH: "dist/10.2"
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
-  CACHE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cache"
   MANIFEST: "manifests/cuda.yaml"
   OS: "centos7"
   OS_NAME: "centos"
@@ -1139,7 +1127,6 @@ centos7-v10.2-deploy-x86_64:
   ARCH: "ppc64le"
   DIST_BASE_PATH: "dist/10.2"
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le"
-  CACHE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cache"
   MANIFEST: "manifests/cuda.yaml"
   OS: "centos7"
   OS_NAME: "centos"
@@ -1195,7 +1182,6 @@ centos7-v10.2-deploy-ppc64le:
   ARCH: "x86_64"
   DIST_BASE_PATH: "dist/10.2"
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
-  CACHE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cache"
   MANIFEST: "manifests/cuda.yaml"
   OS: "ubi7"
   OS_NAME: "ubi"
@@ -1246,4 +1232,59 @@ ubi7-v10.2-deploy-x86_64:
   needs: ["ubi7-v10.2-cudnn8-x86_64","ubi7-v10.2-cudnn7-x86_64", "ubi7-v10.2-test-x86_64", "ubi7-v10.2-scan-x86_64"]
   <<: *deploy_definition
   <<: *ubi7_10_2_x86_64_only
+
+.ubi7_10_2_ppc64le_variables: &ubi7_10_2_ppc64le_variables
+  ARCH: "ppc64le"
+  DIST_BASE_PATH: "dist/10.2"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le"
+  MANIFEST: "manifests/cuda.yaml"
+  OS: "ubi7"
+  OS_NAME: "ubi"
+  OS_VERSION: "7"
+  CUDA_VERSION: "10.2"
+
+.ubi7_10_2_ppc64le_only: &ubi7_10_2_ppc64le_only
+  variables:
+    <<: *ubi7_10_2_ppc64le_variables
+  only:
+    variables:
+      - $ubi7_10_2_ppc64le == "true"
+      - $all == "true"
+
+ubi7-v10.2-ppc64le:
+  <<: *cuda_base_definition
+  <<: *ubi7_10_2_ppc64le_only
+
+ubi7-v10.2-cudnn8-ppc64le:
+  needs: ["ubi7-v10.2-ppc64le"]
+  <<: *cudnn_definition
+  <<: *ubi7_10_2_ppc64le_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi7_10_2_ppc64le_variables
+    CUDNN_VERSION: "cudnn8"
+
+ubi7-v10.2-cudnn7-ppc64le:
+  needs: ["ubi7-v10.2-ppc64le"]
+  <<: *cudnn_definition
+  <<: *ubi7_10_2_ppc64le_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi7_10_2_ppc64le_variables
+    CUDNN_VERSION: "cudnn7"
+
+ubi7-v10.2-test-ppc64le:
+  needs: ["ubi7-v10.2-ppc64le"]
+  <<: *test_definition
+  <<: *ubi7_10_2_ppc64le_only
+
+ubi7-v10.2-scan-ppc64le:
+  needs: ["ubi7-v10.2-ppc64le", "ubi7-v10.2-test-ppc64le"]
+  <<: *scan_definition
+  <<: *ubi7_10_2_ppc64le_only
+
+ubi7-v10.2-deploy-ppc64le:
+  needs: ["ubi7-v10.2-cudnn8-ppc64le","ubi7-v10.2-cudnn7-ppc64le", "ubi7-v10.2-test-ppc64le", "ubi7-v10.2-scan-ppc64le"]
+  <<: *deploy_definition
+  <<: *ubi7_10_2_ppc64le_only
 

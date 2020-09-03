@@ -552,8 +552,11 @@ class ManagerContainerPush(Manager):
         )
         # If the tag has a suffix but we are not expecting one, then fail
         if not self.image_tag_suffix and self._tag_contains_suffix(img):
-            log.debug("Tag suffix detected in image tag")
+            log.debug("Tag suffix detected in image tag, but not expected")
             match = False
+        else:
+            log.debug("Found expected suffix in tag")
+            match = True
         # All together now
         if (
             not match

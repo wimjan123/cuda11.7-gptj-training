@@ -25,9 +25,9 @@ ENV NCCL_VERSION {{ nccl_component_version_without_pkgrel }}
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-libraries-{{ libraries_component_version if libraries_component_version and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
-    {% if cuda.arch != "arm64" and cuda.version.major | int <= 10 %}
+    {% if (cuda.arch != "arm64" and cuda.version.major | int <= 10) or cuda.version.build == 89 %}
     cuda-npp-{{ libnpp_component_version if libnpp_component_version and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
-    {% else %}
+    {% elif cuda.version.major | int > 10 %}
     libnpp-{{ libnpp_component_version if libnpp_component_version and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
     {% endif %}
     {% if cuda.version.major | int == 9 and cuda.version.minor | int == 0 %}
@@ -37,7 +37,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-nvtx-{{ nvtx_component_version if nvtx_component_version and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
     {% endif %}
     {% if cuda.version.major | int == 10 and cuda.version.minor | int >= 1 %}
-        {% set haz10_2 = "-10-2" if cuda.arch == "arm64" else "10" %}
+        {# Check against build version is a workaround #}
+        {% set haz10_2 = "-10-2" if cuda.arch == "arm64" and cuda.version.build != 89 else "10" %}
     libcublas{{ haz10_2 }}=10.2.{{ cuda.version.minor }}.{{ cuda.version.build }}-1 \
     {% elif cuda.version.major | int > 10 %}
     libcublas-{{ libcublas_component_version }} \
