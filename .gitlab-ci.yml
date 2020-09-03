@@ -29,6 +29,7 @@ variables:
   GIT_DEPTH: "2"
 
 before_script:
+  - DRY_RUN=1
   - 'echo "ARCH: $ARCH"'
   - 'echo "OS: $OS"'
   - 'echo "IMAGE_NAME: $IMAGE_NAME"'
