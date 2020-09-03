@@ -390,3 +390,13 @@ cuda_v10.2:
         # TODO: version is different for rhel7
         cudnn7:
           version: 7.6.5.33-1
+    ppc64le:
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le
+      repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7/ppc64le
+      ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7/ppc64le
+      requires: "cuda>=10.2"
+      components:
+        <<: *cuda10_2_components
+        # TODO: version is different for rhel7
+        cudnn7:
+          version: 7.6.5.33-1
