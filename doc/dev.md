@@ -75,6 +75,7 @@ Where pipeline can be:
 - `<distro>-<arch>`: all cuda versions for a distro for a particular architecture
 - `<distro><distro_version>`: all cuda versions for a distro version.
 - `<distro><distro_version>-<arch>`: all cuda versions for a distro version for a particular architecture
+- `cuda<major>.<minor>-<distro><distro_version>-<arch>`: A very specify cuda version, distro, and arch.
 - `name:<pipeline_name>`: A named pipeline. See [Named image pipelines](#named-image-pipelines)
 - **TODO**: `cudnn<version>`: A cudnn version for all distros.
 
