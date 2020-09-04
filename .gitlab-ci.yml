@@ -97,13 +97,16 @@ prepare:
   retry: 2
   <<: *tags_definition
   script:
+    - export CUDA_TAGS=""
     - if [[ "${NO_OS_SUFFIX}" == "true" ]]; then
         export TAG_BASE=" -t ${IMAGE_NAME}:${CUDA_VERSION}-base${IMAGE_TAG_SUFFIX} ";
         export TAG_RUNTIME=" -t ${IMAGE_NAME}:${CUDA_VERSION}-runtime${IMAGE_TAG_SUFFIX} ";
         export TAG_DEVEL=" -t ${IMAGE_NAME}:${CUDA_VERSION}-devel${IMAGE_TAG_SUFFIX} ";
+        CUDA_TAGS="$CUDA_TAGS ${CUDA_VERSION}-base${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-runtime${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-devel${IMAGE_TAG_SUFFIX} ";
       fi
     - if [[ "${LATEST}" == "true" ]]; then
         export TAG_LATEST=" -t ${IMAGE_NAME}:latest ";
+        CUDA_TAGS="$CUDA_TAGS latest";
       fi
     - if [[ -z $DIST_BASE_PATH ]]; then
         export DIST_BASE_PATH="dist/${OS}/${CUDA_VERSION}/${ARCH}";
@@ -128,6 +131,10 @@ prepare:
                           --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel"
                           --build-arg BUILDKIT_INLINE_CACHE=1
                           --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
+    - 'echo "CUDA_TAGS=\"${CUDA_TAGS} ${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}\"" >> tags.env'
+  artifacts:
+    reports:
+      dotenv: tags.env
 
 .cudnn_template: &cudnn_definition
   image: gitlab-cuda-builder
@@ -135,6 +142,7 @@ prepare:
   retry: 2
   <<: *tags_definition
   script:
+    - export CUDA_EXTRA_TAGS=""
     - if [[ -z $DIST_BASE_PATH ]]; then
         DIST_BASE_PATH="dist/${OS}/${CUDA_VERSION}/${ARCH}";
       else
@@ -144,6 +152,7 @@ prepare:
     - if [[ "${NO_OS_SUFFIX}" == "true" ]]; then
         TAG_CUDNN_RUNTIME=" -t ${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime${IMAGE_TAG_SUFFIX} ";
         TAG_CUDNN_DEVEL=" -t ${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel${IMAGE_TAG_SUFFIX} ";
+        CUDA_EXTRA_TAGS="${CUDA_VERSION}-${CUDNN_VERSION}-runtime${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-${CUDNN_VERSION}-devel${IMAGE_TAG_SUFFIX} ";
       fi
     - docker buildx create --use --platform linux/${ARCH} --name cuda-${ARCH}
     - docker buildx build --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_RUNTIME}
@@ -154,6 +163,11 @@ prepare:
                   --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel/${CUDNN_VERSION}"
                   --build-arg BUILDKIT_INLINE_CACHE=1
                   --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
+    # this is not a great way to pass information between stages, but it is currently the only way
+    - 'echo "CUDA_TAGS=\"$CUDA_TAGS\"" > ${CUDNN_VERSION}finaltags.env'
+    - 'echo "CUDA_${CUDNN_VERSION}_TAGS=\"CUDA_${CUDNN_VERSION}_TAGS ${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}\"" >> ${CUDNN_VERSION}finaltags.env'
+    - 'echo "CUDA_EXTRA_${CUDNN_VERSION}_TAGS=\"$CUDA_EXTRA_${CUDNN_VERSION}_TAGS\"" >> ${CUDNN_VERSION}finaltags.env'
+    - cat ${CUDNN_VERSION}finaltags.env
 
 .test_template: &test_definition
   image: gitlab-cuda-builder
@@ -187,7 +201,12 @@ prepare:
   stage: deploy
   <<: *tags_definition
   script:
+    - for tag in $(env | grep "CUDA_*_TAGS=" | cut -f2 -d=); do
+        echo ${tag//\"} >> TAG_MANIFEST;
+      done
+    - cat TAG_MANIFEST
     - python manager.py ${MANIFEST:+`echo "--manifest ${MANIFEST}"`} push
+        --tag-manifest TAG_MANIFEST
         --image-name "${IMAGE_NAME}"
         --os "${OS_NAME}"
         --os-version "${OS_VERSION}"
@@ -218,8 +237,7 @@ cleanup:
   stage: cleanup
   <<: *tags_definition
   script:
-    - docker ps | grep "buildkit" | awk '{ print $1 }' | xargs docker rm -f
-    - docker system prune -f
+    - docker ps
   rules:
     - if: '$TRIGGER == "true"'
       when: always
@@ -248,20 +266,12 @@ ubuntu20.04-v11.0-x86_64:
   <<: *cuda_base_definition
   <<: *ubuntu20_04_11_0_x86_64_only
 
-ubuntu20.04-v11.0-test-x86_64:
-  needs: ["ubuntu20.04-v11.0-x86_64"]
-  <<: *test_definition
-  <<: *ubuntu20_04_11_0_x86_64_only
 
-ubuntu20.04-v11.0-scan-x86_64:
-  needs: ["ubuntu20.04-v11.0-x86_64", "ubuntu20.04-v11.0-test-x86_64"]
-  <<: *scan_definition
-  <<: *ubuntu20_04_11_0_x86_64_only
 
 ubuntu20.04-v11.0-deploy-x86_64:
-  needs: ["ubuntu20.04-v11.0-x86_64"]
   <<: *deploy_definition
   <<: *ubuntu20_04_11_0_x86_64_only
+  needs:
 
 .ubuntu18_04_11_0_x86_64_variables: &ubuntu18_04_11_0_x86_64_variables
   ARCH: "x86_64"
@@ -286,28 +296,27 @@ ubuntu18.04-v11.0-x86_64:
   <<: *ubuntu18_04_11_0_x86_64_only
 
 ubuntu18.04-v11.0-cudnn8-x86_64:
-  needs: ["ubuntu18.04-v11.0-x86_64"]
   <<: *cudnn_definition
   <<: *ubuntu18_04_11_0_x86_64_only
   # Variables overwritten here. Don't move this section.
   variables:
     <<: *ubuntu18_04_11_0_x86_64_variables
     CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubuntu18.04-v11.0-x86_64
+      artifacts: true
 
-ubuntu18.04-v11.0-test-x86_64:
-  needs: ["ubuntu18.04-v11.0-x86_64"]
-  <<: *test_definition
-  <<: *ubuntu18_04_11_0_x86_64_only
 
-ubuntu18.04-v11.0-scan-x86_64:
-  needs: ["ubuntu18.04-v11.0-x86_64", "ubuntu18.04-v11.0-test-x86_64"]
-  <<: *scan_definition
-  <<: *ubuntu18_04_11_0_x86_64_only
 
 ubuntu18.04-v11.0-deploy-x86_64:
-  needs: ["ubuntu18.04-v11.0-cudnn8-x86_64", "ubuntu18.04-v11.0-test-x86_64", "ubuntu18.04-v11.0-scan-x86_64"]
   <<: *deploy_definition
   <<: *ubuntu18_04_11_0_x86_64_only
+  needs:
+    - job: ubuntu18.04-v11.0-cudnn8-x86_64
+      artifacts: true
 
 .ubuntu18_04_11_0_ppc64le_variables: &ubuntu18_04_11_0_ppc64le_variables
   ARCH: "ppc64le"
@@ -334,28 +343,27 @@ ubuntu18.04-v11.0-ppc64le:
   <<: *ubuntu18_04_11_0_ppc64le_only
 
 ubuntu18.04-v11.0-cudnn8-ppc64le:
-  needs: ["ubuntu18.04-v11.0-ppc64le"]
   <<: *cudnn_definition
   <<: *ubuntu18_04_11_0_ppc64le_only
   # Variables overwritten here. Don't move this section.
   variables:
     <<: *ubuntu18_04_11_0_ppc64le_variables
     CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubuntu18.04-v11.0-ppc64le
+      artifacts: true
 
-ubuntu18.04-v11.0-test-ppc64le:
-  needs: ["ubuntu18.04-v11.0-ppc64le"]
-  <<: *test_definition
-  <<: *ubuntu18_04_11_0_ppc64le_only
 
-ubuntu18.04-v11.0-scan-ppc64le:
-  needs: ["ubuntu18.04-v11.0-ppc64le", "ubuntu18.04-v11.0-test-ppc64le"]
-  <<: *scan_definition
-  <<: *ubuntu18_04_11_0_ppc64le_only
 
 ubuntu18.04-v11.0-deploy-ppc64le:
-  needs: ["ubuntu18.04-v11.0-cudnn8-ppc64le", "ubuntu18.04-v11.0-test-ppc64le", "ubuntu18.04-v11.0-scan-ppc64le"]
   <<: *deploy_definition
   <<: *ubuntu18_04_11_0_ppc64le_only
+  needs:
+    - job: ubuntu18.04-v11.0-cudnn8-ppc64le
+      artifacts: true
 
 .ubuntu18_04_11_0_arm64_variables: &ubuntu18_04_11_0_arm64_variables
   ARCH: "arm64"
@@ -381,20 +389,12 @@ ubuntu18.04-v11.0-arm64:
   <<: *cuda_base_definition
   <<: *ubuntu18_04_11_0_arm64_only
 
-ubuntu18.04-v11.0-test-arm64:
-  needs: ["ubuntu18.04-v11.0-arm64"]
-  <<: *test_definition
-  <<: *ubuntu18_04_11_0_arm64_only
 
-ubuntu18.04-v11.0-scan-arm64:
-  needs: ["ubuntu18.04-v11.0-arm64", "ubuntu18.04-v11.0-test-arm64"]
-  <<: *scan_definition
-  <<: *ubuntu18_04_11_0_arm64_only
 
 ubuntu18.04-v11.0-deploy-arm64:
-  needs: ["ubuntu18.04-v11.0-arm64"]
   <<: *deploy_definition
   <<: *ubuntu18_04_11_0_arm64_only
+  needs:
 
 .ubuntu16_04_11_0_x86_64_variables: &ubuntu16_04_11_0_x86_64_variables
   ARCH: "x86_64"
@@ -419,28 +419,27 @@ ubuntu16.04-v11.0-x86_64:
   <<: *ubuntu16_04_11_0_x86_64_only
 
 ubuntu16.04-v11.0-cudnn8-x86_64:
-  needs: ["ubuntu16.04-v11.0-x86_64"]
   <<: *cudnn_definition
   <<: *ubuntu16_04_11_0_x86_64_only
   # Variables overwritten here. Don't move this section.
   variables:
     <<: *ubuntu16_04_11_0_x86_64_variables
     CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubuntu16.04-v11.0-x86_64
+      artifacts: true
 
-ubuntu16.04-v11.0-test-x86_64:
-  needs: ["ubuntu16.04-v11.0-x86_64"]
-  <<: *test_definition
-  <<: *ubuntu16_04_11_0_x86_64_only
 
-ubuntu16.04-v11.0-scan-x86_64:
-  needs: ["ubuntu16.04-v11.0-x86_64", "ubuntu16.04-v11.0-test-x86_64"]
-  <<: *scan_definition
-  <<: *ubuntu16_04_11_0_x86_64_only
 
 ubuntu16.04-v11.0-deploy-x86_64:
-  needs: ["ubuntu16.04-v11.0-cudnn8-x86_64", "ubuntu16.04-v11.0-test-x86_64", "ubuntu16.04-v11.0-scan-x86_64"]
   <<: *deploy_definition
   <<: *ubuntu16_04_11_0_x86_64_only
+  needs:
+    - job: ubuntu16.04-v11.0-cudnn8-x86_64
+      artifacts: true
 
 .centos8_11_0_x86_64_variables: &centos8_11_0_x86_64_variables
   ARCH: "x86_64"
@@ -465,28 +464,27 @@ centos8-v11.0-x86_64:
   <<: *centos8_11_0_x86_64_only
 
 centos8-v11.0-cudnn8-x86_64:
-  needs: ["centos8-v11.0-x86_64"]
   <<: *cudnn_definition
   <<: *centos8_11_0_x86_64_only
   # Variables overwritten here. Don't move this section.
   variables:
     <<: *centos8_11_0_x86_64_variables
     CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: centos8-v11.0-x86_64
+      artifacts: true
 
-centos8-v11.0-test-x86_64:
-  needs: ["centos8-v11.0-x86_64"]
-  <<: *test_definition
-  <<: *centos8_11_0_x86_64_only
 
-centos8-v11.0-scan-x86_64:
-  needs: ["centos8-v11.0-x86_64", "centos8-v11.0-test-x86_64"]
-  <<: *scan_definition
-  <<: *centos8_11_0_x86_64_only
 
 centos8-v11.0-deploy-x86_64:
-  needs: ["centos8-v11.0-cudnn8-x86_64", "centos8-v11.0-test-x86_64", "centos8-v11.0-scan-x86_64"]
   <<: *deploy_definition
   <<: *centos8_11_0_x86_64_only
+  needs:
+    - job: centos8-v11.0-cudnn8-x86_64
+      artifacts: true
 
 .centos8_11_0_ppc64le_variables: &centos8_11_0_ppc64le_variables
   ARCH: "ppc64le"
@@ -511,28 +509,27 @@ centos8-v11.0-ppc64le:
   <<: *centos8_11_0_ppc64le_only
 
 centos8-v11.0-cudnn8-ppc64le:
-  needs: ["centos8-v11.0-ppc64le"]
   <<: *cudnn_definition
   <<: *centos8_11_0_ppc64le_only
   # Variables overwritten here. Don't move this section.
   variables:
     <<: *centos8_11_0_ppc64le_variables
     CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: centos8-v11.0-ppc64le
+      artifacts: true
 
-centos8-v11.0-test-ppc64le:
-  needs: ["centos8-v11.0-ppc64le"]
-  <<: *test_definition
-  <<: *centos8_11_0_ppc64le_only
 
-centos8-v11.0-scan-ppc64le:
-  needs: ["centos8-v11.0-ppc64le", "centos8-v11.0-test-ppc64le"]
-  <<: *scan_definition
-  <<: *centos8_11_0_ppc64le_only
 
 centos8-v11.0-deploy-ppc64le:
-  needs: ["centos8-v11.0-cudnn8-ppc64le", "centos8-v11.0-test-ppc64le", "centos8-v11.0-scan-ppc64le"]
   <<: *deploy_definition
   <<: *centos8_11_0_ppc64le_only
+  needs:
+    - job: centos8-v11.0-cudnn8-ppc64le
+      artifacts: true
 
 .centos8_11_0_arm64_variables: &centos8_11_0_arm64_variables
   ARCH: "arm64"
@@ -556,20 +553,12 @@ centos8-v11.0-arm64:
   <<: *cuda_base_definition
   <<: *centos8_11_0_arm64_only
 
-centos8-v11.0-test-arm64:
-  needs: ["centos8-v11.0-arm64"]
-  <<: *test_definition
-  <<: *centos8_11_0_arm64_only
 
-centos8-v11.0-scan-arm64:
-  needs: ["centos8-v11.0-arm64", "centos8-v11.0-test-arm64"]
-  <<: *scan_definition
-  <<: *centos8_11_0_arm64_only
 
 centos8-v11.0-deploy-arm64:
-  needs: ["centos8-v11.0-arm64"]
   <<: *deploy_definition
   <<: *centos8_11_0_arm64_only
+  needs:
 
 .ubi8_11_0_x86_64_variables: &ubi8_11_0_x86_64_variables
   ARCH: "x86_64"
@@ -594,28 +583,27 @@ ubi8-v11.0-x86_64:
   <<: *ubi8_11_0_x86_64_only
 
 ubi8-v11.0-cudnn8-x86_64:
-  needs: ["ubi8-v11.0-x86_64"]
   <<: *cudnn_definition
   <<: *ubi8_11_0_x86_64_only
   # Variables overwritten here. Don't move this section.
   variables:
     <<: *ubi8_11_0_x86_64_variables
     CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubi8-v11.0-x86_64
+      artifacts: true
 
-ubi8-v11.0-test-x86_64:
-  needs: ["ubi8-v11.0-x86_64"]
-  <<: *test_definition
-  <<: *ubi8_11_0_x86_64_only
 
-ubi8-v11.0-scan-x86_64:
-  needs: ["ubi8-v11.0-x86_64", "ubi8-v11.0-test-x86_64"]
-  <<: *scan_definition
-  <<: *ubi8_11_0_x86_64_only
 
 ubi8-v11.0-deploy-x86_64:
-  needs: ["ubi8-v11.0-cudnn8-x86_64", "ubi8-v11.0-test-x86_64", "ubi8-v11.0-scan-x86_64"]
   <<: *deploy_definition
   <<: *ubi8_11_0_x86_64_only
+  needs:
+    - job: ubi8-v11.0-cudnn8-x86_64
+      artifacts: true
 
 .ubi8_11_0_ppc64le_variables: &ubi8_11_0_ppc64le_variables
   ARCH: "ppc64le"
@@ -640,28 +628,27 @@ ubi8-v11.0-ppc64le:
   <<: *ubi8_11_0_ppc64le_only
 
 ubi8-v11.0-cudnn8-ppc64le:
-  needs: ["ubi8-v11.0-ppc64le"]
   <<: *cudnn_definition
   <<: *ubi8_11_0_ppc64le_only
   # Variables overwritten here. Don't move this section.
   variables:
     <<: *ubi8_11_0_ppc64le_variables
     CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubi8-v11.0-ppc64le
+      artifacts: true
 
-ubi8-v11.0-test-ppc64le:
-  needs: ["ubi8-v11.0-ppc64le"]
-  <<: *test_definition
-  <<: *ubi8_11_0_ppc64le_only
 
-ubi8-v11.0-scan-ppc64le:
-  needs: ["ubi8-v11.0-ppc64le", "ubi8-v11.0-test-ppc64le"]
-  <<: *scan_definition
-  <<: *ubi8_11_0_ppc64le_only
 
 ubi8-v11.0-deploy-ppc64le:
-  needs: ["ubi8-v11.0-cudnn8-ppc64le", "ubi8-v11.0-test-ppc64le", "ubi8-v11.0-scan-ppc64le"]
   <<: *deploy_definition
   <<: *ubi8_11_0_ppc64le_only
+  needs:
+    - job: ubi8-v11.0-cudnn8-ppc64le
+      artifacts: true
 
 .ubi8_11_0_arm64_variables: &ubi8_11_0_arm64_variables
   ARCH: "arm64"
@@ -685,20 +672,12 @@ ubi8-v11.0-arm64:
   <<: *cuda_base_definition
   <<: *ubi8_11_0_arm64_only
 
-ubi8-v11.0-test-arm64:
-  needs: ["ubi8-v11.0-arm64"]
-  <<: *test_definition
-  <<: *ubi8_11_0_arm64_only
 
-ubi8-v11.0-scan-arm64:
-  needs: ["ubi8-v11.0-arm64", "ubi8-v11.0-test-arm64"]
-  <<: *scan_definition
-  <<: *ubi8_11_0_arm64_only
 
 ubi8-v11.0-deploy-arm64:
-  needs: ["ubi8-v11.0-arm64"]
   <<: *deploy_definition
   <<: *ubi8_11_0_arm64_only
+  needs:
 
 .centos7_11_0_x86_64_variables: &centos7_11_0_x86_64_variables
   ARCH: "x86_64"
@@ -723,28 +702,27 @@ centos7-v11.0-x86_64:
   <<: *centos7_11_0_x86_64_only
 
 centos7-v11.0-cudnn8-x86_64:
-  needs: ["centos7-v11.0-x86_64"]
   <<: *cudnn_definition
   <<: *centos7_11_0_x86_64_only
   # Variables overwritten here. Don't move this section.
   variables:
     <<: *centos7_11_0_x86_64_variables
     CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: centos7-v11.0-x86_64
+      artifacts: true
 
-centos7-v11.0-test-x86_64:
-  needs: ["centos7-v11.0-x86_64"]
-  <<: *test_definition
-  <<: *centos7_11_0_x86_64_only
 
-centos7-v11.0-scan-x86_64:
-  needs: ["centos7-v11.0-x86_64", "centos7-v11.0-test-x86_64"]
-  <<: *scan_definition
-  <<: *centos7_11_0_x86_64_only
 
 centos7-v11.0-deploy-x86_64:
-  needs: ["centos7-v11.0-cudnn8-x86_64", "centos7-v11.0-test-x86_64", "centos7-v11.0-scan-x86_64"]
   <<: *deploy_definition
   <<: *centos7_11_0_x86_64_only
+  needs:
+    - job: centos7-v11.0-cudnn8-x86_64
+      artifacts: true
 
 .ubi7_11_0_x86_64_variables: &ubi7_11_0_x86_64_variables
   ARCH: "x86_64"
@@ -769,28 +747,27 @@ ubi7-v11.0-x86_64:
   <<: *ubi7_11_0_x86_64_only
 
 ubi7-v11.0-cudnn8-x86_64:
-  needs: ["ubi7-v11.0-x86_64"]
   <<: *cudnn_definition
   <<: *ubi7_11_0_x86_64_only
   # Variables overwritten here. Don't move this section.
   variables:
     <<: *ubi7_11_0_x86_64_variables
     CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubi7-v11.0-x86_64
+      artifacts: true
 
-ubi7-v11.0-test-x86_64:
-  needs: ["ubi7-v11.0-x86_64"]
-  <<: *test_definition
-  <<: *ubi7_11_0_x86_64_only
 
-ubi7-v11.0-scan-x86_64:
-  needs: ["ubi7-v11.0-x86_64", "ubi7-v11.0-test-x86_64"]
-  <<: *scan_definition
-  <<: *ubi7_11_0_x86_64_only
 
 ubi7-v11.0-deploy-x86_64:
-  needs: ["ubi7-v11.0-cudnn8-x86_64", "ubi7-v11.0-test-x86_64", "ubi7-v11.0-scan-x86_64"]
   <<: *deploy_definition
   <<: *ubi7_11_0_x86_64_only
+  needs:
+    - job: ubi7-v11.0-cudnn8-x86_64
+      artifacts: true
 
 .ubuntu18_04_10_2_x86_64_variables: &ubuntu18_04_10_2_x86_64_variables
   ARCH: "x86_64"
@@ -816,37 +793,42 @@ ubuntu18.04-v10.2-x86_64:
   <<: *ubuntu18_04_10_2_x86_64_only
 
 ubuntu18.04-v10.2-cudnn8-x86_64:
-  needs: ["ubuntu18.04-v10.2-x86_64"]
   <<: *cudnn_definition
   <<: *ubuntu18_04_10_2_x86_64_only
   # Variables overwritten here. Don't move this section.
   variables:
     <<: *ubuntu18_04_10_2_x86_64_variables
     CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubuntu18.04-v10.2-x86_64
+      artifacts: true
 
 ubuntu18.04-v10.2-cudnn7-x86_64:
-  needs: ["ubuntu18.04-v10.2-x86_64"]
   <<: *cudnn_definition
   <<: *ubuntu18_04_10_2_x86_64_only
   # Variables overwritten here. Don't move this section.
   variables:
     <<: *ubuntu18_04_10_2_x86_64_variables
     CUDNN_VERSION: "cudnn7"
+  artifacts:
+    reports:
+      dotenv: cudnn7finaltags.env
+  needs:
+    - job: ubuntu18.04-v10.2-x86_64
+      artifacts: true
 
-ubuntu18.04-v10.2-test-x86_64:
-  needs: ["ubuntu18.04-v10.2-x86_64"]
-  <<: *test_definition
-  <<: *ubuntu18_04_10_2_x86_64_only
 
-ubuntu18.04-v10.2-scan-x86_64:
-  needs: ["ubuntu18.04-v10.2-x86_64", "ubuntu18.04-v10.2-test-x86_64"]
-  <<: *scan_definition
-  <<: *ubuntu18_04_10_2_x86_64_only
 
 ubuntu18.04-v10.2-deploy-x86_64:
-  needs: ["ubuntu18.04-v10.2-cudnn8-x86_64","ubuntu18.04-v10.2-cudnn7-x86_64", "ubuntu18.04-v10.2-test-x86_64", "ubuntu18.04-v10.2-scan-x86_64"]
   <<: *deploy_definition
   <<: *ubuntu18_04_10_2_x86_64_only
+  needs:
+    - job: ubuntu18.04-v10.2-cudnn8-x86_64
+      artifacts: true
+    - job: ubuntu18.04-v10.2-cudnn7-x86_64
 
 .ubuntu18_04_10_2_ppc64le_variables: &ubuntu18_04_10_2_ppc64le_variables
   ARCH: "ppc64le"
@@ -872,37 +854,42 @@ ubuntu18.04-v10.2-ppc64le:
   <<: *ubuntu18_04_10_2_ppc64le_only
 
 ubuntu18.04-v10.2-cudnn8-ppc64le:
-  needs: ["ubuntu18.04-v10.2-ppc64le"]
   <<: *cudnn_definition
   <<: *ubuntu18_04_10_2_ppc64le_only
   # Variables overwritten here. Don't move this section.
   variables:
     <<: *ubuntu18_04_10_2_ppc64le_variables
     CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubuntu18.04-v10.2-ppc64le
+      artifacts: true
 
 ubuntu18.04-v10.2-cudnn7-ppc64le:
-  needs: ["ubuntu18.04-v10.2-ppc64le"]
   <<: *cudnn_definition
   <<: *ubuntu18_04_10_2_ppc64le_only
   # Variables overwritten here. Don't move this section.
   variables:
     <<: *ubuntu18_04_10_2_ppc64le_variables
     CUDNN_VERSION: "cudnn7"
+  artifacts:
+    reports:
+      dotenv: cudnn7finaltags.env
+  needs:
+    - job: ubuntu18.04-v10.2-ppc64le
+      artifacts: true
 
-ubuntu18.04-v10.2-test-ppc64le:
-  needs: ["ubuntu18.04-v10.2-ppc64le"]
-  <<: *test_definition
-  <<: *ubuntu18_04_10_2_ppc64le_only
 
-ubuntu18.04-v10.2-scan-ppc64le:
-  needs: ["ubuntu18.04-v10.2-ppc64le", "ubuntu18.04-v10.2-test-ppc64le"]
-  <<: *scan_definition
-  <<: *ubuntu18_04_10_2_ppc64le_only
 
 ubuntu18.04-v10.2-deploy-ppc64le:
-  needs: ["ubuntu18.04-v10.2-cudnn8-ppc64le","ubuntu18.04-v10.2-cudnn7-ppc64le", "ubuntu18.04-v10.2-test-ppc64le", "ubuntu18.04-v10.2-scan-ppc64le"]
   <<: *deploy_definition
   <<: *ubuntu18_04_10_2_ppc64le_only
+  needs:
+    - job: ubuntu18.04-v10.2-cudnn8-ppc64le
+      artifacts: true
+    - job: ubuntu18.04-v10.2-cudnn7-ppc64le
 
 .ubuntu16_04_10_2_x86_64_variables: &ubuntu16_04_10_2_x86_64_variables
   ARCH: "x86_64"
@@ -927,37 +914,42 @@ ubuntu16.04-v10.2-x86_64:
   <<: *ubuntu16_04_10_2_x86_64_only
 
 ubuntu16.04-v10.2-cudnn8-x86_64:
-  needs: ["ubuntu16.04-v10.2-x86_64"]
   <<: *cudnn_definition
   <<: *ubuntu16_04_10_2_x86_64_only
   # Variables overwritten here. Don't move this section.
   variables:
     <<: *ubuntu16_04_10_2_x86_64_variables
     CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubuntu16.04-v10.2-x86_64
+      artifacts: true
 
 ubuntu16.04-v10.2-cudnn7-x86_64:
-  needs: ["ubuntu16.04-v10.2-x86_64"]
   <<: *cudnn_definition
   <<: *ubuntu16_04_10_2_x86_64_only
   # Variables overwritten here. Don't move this section.
   variables:
     <<: *ubuntu16_04_10_2_x86_64_variables
     CUDNN_VERSION: "cudnn7"
+  artifacts:
+    reports:
+      dotenv: cudnn7finaltags.env
+  needs:
+    - job: ubuntu16.04-v10.2-x86_64
+      artifacts: true
 
-ubuntu16.04-v10.2-test-x86_64:
-  needs: ["ubuntu16.04-v10.2-x86_64"]
-  <<: *test_definition
-  <<: *ubuntu16_04_10_2_x86_64_only
 
-ubuntu16.04-v10.2-scan-x86_64:
-  needs: ["ubuntu16.04-v10.2-x86_64", "ubuntu16.04-v10.2-test-x86_64"]
-  <<: *scan_definition
-  <<: *ubuntu16_04_10_2_x86_64_only
 
 ubuntu16.04-v10.2-deploy-x86_64:
-  needs: ["ubuntu16.04-v10.2-cudnn8-x86_64","ubuntu16.04-v10.2-cudnn7-x86_64", "ubuntu16.04-v10.2-test-x86_64", "ubuntu16.04-v10.2-scan-x86_64"]
   <<: *deploy_definition
   <<: *ubuntu16_04_10_2_x86_64_only
+  needs:
+    - job: ubuntu16.04-v10.2-cudnn8-x86_64
+      artifacts: true
+    - job: ubuntu16.04-v10.2-cudnn7-x86_64
 
 .centos8_10_2_x86_64_variables: &centos8_10_2_x86_64_variables
   ARCH: "x86_64"
@@ -982,37 +974,42 @@ centos8-v10.2-x86_64:
   <<: *centos8_10_2_x86_64_only
 
 centos8-v10.2-cudnn8-x86_64:
-  needs: ["centos8-v10.2-x86_64"]
   <<: *cudnn_definition
   <<: *centos8_10_2_x86_64_only
   # Variables overwritten here. Don't move this section.
   variables:
     <<: *centos8_10_2_x86_64_variables
     CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: centos8-v10.2-x86_64
+      artifacts: true
 
 centos8-v10.2-cudnn7-x86_64:
-  needs: ["centos8-v10.2-x86_64"]
   <<: *cudnn_definition
   <<: *centos8_10_2_x86_64_only
   # Variables overwritten here. Don't move this section.
   variables:
     <<: *centos8_10_2_x86_64_variables
     CUDNN_VERSION: "cudnn7"
+  artifacts:
+    reports:
+      dotenv: cudnn7finaltags.env
+  needs:
+    - job: centos8-v10.2-x86_64
+      artifacts: true
 
-centos8-v10.2-test-x86_64:
-  needs: ["centos8-v10.2-x86_64"]
-  <<: *test_definition
-  <<: *centos8_10_2_x86_64_only
 
-centos8-v10.2-scan-x86_64:
-  needs: ["centos8-v10.2-x86_64", "centos8-v10.2-test-x86_64"]
-  <<: *scan_definition
-  <<: *centos8_10_2_x86_64_only
 
 centos8-v10.2-deploy-x86_64:
-  needs: ["centos8-v10.2-cudnn8-x86_64","centos8-v10.2-cudnn7-x86_64", "centos8-v10.2-test-x86_64", "centos8-v10.2-scan-x86_64"]
   <<: *deploy_definition
   <<: *centos8_10_2_x86_64_only
+  needs:
+    - job: centos8-v10.2-cudnn8-x86_64
+      artifacts: true
+    - job: centos8-v10.2-cudnn7-x86_64
 
 .ubi8_10_2_x86_64_variables: &ubi8_10_2_x86_64_variables
   ARCH: "x86_64"
@@ -1037,37 +1034,42 @@ ubi8-v10.2-x86_64:
   <<: *ubi8_10_2_x86_64_only
 
 ubi8-v10.2-cudnn8-x86_64:
-  needs: ["ubi8-v10.2-x86_64"]
   <<: *cudnn_definition
   <<: *ubi8_10_2_x86_64_only
   # Variables overwritten here. Don't move this section.
   variables:
     <<: *ubi8_10_2_x86_64_variables
     CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubi8-v10.2-x86_64
+      artifacts: true
 
 ubi8-v10.2-cudnn7-x86_64:
-  needs: ["ubi8-v10.2-x86_64"]
   <<: *cudnn_definition
   <<: *ubi8_10_2_x86_64_only
   # Variables overwritten here. Don't move this section.
   variables:
     <<: *ubi8_10_2_x86_64_variables
     CUDNN_VERSION: "cudnn7"
+  artifacts:
+    reports:
+      dotenv: cudnn7finaltags.env
+  needs:
+    - job: ubi8-v10.2-x86_64
+      artifacts: true
 
-ubi8-v10.2-test-x86_64:
-  needs: ["ubi8-v10.2-x86_64"]
-  <<: *test_definition
-  <<: *ubi8_10_2_x86_64_only
 
-ubi8-v10.2-scan-x86_64:
-  needs: ["ubi8-v10.2-x86_64", "ubi8-v10.2-test-x86_64"]
-  <<: *scan_definition
-  <<: *ubi8_10_2_x86_64_only
 
 ubi8-v10.2-deploy-x86_64:
-  needs: ["ubi8-v10.2-cudnn8-x86_64","ubi8-v10.2-cudnn7-x86_64", "ubi8-v10.2-test-x86_64", "ubi8-v10.2-scan-x86_64"]
   <<: *deploy_definition
   <<: *ubi8_10_2_x86_64_only
+  needs:
+    - job: ubi8-v10.2-cudnn8-x86_64
+      artifacts: true
+    - job: ubi8-v10.2-cudnn7-x86_64
 
 .centos7_10_2_x86_64_variables: &centos7_10_2_x86_64_variables
   ARCH: "x86_64"
@@ -1092,37 +1094,42 @@ centos7-v10.2-x86_64:
   <<: *centos7_10_2_x86_64_only
 
 centos7-v10.2-cudnn8-x86_64:
-  needs: ["centos7-v10.2-x86_64"]
   <<: *cudnn_definition
   <<: *centos7_10_2_x86_64_only
   # Variables overwritten here. Don't move this section.
   variables:
     <<: *centos7_10_2_x86_64_variables
     CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: centos7-v10.2-x86_64
+      artifacts: true
 
 centos7-v10.2-cudnn7-x86_64:
-  needs: ["centos7-v10.2-x86_64"]
   <<: *cudnn_definition
   <<: *centos7_10_2_x86_64_only
   # Variables overwritten here. Don't move this section.
   variables:
     <<: *centos7_10_2_x86_64_variables
     CUDNN_VERSION: "cudnn7"
+  artifacts:
+    reports:
+      dotenv: cudnn7finaltags.env
+  needs:
+    - job: centos7-v10.2-x86_64
+      artifacts: true
 
-centos7-v10.2-test-x86_64:
-  needs: ["centos7-v10.2-x86_64"]
-  <<: *test_definition
-  <<: *centos7_10_2_x86_64_only
 
-centos7-v10.2-scan-x86_64:
-  needs: ["centos7-v10.2-x86_64", "centos7-v10.2-test-x86_64"]
-  <<: *scan_definition
-  <<: *centos7_10_2_x86_64_only
 
 centos7-v10.2-deploy-x86_64:
-  needs: ["centos7-v10.2-cudnn8-x86_64","centos7-v10.2-cudnn7-x86_64", "centos7-v10.2-test-x86_64", "centos7-v10.2-scan-x86_64"]
   <<: *deploy_definition
   <<: *centos7_10_2_x86_64_only
+  needs:
+    - job: centos7-v10.2-cudnn8-x86_64
+      artifacts: true
+    - job: centos7-v10.2-cudnn7-x86_64
 
 .centos7_10_2_ppc64le_variables: &centos7_10_2_ppc64le_variables
   ARCH: "ppc64le"
@@ -1147,37 +1154,42 @@ centos7-v10.2-ppc64le:
   <<: *centos7_10_2_ppc64le_only
 
 centos7-v10.2-cudnn8-ppc64le:
-  needs: ["centos7-v10.2-ppc64le"]
   <<: *cudnn_definition
   <<: *centos7_10_2_ppc64le_only
   # Variables overwritten here. Don't move this section.
   variables:
     <<: *centos7_10_2_ppc64le_variables
     CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: centos7-v10.2-ppc64le
+      artifacts: true
 
 centos7-v10.2-cudnn7-ppc64le:
-  needs: ["centos7-v10.2-ppc64le"]
   <<: *cudnn_definition
   <<: *centos7_10_2_ppc64le_only
   # Variables overwritten here. Don't move this section.
   variables:
     <<: *centos7_10_2_ppc64le_variables
     CUDNN_VERSION: "cudnn7"
+  artifacts:
+    reports:
+      dotenv: cudnn7finaltags.env
+  needs:
+    - job: centos7-v10.2-ppc64le
+      artifacts: true
 
-centos7-v10.2-test-ppc64le:
-  needs: ["centos7-v10.2-ppc64le"]
-  <<: *test_definition
-  <<: *centos7_10_2_ppc64le_only
 
-centos7-v10.2-scan-ppc64le:
-  needs: ["centos7-v10.2-ppc64le", "centos7-v10.2-test-ppc64le"]
-  <<: *scan_definition
-  <<: *centos7_10_2_ppc64le_only
 
 centos7-v10.2-deploy-ppc64le:
-  needs: ["centos7-v10.2-cudnn8-ppc64le","centos7-v10.2-cudnn7-ppc64le", "centos7-v10.2-test-ppc64le", "centos7-v10.2-scan-ppc64le"]
   <<: *deploy_definition
   <<: *centos7_10_2_ppc64le_only
+  needs:
+    - job: centos7-v10.2-cudnn8-ppc64le
+      artifacts: true
+    - job: centos7-v10.2-cudnn7-ppc64le
 
 .ubi7_10_2_x86_64_variables: &ubi7_10_2_x86_64_variables
   ARCH: "x86_64"
@@ -1202,37 +1214,42 @@ ubi7-v10.2-x86_64:
   <<: *ubi7_10_2_x86_64_only
 
 ubi7-v10.2-cudnn8-x86_64:
-  needs: ["ubi7-v10.2-x86_64"]
   <<: *cudnn_definition
   <<: *ubi7_10_2_x86_64_only
   # Variables overwritten here. Don't move this section.
   variables:
     <<: *ubi7_10_2_x86_64_variables
     CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubi7-v10.2-x86_64
+      artifacts: true
 
 ubi7-v10.2-cudnn7-x86_64:
-  needs: ["ubi7-v10.2-x86_64"]
   <<: *cudnn_definition
   <<: *ubi7_10_2_x86_64_only
   # Variables overwritten here. Don't move this section.
   variables:
     <<: *ubi7_10_2_x86_64_variables
     CUDNN_VERSION: "cudnn7"
+  artifacts:
+    reports:
+      dotenv: cudnn7finaltags.env
+  needs:
+    - job: ubi7-v10.2-x86_64
+      artifacts: true
 
-ubi7-v10.2-test-x86_64:
-  needs: ["ubi7-v10.2-x86_64"]
-  <<: *test_definition
-  <<: *ubi7_10_2_x86_64_only
 
-ubi7-v10.2-scan-x86_64:
-  needs: ["ubi7-v10.2-x86_64", "ubi7-v10.2-test-x86_64"]
-  <<: *scan_definition
-  <<: *ubi7_10_2_x86_64_only
 
 ubi7-v10.2-deploy-x86_64:
-  needs: ["ubi7-v10.2-cudnn8-x86_64","ubi7-v10.2-cudnn7-x86_64", "ubi7-v10.2-test-x86_64", "ubi7-v10.2-scan-x86_64"]
   <<: *deploy_definition
   <<: *ubi7_10_2_x86_64_only
+  needs:
+    - job: ubi7-v10.2-cudnn8-x86_64
+      artifacts: true
+    - job: ubi7-v10.2-cudnn7-x86_64
 
 .ubi7_10_2_ppc64le_variables: &ubi7_10_2_ppc64le_variables
   ARCH: "ppc64le"
@@ -1257,35 +1274,40 @@ ubi7-v10.2-ppc64le:
   <<: *ubi7_10_2_ppc64le_only
 
 ubi7-v10.2-cudnn8-ppc64le:
-  needs: ["ubi7-v10.2-ppc64le"]
   <<: *cudnn_definition
   <<: *ubi7_10_2_ppc64le_only
   # Variables overwritten here. Don't move this section.
   variables:
     <<: *ubi7_10_2_ppc64le_variables
     CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubi7-v10.2-ppc64le
+      artifacts: true
 
 ubi7-v10.2-cudnn7-ppc64le:
-  needs: ["ubi7-v10.2-ppc64le"]
   <<: *cudnn_definition
   <<: *ubi7_10_2_ppc64le_only
   # Variables overwritten here. Don't move this section.
   variables:
     <<: *ubi7_10_2_ppc64le_variables
     CUDNN_VERSION: "cudnn7"
+  artifacts:
+    reports:
+      dotenv: cudnn7finaltags.env
+  needs:
+    - job: ubi7-v10.2-ppc64le
+      artifacts: true
 
-ubi7-v10.2-test-ppc64le:
-  needs: ["ubi7-v10.2-ppc64le"]
-  <<: *test_definition
-  <<: *ubi7_10_2_ppc64le_only
 
-ubi7-v10.2-scan-ppc64le:
-  needs: ["ubi7-v10.2-ppc64le", "ubi7-v10.2-test-ppc64le"]
-  <<: *scan_definition
-  <<: *ubi7_10_2_ppc64le_only
 
 ubi7-v10.2-deploy-ppc64le:
-  needs: ["ubi7-v10.2-cudnn8-ppc64le","ubi7-v10.2-cudnn7-ppc64le", "ubi7-v10.2-test-ppc64le", "ubi7-v10.2-scan-ppc64le"]
   <<: *deploy_definition
   <<: *ubi7_10_2_ppc64le_only
+  needs:
+    - job: ubi7-v10.2-cudnn8-ppc64le
+      artifacts: true
+    - job: ubi7-v10.2-cudnn7-ppc64le
 

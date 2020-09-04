@@ -22,13 +22,6 @@ push_repos:
       x86_64: urm.nvidia.com/sw-gpu-cuda-installer-docker-local/cuda
       ppc64le: urm.nvidia.com/sw-gpu-cuda-installer-docker-local/cuda/cuda-ppc64le
       arm64: urm.nvidia.com/sw-gpu-cuda-installer-docker-local/cuda/cuda-arm64
-  # TODO: allow merging name pipeline repos so we don't duplicate too much
-  artifactory_l4t:
-    only_if: NV_ARTIFACTORY
-    user: ARTIFACTORY_USER
-    pass: ARTIFACTORY_PASS
-    registry:
-      arm64: urm.nvidia.com/sw-gpu-cuda-installer-docker-local/cuda/l4t-cuda
   # EA and GA
   nvcr.io:
     only_if: NVCR_TOKEN

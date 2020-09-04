@@ -474,6 +474,8 @@ class ManagerContainerPush(Manager):
         help="The name of the pipeline the deploy is coming from",
     )
 
+    tag_manifest = cli.SwitchAttr("--tag-manifest", str, help="A list of tags to push",)
+
     client = None
     repos = []
     tags = []

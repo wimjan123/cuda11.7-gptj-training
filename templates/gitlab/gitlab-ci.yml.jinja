@@ -99,13 +99,16 @@ prepare:
   retry: 2
   <<: *tags_definition
   script:
+    - export CUDA_TAGS=""
     - if [[ "${NO_OS_SUFFIX}" == "true" ]]; then
         export TAG_BASE=" -t ${IMAGE_NAME}:${CUDA_VERSION}-base${IMAGE_TAG_SUFFIX} ";
         export TAG_RUNTIME=" -t ${IMAGE_NAME}:${CUDA_VERSION}-runtime${IMAGE_TAG_SUFFIX} ";
         export TAG_DEVEL=" -t ${IMAGE_NAME}:${CUDA_VERSION}-devel${IMAGE_TAG_SUFFIX} ";
+        CUDA_TAGS="$CUDA_TAGS ${CUDA_VERSION}-base${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-runtime${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-devel${IMAGE_TAG_SUFFIX} ";
       fi
     - if [[ "${LATEST}" == "true" ]]; then
         export TAG_LATEST=" -t ${IMAGE_NAME}:latest ";
+        CUDA_TAGS="$CUDA_TAGS latest";
       fi
     - if [[ -z $DIST_BASE_PATH ]]; then
         export DIST_BASE_PATH="dist/${OS}/${CUDA_VERSION}/${ARCH}";
@@ -130,6 +133,10 @@ prepare:
                           --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel"
                           --build-arg BUILDKIT_INLINE_CACHE=1
                           --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
+    - 'echo "CUDA_TAGS=\"${CUDA_TAGS} ${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}\"" >> tags.env'
+  artifacts:
+    reports:
+      dotenv: tags.env
 
 .cudnn_template: &cudnn_definition
   image: gitlab-cuda-builder
@@ -137,6 +144,7 @@ prepare:
   retry: 2
   <<: *tags_definition
   script:
+    - export CUDA_EXTRA_TAGS=""
     - if [[ -z $DIST_BASE_PATH ]]; then
         DIST_BASE_PATH="dist/${OS}/${CUDA_VERSION}/${ARCH}";
       else
@@ -146,6 +154,7 @@ prepare:
     - if [[ "${NO_OS_SUFFIX}" == "true" ]]; then
         TAG_CUDNN_RUNTIME=" -t ${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime${IMAGE_TAG_SUFFIX} ";
         TAG_CUDNN_DEVEL=" -t ${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel${IMAGE_TAG_SUFFIX} ";
+        CUDA_EXTRA_TAGS="${CUDA_VERSION}-${CUDNN_VERSION}-runtime${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-${CUDNN_VERSION}-devel${IMAGE_TAG_SUFFIX} ";
       fi
     - docker buildx create --use --platform linux/${ARCH} --name cuda-${ARCH}
     - docker buildx build --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_RUNTIME}
@@ -156,6 +165,11 @@ prepare:
                   --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel/${CUDNN_VERSION}"
                   --build-arg BUILDKIT_INLINE_CACHE=1
                   --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
+    # this is not a great way to pass information between stages, but it is currently the only way
+    - 'echo "CUDA_TAGS=\"$CUDA_TAGS\"" > ${CUDNN_VERSION}finaltags.env'
+    - 'echo "CUDA_${CUDNN_VERSION}_TAGS=\"CUDA_${CUDNN_VERSION}_TAGS ${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}\"" >> ${CUDNN_VERSION}finaltags.env'
+    - 'echo "CUDA_EXTRA_${CUDNN_VERSION}_TAGS=\"$CUDA_EXTRA_${CUDNN_VERSION}_TAGS\"" >> ${CUDNN_VERSION}finaltags.env'
+    - cat ${CUDNN_VERSION}finaltags.env
 
 .test_template: &test_definition
   image: gitlab-cuda-builder
@@ -189,7 +203,13 @@ prepare:
   stage: deploy
   <<: *tags_definition
   script:
+    - for tag in $(env | grep "CUDA_*_TAGS=" | cut -f2 -d=); do
+        {# [[ $tag == "\"\"" ]] && continue; #}
+        echo ${tag//\"} >> TAG_MANIFEST;
+      done
+    - cat TAG_MANIFEST
     - python manager.py ${MANIFEST:+`echo "--manifest ${MANIFEST}"`} push
+        --tag-manifest TAG_MANIFEST
         --image-name "${IMAGE_NAME}"
         --os "${OS_NAME}"
         --os-version "${OS_VERSION}"
@@ -220,8 +240,9 @@ cleanup:
   stage: cleanup
   <<: *tags_definition
   script:
-    - docker ps | grep "buildkit" | awk '{ print $1 }' | xargs docker rm -f
-    - docker system prune -f
+    - docker ps
+    {# - docker ps | grep "buildkit" | awk '{ print $1 }' | xargs docker rm -f #}
+    {# - docker system prune -f #}
     {# - docker buildx stop cuda-arm64 #}
     {# - docker buildx stop cuda-ppc64le #}
     {# - docker buildx stop cuda-x86_64 #}
@@ -280,13 +301,18 @@ cleanup:
 {% for cudnn in cuda[cuda_version][pipeline][distro]["cudnn"][arch] -%}
 
 {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ cudnn }}-{{ arch }}:
-  needs: ["{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ arch }}"]
   <<: *cudnn_definition
   <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
   # Variables overwritten here. Don't move this section.
   variables:
     <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_variables
     CUDNN_VERSION: "{{ cudnn }}"
+  artifacts:
+    reports:
+      dotenv: {{ cudnn }}finaltags.env
+  needs:
+    - job: {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ arch }}
+      artifacts: true
 
 {% if pipeline and pipeline != "default" %}
   {% do cudnn_stages.append(distro + "-v" + cuda_version + "-" + pipeline + "-" + cudnn + "-" + arch) %}
@@ -296,37 +322,38 @@ cleanup:
 {% endfor %}
 {% endif -%}
 
-{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-test-{{ arch }}:
-  needs: ["{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ arch }}"]
-  <<: *test_definition
-  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
+{# {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-test-{{ arch }}: #}
+{#   needs: ["{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ arch }}"] #}
+{#   <<: *test_definition #}
+{#   <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only #}
 
-{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-scan-{{ arch }}:
-  needs: ["{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ arch }}", "{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-test-{{ arch }}"]
-  <<: *scan_definition
-  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
+{# {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-scan-{{ arch }}: #}
+{#   needs: ["{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ arch }}", "{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-test-{{ arch }}"] #}
+{#   <<: *scan_definition #}
+{#   <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only #}
 
 {% set cudnn_stages_final = "" %}
 {% if cudnn_stages %}
     {% set cudnn_stages_buf = [] %}
     {% for cudnn_stage in cudnn_stages %}
-        {% do cudnn_stages_buf.append('"' + cudnn_stage + '"') %}
+        {% do cudnn_stages_buf.append(cudnn_stage) %}
     {% endfor %}
-    {% set cudnn_stages_final = cudnn_stages_buf|join(",") %}
-    {% if cudnn_stages_final != "" %}
-        {% set cudnn_stages_final = cudnn_stages_final + ", " %}
-    {% endif %}
 {% endif -%}
 
 {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-deploy-{{ arch }}:
-{% if not cudnn_stages_final %}
-  needs: ["{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ arch }}"]
-{% else %}
-  {# needs: [{{ cudnn_stages_final }}] #}
-  needs: [{{ cudnn_stages_final }}"{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-test-{{ arch }}", "{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-scan-{{ arch }}"]
-{% endif %}
   <<: *deploy_definition
   <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
+  needs:
+  {% set stahp = { 'flag': True } %}
+  {% for job in cudnn_stages_buf %}
+    - job: {{ job }}
+    {% if stahp.flag %}
+      artifacts: true
+      {% do stahp.update({'flag':False}) %}
+    {% endif %}
+  {% endfor %}
+  {# needs: [{{ cudnn_stages_final }}"{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-test-{{ arch }}", "{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-scan-{{ arch }}"] #}
+{# {% endif %} #}
 
 {% endfor -%}
 {% endfor %}
