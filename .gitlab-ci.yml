@@ -1014,61 +1014,6 @@ centos8-v10.2-deploy-x86_64:
   <<: *deploy_definition
   <<: *centos8_10_2_x86_64_only
 
-.centos8_10_2_ppc64le_variables: &centos8_10_2_ppc64le_variables
-  ARCH: "ppc64le"
-  DIST_BASE_PATH: "dist/10.2"
-  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le"
-  MANIFEST: "manifests/cuda.yaml"
-  OS: "centos8"
-  OS_NAME: "centos"
-  OS_VERSION: "8"
-  CUDA_VERSION: "10.2"
-
-.centos8_10_2_ppc64le_only: &centos8_10_2_ppc64le_only
-  variables:
-    <<: *centos8_10_2_ppc64le_variables
-  only:
-    variables:
-      - $centos8_10_2_ppc64le == "true"
-      - $all == "true"
-
-centos8-v10.2-ppc64le:
-  <<: *cuda_base_definition
-  <<: *centos8_10_2_ppc64le_only
-
-centos8-v10.2-cudnn8-ppc64le:
-  needs: ["centos8-v10.2-ppc64le"]
-  <<: *cudnn_definition
-  <<: *centos8_10_2_ppc64le_only
-  # Variables overwritten here. Don't move this section.
-  variables:
-    <<: *centos8_10_2_ppc64le_variables
-    CUDNN_VERSION: "cudnn8"
-
-centos8-v10.2-cudnn7-ppc64le:
-  needs: ["centos8-v10.2-ppc64le"]
-  <<: *cudnn_definition
-  <<: *centos8_10_2_ppc64le_only
-  # Variables overwritten here. Don't move this section.
-  variables:
-    <<: *centos8_10_2_ppc64le_variables
-    CUDNN_VERSION: "cudnn7"
-
-centos8-v10.2-test-ppc64le:
-  needs: ["centos8-v10.2-ppc64le"]
-  <<: *test_definition
-  <<: *centos8_10_2_ppc64le_only
-
-centos8-v10.2-scan-ppc64le:
-  needs: ["centos8-v10.2-ppc64le", "centos8-v10.2-test-ppc64le"]
-  <<: *scan_definition
-  <<: *centos8_10_2_ppc64le_only
-
-centos8-v10.2-deploy-ppc64le:
-  needs: ["centos8-v10.2-cudnn8-ppc64le","centos8-v10.2-cudnn7-ppc64le", "centos8-v10.2-test-ppc64le", "centos8-v10.2-scan-ppc64le"]
-  <<: *deploy_definition
-  <<: *centos8_10_2_ppc64le_only
-
 .ubi8_10_2_x86_64_variables: &ubi8_10_2_x86_64_variables
   ARCH: "x86_64"
   DIST_BASE_PATH: "dist/10.2"
@@ -1123,61 +1068,6 @@ ubi8-v10.2-deploy-x86_64:
   needs: ["ubi8-v10.2-cudnn8-x86_64","ubi8-v10.2-cudnn7-x86_64", "ubi8-v10.2-test-x86_64", "ubi8-v10.2-scan-x86_64"]
   <<: *deploy_definition
   <<: *ubi8_10_2_x86_64_only
-
-.ubi8_10_2_ppc64le_variables: &ubi8_10_2_ppc64le_variables
-  ARCH: "ppc64le"
-  DIST_BASE_PATH: "dist/10.2"
-  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le"
-  MANIFEST: "manifests/cuda.yaml"
-  OS: "ubi8"
-  OS_NAME: "ubi"
-  OS_VERSION: "8"
-  CUDA_VERSION: "10.2"
-
-.ubi8_10_2_ppc64le_only: &ubi8_10_2_ppc64le_only
-  variables:
-    <<: *ubi8_10_2_ppc64le_variables
-  only:
-    variables:
-      - $ubi8_10_2_ppc64le == "true"
-      - $all == "true"
-
-ubi8-v10.2-ppc64le:
-  <<: *cuda_base_definition
-  <<: *ubi8_10_2_ppc64le_only
-
-ubi8-v10.2-cudnn8-ppc64le:
-  needs: ["ubi8-v10.2-ppc64le"]
-  <<: *cudnn_definition
-  <<: *ubi8_10_2_ppc64le_only
-  # Variables overwritten here. Don't move this section.
-  variables:
-    <<: *ubi8_10_2_ppc64le_variables
-    CUDNN_VERSION: "cudnn8"
-
-ubi8-v10.2-cudnn7-ppc64le:
-  needs: ["ubi8-v10.2-ppc64le"]
-  <<: *cudnn_definition
-  <<: *ubi8_10_2_ppc64le_only
-  # Variables overwritten here. Don't move this section.
-  variables:
-    <<: *ubi8_10_2_ppc64le_variables
-    CUDNN_VERSION: "cudnn7"
-
-ubi8-v10.2-test-ppc64le:
-  needs: ["ubi8-v10.2-ppc64le"]
-  <<: *test_definition
-  <<: *ubi8_10_2_ppc64le_only
-
-ubi8-v10.2-scan-ppc64le:
-  needs: ["ubi8-v10.2-ppc64le", "ubi8-v10.2-test-ppc64le"]
-  <<: *scan_definition
-  <<: *ubi8_10_2_ppc64le_only
-
-ubi8-v10.2-deploy-ppc64le:
-  needs: ["ubi8-v10.2-cudnn8-ppc64le","ubi8-v10.2-cudnn7-ppc64le", "ubi8-v10.2-test-ppc64le", "ubi8-v10.2-scan-ppc64le"]
-  <<: *deploy_definition
-  <<: *ubi8_10_2_ppc64le_only
 
 .centos7_10_2_x86_64_variables: &centos7_10_2_x86_64_variables
   ARCH: "x86_64"

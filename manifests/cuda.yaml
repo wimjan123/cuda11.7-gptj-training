@@ -331,13 +331,6 @@ cuda_v10.2:
         cudnn7:
           version: 7.6.5.32
           sha256sum: 600267f2caaed2fd58eb214ba669d8ea35f396a7d19b94822e6b36f9f7088c20
-    ppc64le:
-      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le
-      repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8/ppc64le
-      ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel8/ppc64le
-      requires: "cuda>=10.2"
-      components:
-        <<: *cuda10_2_components
   ubi8:
     template_path: templates/redhat
     base_image: registry.access.redhat.com/ubi8/ubi:latest
@@ -356,13 +349,6 @@ cuda_v10.2:
         cudnn7:
           version: 7.6.5.32
           sha256sum: 600267f2caaed2fd58eb214ba669d8ea35f396a7d19b94822e6b36f9f7088c20
-    ppc64le:
-      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le
-      repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8/ppc64le
-      ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel8/ppc64le
-      requires: "cuda>=10.2"
-      components:
-        <<: *cuda10_2_components
   centos7:
     template_path: templates/redhat
     base_image: centos:7
