@@ -71,6 +71,7 @@ Where pipeline can be:
 - `all`: All of the pipelines are built.
 - `<distro><distro_version>-cuda<major>.<minor>`: A specific cuda version for a specific cuda version.
 - `cuda<major>.<minor>`: A cuda version for all distros.
+- `cuda<major>.<minor>-<arch>`: A cuda version for an architecture.
 - `<distro>`: all cuda versions for a distro.
 - `<distro>-<arch>`: all cuda versions for a distro for a particular architecture
 - `<distro><distro_version>`: all cuda versions for a distro version.

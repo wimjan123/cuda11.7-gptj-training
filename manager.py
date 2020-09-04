@@ -164,6 +164,16 @@ class ManagerTrigger(Manager):
                     ci_vars.append(match.groups(0)[0])
         return ci_vars
 
+    def ci_cuda_version_arch_variables(self, version, arch):
+        rgx = re.compile(fr"^\s+- \$(?!all)(.*{version}_{arch}) == \"true\"$")
+        ci_vars = []
+        with open(".gitlab-ci.yml", "r") as fp:
+            for _, line in enumerate(fp):
+                match = rgx.match(line)
+                if match:
+                    ci_vars.append(match.groups(0)[0])
+        return ci_vars
+
     def get_cuda_version_from_trigger(self, trigger):
         rgx = re.compile(r".*cuda([\d\.]+).*$")
         match = rgx.match(trigger)
@@ -261,7 +271,7 @@ class ManagerTrigger(Manager):
                     f"job: '{job}' name: {self.pipeline_name} version: {version} distro: {distro} distro_version: {distro_version} arch: {arch}"
                 )
 
-                #  log.debug(f"distro_list: '{distro_list}'")
+                log.debug(f"distro_list: '{distro_list}'")
 
                 cijobs = []
                 if version and distro:
@@ -270,6 +280,8 @@ class ManagerTrigger(Manager):
                     cijobs = self.ci_cuda_version_distro_arch_variables(
                         version, distro, arch
                     )
+                elif version and arch:
+                    cijobs = self.ci_cuda_version_arch_variables(version, arch)
                 elif distro and arch:
                     cijobs = self.ci_distro_arch_variables(
                         version, arch, distro, distro_version
