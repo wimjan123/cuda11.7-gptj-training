@@ -563,6 +563,7 @@ class ManagerContainerPush(Manager):
                     continue
                 log.info("COPYING to: %s:%s", repo, tag)
                 if self.dry_run:
+                    log.debug("dry-run; not copying")
                     continue
                 if self.skopeocmd(
                     (

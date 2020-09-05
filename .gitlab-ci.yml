@@ -97,16 +97,15 @@ prepare:
   retry: 2
   <<: *tags_definition
   script:
-    - export CUDA_TAGS=""
     - if [[ "${NO_OS_SUFFIX}" == "true" ]]; then
         export TAG_BASE=" -t ${IMAGE_NAME}:${CUDA_VERSION}-base${IMAGE_TAG_SUFFIX} ";
         export TAG_RUNTIME=" -t ${IMAGE_NAME}:${CUDA_VERSION}-runtime${IMAGE_TAG_SUFFIX} ";
         export TAG_DEVEL=" -t ${IMAGE_NAME}:${CUDA_VERSION}-devel${IMAGE_TAG_SUFFIX} ";
-        CUDA_TAGS="$CUDA_TAGS ${CUDA_VERSION}-base${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-runtime${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-devel${IMAGE_TAG_SUFFIX} ";
+        export CUDA_TAGS="${CUDA_VERSION}-base${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-runtime${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-devel${IMAGE_TAG_SUFFIX} ";
       fi
     - if [[ "${LATEST}" == "true" ]]; then
         export TAG_LATEST=" -t ${IMAGE_NAME}:latest ";
-        CUDA_TAGS="$CUDA_TAGS latest";
+        export CUDA_TAGS="$CUDA_TAGS latest";
       fi
     - if [[ -z $DIST_BASE_PATH ]]; then
         export DIST_BASE_PATH="dist/${OS}/${CUDA_VERSION}/${ARCH}";
@@ -132,6 +131,7 @@ prepare:
                           --build-arg BUILDKIT_INLINE_CACHE=1
                           --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
     - 'echo "CUDA_TAGS=\"${CUDA_TAGS} ${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}\"" >> tags.env'
+    - cat tags.env
   artifacts:
     reports:
       dotenv: tags.env
@@ -142,7 +142,6 @@ prepare:
   retry: 2
   <<: *tags_definition
   script:
-    - export CUDA_EXTRA_TAGS=""
     - if [[ -z $DIST_BASE_PATH ]]; then
         DIST_BASE_PATH="dist/${OS}/${CUDA_VERSION}/${ARCH}";
       else
@@ -152,7 +151,7 @@ prepare:
     - if [[ "${NO_OS_SUFFIX}" == "true" ]]; then
         TAG_CUDNN_RUNTIME=" -t ${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime${IMAGE_TAG_SUFFIX} ";
         TAG_CUDNN_DEVEL=" -t ${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel${IMAGE_TAG_SUFFIX} ";
-        CUDA_EXTRA_TAGS="${CUDA_VERSION}-${CUDNN_VERSION}-runtime${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-${CUDNN_VERSION}-devel${IMAGE_TAG_SUFFIX} ";
+        export CUDA_EXTRA_TAGS="${CUDA_EXTRA_TAGS} ${CUDA_VERSION}-${CUDNN_VERSION}-runtime${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-${CUDNN_VERSION}-devel${IMAGE_TAG_SUFFIX}";
       fi
     - docker buildx create --use --platform linux/${ARCH} --name cuda-${ARCH}
     - docker buildx build --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_RUNTIME}
@@ -164,9 +163,9 @@ prepare:
                   --build-arg BUILDKIT_INLINE_CACHE=1
                   --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
     # this is not a great way to pass information between stages, but it is currently the only way
-    - 'echo "CUDA_TAGS=\"$CUDA_TAGS\"" > ${CUDNN_VERSION}finaltags.env'
-    - 'echo "CUDA_${CUDNN_VERSION}_TAGS=\"CUDA_${CUDNN_VERSION}_TAGS ${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}\"" >> ${CUDNN_VERSION}finaltags.env'
-    - 'echo "CUDA_EXTRA_${CUDNN_VERSION}_TAGS=\"$CUDA_EXTRA_${CUDNN_VERSION}_TAGS\"" >> ${CUDNN_VERSION}finaltags.env'
+    - 'echo "CUDA_TAGS=${CUDA_TAGS}" > ${CUDNN_VERSION}finaltags.env'
+    - 'echo "CUDA_${CUDNN_VERSION}_TAGS=\"${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}\"" >> ${CUDNN_VERSION}finaltags.env'
+    - 'echo "CUDA_EXTRA_${CUDNN_VERSION}_TAGS=\"${CUDA_EXTRA_TAGS}\"" >> ${CUDNN_VERSION}finaltags.env'
     - cat ${CUDNN_VERSION}finaltags.env
 
 .test_template: &test_definition
@@ -201,7 +200,7 @@ prepare:
   stage: deploy
   <<: *tags_definition
   script:
-    - for tag in $(env | grep "CUDA_*_TAGS=" | cut -f2 -d=); do
+    - for tag in $(env | grep 'CUDA.*_TAGS' | cut -f2 -d=); do
         echo ${tag//\"} >> TAG_MANIFEST;
       done
     - cat TAG_MANIFEST
