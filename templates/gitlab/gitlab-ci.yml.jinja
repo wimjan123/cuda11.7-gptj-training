@@ -317,20 +317,20 @@ cleanup:
 {% endfor %}
 {% endif -%}
 
-{# {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-test-{{ arch }}: #}
-{#   needs: ["{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ arch }}"] #}
-{#   <<: *test_definition #}
-{#   <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only #}
+{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-test-{{ arch }}:
+  needs: ["{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ arch }}"]
+  <<: *test_definition
+  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
 
-{# {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-scan-{{ arch }}: #}
-{#   needs: ["{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ arch }}", "{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-test-{{ arch }}"] #}
-{#   <<: *scan_definition #}
-{#   <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only #}
+{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-scan-{{ arch }}:
+  needs: ["{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ arch }}", "{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-test-{{ arch }}"]
+  <<: *scan_definition
+  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
 
 {% set cudnn_stages_final = "" %}
 {% if cudnn_stages %}
-    {% set cudnn_stages_buf = [] %}
-    {# {% set cudnn_stages_buf = ["{}-v{}{}-test-{}".format(distro, cuda_version, pipeline_name_hyp, arch), "{}-v{}{}-scan-{}".format(distro, cuda_version, pipeline_name_hyp, arch)] %} #}
+    {# {% set cudnn_stages_buf = [] %} #}
+    {% set cudnn_stages_buf = ["{}-v{}{}-test-{}".format(distro, cuda_version, pipeline_name_hyp, arch), "{}-v{}{}-scan-{}".format(distro, cuda_version, pipeline_name_hyp, arch)] %}
     {% for cudnn_stage in cudnn_stages %}
         {% do cudnn_stages_buf.append(cudnn_stage) %}
     {% endfor %}

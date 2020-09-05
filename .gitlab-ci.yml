@@ -265,7 +265,15 @@ ubuntu20.04-v11.0-x86_64:
   <<: *cuda_base_definition
   <<: *ubuntu20_04_11_0_x86_64_only
 
+ubuntu20.04-v11.0-test-x86_64:
+  needs: ["ubuntu20.04-v11.0-x86_64"]
+  <<: *test_definition
+  <<: *ubuntu20_04_11_0_x86_64_only
 
+ubuntu20.04-v11.0-scan-x86_64:
+  needs: ["ubuntu20.04-v11.0-x86_64", "ubuntu20.04-v11.0-test-x86_64"]
+  <<: *scan_definition
+  <<: *ubuntu20_04_11_0_x86_64_only
 
 ubuntu20.04-v11.0-deploy-x86_64:
   <<: *deploy_definition
@@ -308,14 +316,24 @@ ubuntu18.04-v11.0-cudnn8-x86_64:
     - job: ubuntu18.04-v11.0-x86_64
       artifacts: true
 
+ubuntu18.04-v11.0-test-x86_64:
+  needs: ["ubuntu18.04-v11.0-x86_64"]
+  <<: *test_definition
+  <<: *ubuntu18_04_11_0_x86_64_only
 
+ubuntu18.04-v11.0-scan-x86_64:
+  needs: ["ubuntu18.04-v11.0-x86_64", "ubuntu18.04-v11.0-test-x86_64"]
+  <<: *scan_definition
+  <<: *ubuntu18_04_11_0_x86_64_only
 
 ubuntu18.04-v11.0-deploy-x86_64:
   <<: *deploy_definition
   <<: *ubuntu18_04_11_0_x86_64_only
   needs:
-    - job: ubuntu18.04-v11.0-cudnn8-x86_64
+    - job: ubuntu18.04-v11.0-test-x86_64
       artifacts: true
+    - job: ubuntu18.04-v11.0-scan-x86_64
+    - job: ubuntu18.04-v11.0-cudnn8-x86_64
 
 .ubuntu18_04_11_0_ppc64le_variables: &ubuntu18_04_11_0_ppc64le_variables
   ARCH: "ppc64le"
@@ -355,14 +373,24 @@ ubuntu18.04-v11.0-cudnn8-ppc64le:
     - job: ubuntu18.04-v11.0-ppc64le
       artifacts: true
 
+ubuntu18.04-v11.0-test-ppc64le:
+  needs: ["ubuntu18.04-v11.0-ppc64le"]
+  <<: *test_definition
+  <<: *ubuntu18_04_11_0_ppc64le_only
 
+ubuntu18.04-v11.0-scan-ppc64le:
+  needs: ["ubuntu18.04-v11.0-ppc64le", "ubuntu18.04-v11.0-test-ppc64le"]
+  <<: *scan_definition
+  <<: *ubuntu18_04_11_0_ppc64le_only
 
 ubuntu18.04-v11.0-deploy-ppc64le:
   <<: *deploy_definition
   <<: *ubuntu18_04_11_0_ppc64le_only
   needs:
-    - job: ubuntu18.04-v11.0-cudnn8-ppc64le
+    - job: ubuntu18.04-v11.0-test-ppc64le
       artifacts: true
+    - job: ubuntu18.04-v11.0-scan-ppc64le
+    - job: ubuntu18.04-v11.0-cudnn8-ppc64le
 
 .ubuntu18_04_11_0_arm64_variables: &ubuntu18_04_11_0_arm64_variables
   ARCH: "arm64"
@@ -388,7 +416,15 @@ ubuntu18.04-v11.0-arm64:
   <<: *cuda_base_definition
   <<: *ubuntu18_04_11_0_arm64_only
 
+ubuntu18.04-v11.0-test-arm64:
+  needs: ["ubuntu18.04-v11.0-arm64"]
+  <<: *test_definition
+  <<: *ubuntu18_04_11_0_arm64_only
 
+ubuntu18.04-v11.0-scan-arm64:
+  needs: ["ubuntu18.04-v11.0-arm64", "ubuntu18.04-v11.0-test-arm64"]
+  <<: *scan_definition
+  <<: *ubuntu18_04_11_0_arm64_only
 
 ubuntu18.04-v11.0-deploy-arm64:
   <<: *deploy_definition
@@ -431,14 +467,24 @@ ubuntu16.04-v11.0-cudnn8-x86_64:
     - job: ubuntu16.04-v11.0-x86_64
       artifacts: true
 
+ubuntu16.04-v11.0-test-x86_64:
+  needs: ["ubuntu16.04-v11.0-x86_64"]
+  <<: *test_definition
+  <<: *ubuntu16_04_11_0_x86_64_only
 
+ubuntu16.04-v11.0-scan-x86_64:
+  needs: ["ubuntu16.04-v11.0-x86_64", "ubuntu16.04-v11.0-test-x86_64"]
+  <<: *scan_definition
+  <<: *ubuntu16_04_11_0_x86_64_only
 
 ubuntu16.04-v11.0-deploy-x86_64:
   <<: *deploy_definition
   <<: *ubuntu16_04_11_0_x86_64_only
   needs:
-    - job: ubuntu16.04-v11.0-cudnn8-x86_64
+    - job: ubuntu16.04-v11.0-test-x86_64
       artifacts: true
+    - job: ubuntu16.04-v11.0-scan-x86_64
+    - job: ubuntu16.04-v11.0-cudnn8-x86_64
 
 .centos8_11_0_x86_64_variables: &centos8_11_0_x86_64_variables
   ARCH: "x86_64"
@@ -476,14 +522,24 @@ centos8-v11.0-cudnn8-x86_64:
     - job: centos8-v11.0-x86_64
       artifacts: true
 
+centos8-v11.0-test-x86_64:
+  needs: ["centos8-v11.0-x86_64"]
+  <<: *test_definition
+  <<: *centos8_11_0_x86_64_only
 
+centos8-v11.0-scan-x86_64:
+  needs: ["centos8-v11.0-x86_64", "centos8-v11.0-test-x86_64"]
+  <<: *scan_definition
+  <<: *centos8_11_0_x86_64_only
 
 centos8-v11.0-deploy-x86_64:
   <<: *deploy_definition
   <<: *centos8_11_0_x86_64_only
   needs:
-    - job: centos8-v11.0-cudnn8-x86_64
+    - job: centos8-v11.0-test-x86_64
       artifacts: true
+    - job: centos8-v11.0-scan-x86_64
+    - job: centos8-v11.0-cudnn8-x86_64
 
 .centos8_11_0_ppc64le_variables: &centos8_11_0_ppc64le_variables
   ARCH: "ppc64le"
@@ -521,14 +577,24 @@ centos8-v11.0-cudnn8-ppc64le:
     - job: centos8-v11.0-ppc64le
       artifacts: true
 
+centos8-v11.0-test-ppc64le:
+  needs: ["centos8-v11.0-ppc64le"]
+  <<: *test_definition
+  <<: *centos8_11_0_ppc64le_only
 
+centos8-v11.0-scan-ppc64le:
+  needs: ["centos8-v11.0-ppc64le", "centos8-v11.0-test-ppc64le"]
+  <<: *scan_definition
+  <<: *centos8_11_0_ppc64le_only
 
 centos8-v11.0-deploy-ppc64le:
   <<: *deploy_definition
   <<: *centos8_11_0_ppc64le_only
   needs:
-    - job: centos8-v11.0-cudnn8-ppc64le
+    - job: centos8-v11.0-test-ppc64le
       artifacts: true
+    - job: centos8-v11.0-scan-ppc64le
+    - job: centos8-v11.0-cudnn8-ppc64le
 
 .centos8_11_0_arm64_variables: &centos8_11_0_arm64_variables
   ARCH: "arm64"
@@ -552,7 +618,15 @@ centos8-v11.0-arm64:
   <<: *cuda_base_definition
   <<: *centos8_11_0_arm64_only
 
+centos8-v11.0-test-arm64:
+  needs: ["centos8-v11.0-arm64"]
+  <<: *test_definition
+  <<: *centos8_11_0_arm64_only
 
+centos8-v11.0-scan-arm64:
+  needs: ["centos8-v11.0-arm64", "centos8-v11.0-test-arm64"]
+  <<: *scan_definition
+  <<: *centos8_11_0_arm64_only
 
 centos8-v11.0-deploy-arm64:
   <<: *deploy_definition
@@ -595,14 +669,24 @@ ubi8-v11.0-cudnn8-x86_64:
     - job: ubi8-v11.0-x86_64
       artifacts: true
 
+ubi8-v11.0-test-x86_64:
+  needs: ["ubi8-v11.0-x86_64"]
+  <<: *test_definition
+  <<: *ubi8_11_0_x86_64_only
 
+ubi8-v11.0-scan-x86_64:
+  needs: ["ubi8-v11.0-x86_64", "ubi8-v11.0-test-x86_64"]
+  <<: *scan_definition
+  <<: *ubi8_11_0_x86_64_only
 
 ubi8-v11.0-deploy-x86_64:
   <<: *deploy_definition
   <<: *ubi8_11_0_x86_64_only
   needs:
-    - job: ubi8-v11.0-cudnn8-x86_64
+    - job: ubi8-v11.0-test-x86_64
       artifacts: true
+    - job: ubi8-v11.0-scan-x86_64
+    - job: ubi8-v11.0-cudnn8-x86_64
 
 .ubi8_11_0_ppc64le_variables: &ubi8_11_0_ppc64le_variables
   ARCH: "ppc64le"
@@ -640,14 +724,24 @@ ubi8-v11.0-cudnn8-ppc64le:
     - job: ubi8-v11.0-ppc64le
       artifacts: true
 
+ubi8-v11.0-test-ppc64le:
+  needs: ["ubi8-v11.0-ppc64le"]
+  <<: *test_definition
+  <<: *ubi8_11_0_ppc64le_only
 
+ubi8-v11.0-scan-ppc64le:
+  needs: ["ubi8-v11.0-ppc64le", "ubi8-v11.0-test-ppc64le"]
+  <<: *scan_definition
+  <<: *ubi8_11_0_ppc64le_only
 
 ubi8-v11.0-deploy-ppc64le:
   <<: *deploy_definition
   <<: *ubi8_11_0_ppc64le_only
   needs:
-    - job: ubi8-v11.0-cudnn8-ppc64le
+    - job: ubi8-v11.0-test-ppc64le
       artifacts: true
+    - job: ubi8-v11.0-scan-ppc64le
+    - job: ubi8-v11.0-cudnn8-ppc64le
 
 .ubi8_11_0_arm64_variables: &ubi8_11_0_arm64_variables
   ARCH: "arm64"
@@ -671,7 +765,15 @@ ubi8-v11.0-arm64:
   <<: *cuda_base_definition
   <<: *ubi8_11_0_arm64_only
 
+ubi8-v11.0-test-arm64:
+  needs: ["ubi8-v11.0-arm64"]
+  <<: *test_definition
+  <<: *ubi8_11_0_arm64_only
 
+ubi8-v11.0-scan-arm64:
+  needs: ["ubi8-v11.0-arm64", "ubi8-v11.0-test-arm64"]
+  <<: *scan_definition
+  <<: *ubi8_11_0_arm64_only
 
 ubi8-v11.0-deploy-arm64:
   <<: *deploy_definition
@@ -714,14 +816,24 @@ centos7-v11.0-cudnn8-x86_64:
     - job: centos7-v11.0-x86_64
       artifacts: true
 
+centos7-v11.0-test-x86_64:
+  needs: ["centos7-v11.0-x86_64"]
+  <<: *test_definition
+  <<: *centos7_11_0_x86_64_only
 
+centos7-v11.0-scan-x86_64:
+  needs: ["centos7-v11.0-x86_64", "centos7-v11.0-test-x86_64"]
+  <<: *scan_definition
+  <<: *centos7_11_0_x86_64_only
 
 centos7-v11.0-deploy-x86_64:
   <<: *deploy_definition
   <<: *centos7_11_0_x86_64_only
   needs:
-    - job: centos7-v11.0-cudnn8-x86_64
+    - job: centos7-v11.0-test-x86_64
       artifacts: true
+    - job: centos7-v11.0-scan-x86_64
+    - job: centos7-v11.0-cudnn8-x86_64
 
 .ubi7_11_0_x86_64_variables: &ubi7_11_0_x86_64_variables
   ARCH: "x86_64"
@@ -759,14 +871,24 @@ ubi7-v11.0-cudnn8-x86_64:
     - job: ubi7-v11.0-x86_64
       artifacts: true
 
+ubi7-v11.0-test-x86_64:
+  needs: ["ubi7-v11.0-x86_64"]
+  <<: *test_definition
+  <<: *ubi7_11_0_x86_64_only
 
+ubi7-v11.0-scan-x86_64:
+  needs: ["ubi7-v11.0-x86_64", "ubi7-v11.0-test-x86_64"]
+  <<: *scan_definition
+  <<: *ubi7_11_0_x86_64_only
 
 ubi7-v11.0-deploy-x86_64:
   <<: *deploy_definition
   <<: *ubi7_11_0_x86_64_only
   needs:
-    - job: ubi7-v11.0-cudnn8-x86_64
+    - job: ubi7-v11.0-test-x86_64
       artifacts: true
+    - job: ubi7-v11.0-scan-x86_64
+    - job: ubi7-v11.0-cudnn8-x86_64
 
 .ubuntu18_04_10_2_x86_64_variables: &ubuntu18_04_10_2_x86_64_variables
   ARCH: "x86_64"
@@ -819,14 +941,24 @@ ubuntu18.04-v10.2-cudnn7-x86_64:
     - job: ubuntu18.04-v10.2-x86_64
       artifacts: true
 
+ubuntu18.04-v10.2-test-x86_64:
+  needs: ["ubuntu18.04-v10.2-x86_64"]
+  <<: *test_definition
+  <<: *ubuntu18_04_10_2_x86_64_only
 
+ubuntu18.04-v10.2-scan-x86_64:
+  needs: ["ubuntu18.04-v10.2-x86_64", "ubuntu18.04-v10.2-test-x86_64"]
+  <<: *scan_definition
+  <<: *ubuntu18_04_10_2_x86_64_only
 
 ubuntu18.04-v10.2-deploy-x86_64:
   <<: *deploy_definition
   <<: *ubuntu18_04_10_2_x86_64_only
   needs:
-    - job: ubuntu18.04-v10.2-cudnn8-x86_64
+    - job: ubuntu18.04-v10.2-test-x86_64
       artifacts: true
+    - job: ubuntu18.04-v10.2-scan-x86_64
+    - job: ubuntu18.04-v10.2-cudnn8-x86_64
     - job: ubuntu18.04-v10.2-cudnn7-x86_64
 
 .ubuntu18_04_10_2_ppc64le_variables: &ubuntu18_04_10_2_ppc64le_variables
@@ -880,14 +1012,24 @@ ubuntu18.04-v10.2-cudnn7-ppc64le:
     - job: ubuntu18.04-v10.2-ppc64le
       artifacts: true
 
+ubuntu18.04-v10.2-test-ppc64le:
+  needs: ["ubuntu18.04-v10.2-ppc64le"]
+  <<: *test_definition
+  <<: *ubuntu18_04_10_2_ppc64le_only
 
+ubuntu18.04-v10.2-scan-ppc64le:
+  needs: ["ubuntu18.04-v10.2-ppc64le", "ubuntu18.04-v10.2-test-ppc64le"]
+  <<: *scan_definition
+  <<: *ubuntu18_04_10_2_ppc64le_only
 
 ubuntu18.04-v10.2-deploy-ppc64le:
   <<: *deploy_definition
   <<: *ubuntu18_04_10_2_ppc64le_only
   needs:
-    - job: ubuntu18.04-v10.2-cudnn8-ppc64le
+    - job: ubuntu18.04-v10.2-test-ppc64le
       artifacts: true
+    - job: ubuntu18.04-v10.2-scan-ppc64le
+    - job: ubuntu18.04-v10.2-cudnn8-ppc64le
     - job: ubuntu18.04-v10.2-cudnn7-ppc64le
 
 .ubuntu16_04_10_2_x86_64_variables: &ubuntu16_04_10_2_x86_64_variables
@@ -940,14 +1082,24 @@ ubuntu16.04-v10.2-cudnn7-x86_64:
     - job: ubuntu16.04-v10.2-x86_64
       artifacts: true
 
+ubuntu16.04-v10.2-test-x86_64:
+  needs: ["ubuntu16.04-v10.2-x86_64"]
+  <<: *test_definition
+  <<: *ubuntu16_04_10_2_x86_64_only
 
+ubuntu16.04-v10.2-scan-x86_64:
+  needs: ["ubuntu16.04-v10.2-x86_64", "ubuntu16.04-v10.2-test-x86_64"]
+  <<: *scan_definition
+  <<: *ubuntu16_04_10_2_x86_64_only
 
 ubuntu16.04-v10.2-deploy-x86_64:
   <<: *deploy_definition
   <<: *ubuntu16_04_10_2_x86_64_only
   needs:
-    - job: ubuntu16.04-v10.2-cudnn8-x86_64
+    - job: ubuntu16.04-v10.2-test-x86_64
       artifacts: true
+    - job: ubuntu16.04-v10.2-scan-x86_64
+    - job: ubuntu16.04-v10.2-cudnn8-x86_64
     - job: ubuntu16.04-v10.2-cudnn7-x86_64
 
 .centos8_10_2_x86_64_variables: &centos8_10_2_x86_64_variables
@@ -1000,14 +1152,24 @@ centos8-v10.2-cudnn7-x86_64:
     - job: centos8-v10.2-x86_64
       artifacts: true
 
+centos8-v10.2-test-x86_64:
+  needs: ["centos8-v10.2-x86_64"]
+  <<: *test_definition
+  <<: *centos8_10_2_x86_64_only
 
+centos8-v10.2-scan-x86_64:
+  needs: ["centos8-v10.2-x86_64", "centos8-v10.2-test-x86_64"]
+  <<: *scan_definition
+  <<: *centos8_10_2_x86_64_only
 
 centos8-v10.2-deploy-x86_64:
   <<: *deploy_definition
   <<: *centos8_10_2_x86_64_only
   needs:
-    - job: centos8-v10.2-cudnn8-x86_64
+    - job: centos8-v10.2-test-x86_64
       artifacts: true
+    - job: centos8-v10.2-scan-x86_64
+    - job: centos8-v10.2-cudnn8-x86_64
     - job: centos8-v10.2-cudnn7-x86_64
 
 .ubi8_10_2_x86_64_variables: &ubi8_10_2_x86_64_variables
@@ -1060,14 +1222,24 @@ ubi8-v10.2-cudnn7-x86_64:
     - job: ubi8-v10.2-x86_64
       artifacts: true
 
+ubi8-v10.2-test-x86_64:
+  needs: ["ubi8-v10.2-x86_64"]
+  <<: *test_definition
+  <<: *ubi8_10_2_x86_64_only
 
+ubi8-v10.2-scan-x86_64:
+  needs: ["ubi8-v10.2-x86_64", "ubi8-v10.2-test-x86_64"]
+  <<: *scan_definition
+  <<: *ubi8_10_2_x86_64_only
 
 ubi8-v10.2-deploy-x86_64:
   <<: *deploy_definition
   <<: *ubi8_10_2_x86_64_only
   needs:
-    - job: ubi8-v10.2-cudnn8-x86_64
+    - job: ubi8-v10.2-test-x86_64
       artifacts: true
+    - job: ubi8-v10.2-scan-x86_64
+    - job: ubi8-v10.2-cudnn8-x86_64
     - job: ubi8-v10.2-cudnn7-x86_64
 
 .centos7_10_2_x86_64_variables: &centos7_10_2_x86_64_variables
@@ -1120,14 +1292,24 @@ centos7-v10.2-cudnn7-x86_64:
     - job: centos7-v10.2-x86_64
       artifacts: true
 
+centos7-v10.2-test-x86_64:
+  needs: ["centos7-v10.2-x86_64"]
+  <<: *test_definition
+  <<: *centos7_10_2_x86_64_only
 
+centos7-v10.2-scan-x86_64:
+  needs: ["centos7-v10.2-x86_64", "centos7-v10.2-test-x86_64"]
+  <<: *scan_definition
+  <<: *centos7_10_2_x86_64_only
 
 centos7-v10.2-deploy-x86_64:
   <<: *deploy_definition
   <<: *centos7_10_2_x86_64_only
   needs:
-    - job: centos7-v10.2-cudnn8-x86_64
+    - job: centos7-v10.2-test-x86_64
       artifacts: true
+    - job: centos7-v10.2-scan-x86_64
+    - job: centos7-v10.2-cudnn8-x86_64
     - job: centos7-v10.2-cudnn7-x86_64
 
 .centos7_10_2_ppc64le_variables: &centos7_10_2_ppc64le_variables
@@ -1180,14 +1362,24 @@ centos7-v10.2-cudnn7-ppc64le:
     - job: centos7-v10.2-ppc64le
       artifacts: true
 
+centos7-v10.2-test-ppc64le:
+  needs: ["centos7-v10.2-ppc64le"]
+  <<: *test_definition
+  <<: *centos7_10_2_ppc64le_only
 
+centos7-v10.2-scan-ppc64le:
+  needs: ["centos7-v10.2-ppc64le", "centos7-v10.2-test-ppc64le"]
+  <<: *scan_definition
+  <<: *centos7_10_2_ppc64le_only
 
 centos7-v10.2-deploy-ppc64le:
   <<: *deploy_definition
   <<: *centos7_10_2_ppc64le_only
   needs:
-    - job: centos7-v10.2-cudnn8-ppc64le
+    - job: centos7-v10.2-test-ppc64le
       artifacts: true
+    - job: centos7-v10.2-scan-ppc64le
+    - job: centos7-v10.2-cudnn8-ppc64le
     - job: centos7-v10.2-cudnn7-ppc64le
 
 .ubi7_10_2_x86_64_variables: &ubi7_10_2_x86_64_variables
@@ -1240,14 +1432,24 @@ ubi7-v10.2-cudnn7-x86_64:
     - job: ubi7-v10.2-x86_64
       artifacts: true
 
+ubi7-v10.2-test-x86_64:
+  needs: ["ubi7-v10.2-x86_64"]
+  <<: *test_definition
+  <<: *ubi7_10_2_x86_64_only
 
+ubi7-v10.2-scan-x86_64:
+  needs: ["ubi7-v10.2-x86_64", "ubi7-v10.2-test-x86_64"]
+  <<: *scan_definition
+  <<: *ubi7_10_2_x86_64_only
 
 ubi7-v10.2-deploy-x86_64:
   <<: *deploy_definition
   <<: *ubi7_10_2_x86_64_only
   needs:
-    - job: ubi7-v10.2-cudnn8-x86_64
+    - job: ubi7-v10.2-test-x86_64
       artifacts: true
+    - job: ubi7-v10.2-scan-x86_64
+    - job: ubi7-v10.2-cudnn8-x86_64
     - job: ubi7-v10.2-cudnn7-x86_64
 
 .ubi7_10_2_ppc64le_variables: &ubi7_10_2_ppc64le_variables
@@ -1300,13 +1502,23 @@ ubi7-v10.2-cudnn7-ppc64le:
     - job: ubi7-v10.2-ppc64le
       artifacts: true
 
+ubi7-v10.2-test-ppc64le:
+  needs: ["ubi7-v10.2-ppc64le"]
+  <<: *test_definition
+  <<: *ubi7_10_2_ppc64le_only
 
+ubi7-v10.2-scan-ppc64le:
+  needs: ["ubi7-v10.2-ppc64le", "ubi7-v10.2-test-ppc64le"]
+  <<: *scan_definition
+  <<: *ubi7_10_2_ppc64le_only
 
 ubi7-v10.2-deploy-ppc64le:
   <<: *deploy_definition
   <<: *ubi7_10_2_ppc64le_only
   needs:
-    - job: ubi7-v10.2-cudnn8-ppc64le
+    - job: ubi7-v10.2-test-ppc64le
       artifacts: true
+    - job: ubi7-v10.2-scan-ppc64le
+    - job: ubi7-v10.2-cudnn8-ppc64le
     - job: ubi7-v10.2-cudnn7-ppc64le
 
