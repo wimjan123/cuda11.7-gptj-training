@@ -23,9 +23,9 @@ push_repos:
     pass: REGISTRY_TOKEN
     user: REGISTRY_USER
     registry:
-      x86_64: docker.io/nvidia/cuda
-      ppc64le: docker.io/nvidia/cuda-ppc64le
-      arm64: docker.io/nvidia/cuda-arm64
+      x86_64: nvidia/cuda
+      ppc64le: nvidia/cuda-ppc64le
+      arm64: nvidia/cuda-arm64
 
 
 .requires_v11.0: &cuda11_0_requires
