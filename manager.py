@@ -561,8 +561,10 @@ class ManagerContainerPush(Manager):
     def push_images(self):
         with open(self.tag_manifest) as f:
             tags = f.readlines()
-        tags = [x.strip() for x in tags]
-        for tag in tags:
+        stags = [x.strip() for x in tags]
+        for tag in stags:
+            if not tag:
+                continue
             log.info("Processing image: %s:%s", self.image_name, tag)
             for repo in self.repos:
                 if tag == "latest" and "nvcr.io" in repo:
