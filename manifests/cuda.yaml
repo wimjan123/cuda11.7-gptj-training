@@ -1,19 +1,6 @@
 ---
 
 push_repos:
-  # Dev Only
-  gitlab-internal:
-    only_if: NV_CI_INTERNAL
-    # WARNING: Set your user creds if debugging. Password should not be set in this file! It should be stored in
-    # ~/.docker/config.json on the machine where this command is running.
-    # user: jesusa
-    # pass: flimflam
-    user: "gitlab-ci-token"
-    pass: CI_JOB_TOKEN
-    registry:
-      x86_64: gitlab-master.nvidia.com:5005/cuda-installer/cuda
-      ppc64le: gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le
-      arm64: gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-arm64
   artifactory:
     only_if: NV_ARTIFACTORY
     user: ARTIFACTORY_USER
@@ -22,7 +9,6 @@ push_repos:
       x86_64: urm.nvidia.com/sw-gpu-cuda-installer-docker-local/cuda
       ppc64le: urm.nvidia.com/sw-gpu-cuda-installer-docker-local/cuda/cuda-ppc64le
       arm64: urm.nvidia.com/sw-gpu-cuda-installer-docker-local/cuda/cuda-arm64
-  # EA and GA
   nvcr.io:
     only_if: NVCR_TOKEN
     pass: NVCR_TOKEN
@@ -31,16 +17,15 @@ push_repos:
       x86_64: nvcr.io/nvidia/cuda
       ppc64le: nvcr.io/nvidia/cuda-ppc64le
       arm64: nvcr.io/nvidia/cuda-arm64
-  # GA only
   docker.io:
     # Will only use this repo if the REGISTRY_TOKEN environment variable is set
     only_if: REGISTRY_TOKEN
     pass: REGISTRY_TOKEN
     user: REGISTRY_USER
     registry:
-      x86_64: nvidia/cuda
-      ppc64le: nvidia/cuda-ppc64le
-      arm64: nvidia/cuda-arm64
+      x86_64: docker.io/nvidia/cuda
+      ppc64le: docker.io/nvidia/cuda-ppc64le
+      arm64: docker.io/nvidia/cuda-arm64
 
 
 .requires_v11.0: &cuda11_0_requires

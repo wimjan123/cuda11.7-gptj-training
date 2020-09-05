@@ -19,10 +19,11 @@ import shutil
 import glob
 import sys
 import io
+import select
 
 import jinja2
 from jinja2 import Environment, Template
-from plumbum import cli
+from plumbum import cli, local
 from plumbum.cmd import rm
 import yaml
 import glom
@@ -532,85 +533,47 @@ class ManagerContainerPush(Manager):
             )
             sys.exit(1)
 
-    # Check the image tag to see if it contains a suffix. This is used for special builds.
-    # A tag with a suffix looks like:
-    #
-    #  10.0-cudnn7-devel-centos6-patched
-    #  10.0-devel-centos6-patched
-    #
-    def _tag_contains_suffix(self, img):
-        if len(img.tags) == 0:
-            log.debug("img has no tags!")
-            return False
-        fields = img.tags[0].split(":")[1].split("-")
-        is_cudnn = [s for s in fields if "cudnn" in s]
-        if (is_cudnn and len(fields) > 4) or (not is_cudnn and len(fields) > 3):
-            log.debug("tag contains suffix")
-            return True
-        elif len(fields) == 2 or f"{self.distro}{self.distro_version}" in fields[:-1]:
-            log.debug("tag does not contain suffix")
-            return False
-        elif f"{self.distro}{self.distro_version}" in fields[:-1]:
-            log.debug("tag contains suffix")
-            return True
-        log.debug("tag does not contain suffix")
-
-    def _should_push_image(self, img):
-        if len(img.tags) == 0:
-            log.debug("img has no tags!")
-            return False
-        log.debug(f"Have image tags {img.tags}")
-        # Ensure the tag contains the target cuda version and distro version
-        match = all(
-            key in str(img.tags)
-            for key in [self.cuda_version, f"{self.distro}{self.distro_version}"]
-        )
-        # If the tag has a suffix but we are not expecting one, then fail
-        if not self.image_tag_suffix and self._tag_contains_suffix(img):
-            log.debug("Tag suffix detected in image tag, but not expected")
-            match = False
-        else:
-            log.debug("Found expected suffix in tag")
-            match = True
-        # All together now
-        if (
-            not match
-            or "-test_" in str(img.tags)
-            # a suffix is expected but the image does not contain what we expect
-            or (self.image_tag_suffix and self.image_tag_suffix not in str(img.tags))
-        ):
-            log.debug("Image will not be pushed.")
+    # Args is a tuple
+    def skopeocmd(self, args):
+        skop = local["/usr/bin/skopeo"]
+        (pipe_r, pipe_w) = os.pipe()
+        p = skop.popen(args=args, shell=False, stdout=pipe_w, stderr=pipe_w)
+        while p.poll() is None:
+            # Loop long as the selct mechanism indicates there
+            # is data to be read from the buffer
+            while len(select.select([pipe_r], [], [], 0)[0]) == 1:
+                log.debug(os.read(pipe_r, 8192).decode("utf-8").strip())
+        os.close(pipe_r)
+        os.close(pipe_w)
+        if p.returncode != 0:
+            log.error("See log output...")
             return False
         return True
 
     def push_images(self):
-        for img in self.client.images.list(
-            name=self.image_name, filters={"dangling": False}
-        ):
-            log.debug("img: %s", str(img.tags))
-            if not self._should_push_image(img):
-                log.debug("Skipping")
-                continue
-            log.info("Processing image: %s, id: %s", img.tags, img.short_id)
+        with open(self.tag_manifest) as f:
+            tags = f.readlines()
+        tags = [x.strip() for x in tags]
+        for tag in tags:
+            log.info("Processing image: %s:%s", self.image_name, tag)
             for repo in self.repos:
-                for k, v in [
-                    [x, y] for tag in img.tags for (x, y) in [tag.rsplit(":", 1)]
-                ]:
-                    tag = v
-                    if self.dry_run:
-                        log.info(
-                            "Tagged %s:%s (%s), %s", repo, tag, img.short_id, False
-                        )
-                        log.info("Would have pushed: %s:%s", repo, tag)
-                        continue
-                    tagged = img.tag(repo, tag)
-                    log.info("Tagged %s:%s (%s), %s", repo, tag, img.short_id, tagged)
-                    if tagged:
-                        # FIXME: only push if the image has changed
-                        for line in self.client.images.push(
-                            repo, tag, stream=True, decode=True
-                        ):
-                            log.info(line)
+                if tag == "latest" and "nvcr.io" in repo:
+                    # No latest tags on NGC
+                    log.debug("Not pushing latest tag to NGC")
+                    continue
+                log.info("COPYING to: %s:%s", repo, tag)
+                if self.dry_run:
+                    continue
+                if self.skopeocmd(
+                    (
+                        "copy",
+                        f"docker://{self.image_name}:{tag}",
+                        f"docker://{repo}:{tag}",
+                    )
+                ):
+                    log.info("Copy was successful")
+                else:
+                    log.error("Copy failed!")
 
     def main(self):
         log.debug("dry-run: %s", self.dry_run)
