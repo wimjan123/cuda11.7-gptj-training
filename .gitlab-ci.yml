@@ -279,6 +279,9 @@ ubuntu20.04-v11.0-deploy-x86_64:
   <<: *deploy_definition
   <<: *ubuntu20_04_11_0_x86_64_only
   needs:
+    - job: ubuntu20.04-v11.0-test-x86_64
+      artifacts: true
+    - job: ubuntu20.04-v11.0-scan-x86_64
 
 .ubuntu18_04_11_0_x86_64_variables: &ubuntu18_04_11_0_x86_64_variables
   ARCH: "x86_64"
@@ -430,6 +433,9 @@ ubuntu18.04-v11.0-deploy-arm64:
   <<: *deploy_definition
   <<: *ubuntu18_04_11_0_arm64_only
   needs:
+    - job: ubuntu18.04-v11.0-test-arm64
+      artifacts: true
+    - job: ubuntu18.04-v11.0-scan-arm64
 
 .ubuntu16_04_11_0_x86_64_variables: &ubuntu16_04_11_0_x86_64_variables
   ARCH: "x86_64"
@@ -632,6 +638,9 @@ centos8-v11.0-deploy-arm64:
   <<: *deploy_definition
   <<: *centos8_11_0_arm64_only
   needs:
+    - job: centos8-v11.0-test-arm64
+      artifacts: true
+    - job: centos8-v11.0-scan-arm64
 
 .ubi8_11_0_x86_64_variables: &ubi8_11_0_x86_64_variables
   ARCH: "x86_64"
@@ -779,6 +788,9 @@ ubi8-v11.0-deploy-arm64:
   <<: *deploy_definition
   <<: *ubi8_11_0_arm64_only
   needs:
+    - job: ubi8-v11.0-test-arm64
+      artifacts: true
+    - job: ubi8-v11.0-scan-arm64
 
 .centos7_11_0_x86_64_variables: &centos7_11_0_x86_64_variables
   ARCH: "x86_64"
