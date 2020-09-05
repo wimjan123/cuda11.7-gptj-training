@@ -482,8 +482,9 @@ class ManagerContainerPush(Manager):
     tags = []
     key = ""
     copy_failed = False
+    repo_creds = {}
 
-    def docker_login(self):
+    def setup_repos(self):
         distro_push_repos = self.get_data(
             self.parent.manifest,
             self.key,
@@ -519,18 +520,19 @@ class ManagerContainerPush(Manager):
             if not passwd:
                 passwd = metadata["pass"]
             registry = metadata["registry"][self.arch]
-            if repo == "docker.io":
-                registry = f"docker.io/{registry}"
-            if self.client.login(username=user, password=passwd, registry=registry):
-                if "docker.io" in registry:
-                    # docker.io designation not needed in the image name for pushes to docker hub, only
-                    # for login
-                    registry = metadata["registry"][self.arch]
-                self.repos.append(registry)
-                log.info("Logged into %s", registry)
+            self.repo_creds[registry] = {"user": user, "pass": passwd}
+            self.repos.append(registry)
+            #  if repo == "docker.io":
+            #      registry = f"docker.io/{registry}"
+            #  if self.client.login(username=user, password=passwd, registry=registry):
+            #      if "docker.io" in registry:
+            #          # docker.io designation not needed in the image name for pushes to docker hub, only
+            #          # for login
+            #          registry = metadata["registry"][self.arch]
+            #      log.info("Logged into %s", registry)
         if not self.repos:
             log.fatal(
-                "Docker login failed! Did not log into any repositories. Environment not set?"
+                "Could not retrieve container image repo credentials. Environment not set?"
             )
             sys.exit(1)
 
@@ -566,9 +568,18 @@ class ManagerContainerPush(Manager):
                 if self.dry_run:
                     log.debug("dry-run; not copying")
                     continue
+                #  --src-creds USERNAME[:PASSWORD]
+                #  --dest-creds USERNAME[:PASSWORD]
                 if self.skopeocmd(
                     (
                         "copy",
+                        "--src-creds {}:{}".format(
+                            self.repo_creds[self.image_name]["user"],
+                            self.repo_creds[self.image_name]["pass"],
+                        ),
+                        "--dest-creds {}:{}".format(
+                            self.repo_creds[repo]["user"], self.repo_creds[repo]["pass"]
+                        ),
                         f"docker://{self.image_name}:{tag}",
                         f"docker://{repo}:{tag}",
                     )
@@ -586,7 +597,7 @@ class ManagerContainerPush(Manager):
         self.client = docker.DockerClient(
             base_url="unix://var/run/docker.sock", timeout=600
         )
-        self.docker_login()
+        self.setup_repos()
         self.push_images()
         if self.copy_failed:
             log.error("Errors were encountered copying images!")
