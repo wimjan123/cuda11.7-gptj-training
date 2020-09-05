@@ -481,6 +481,7 @@ class ManagerContainerPush(Manager):
     repos = []
     tags = []
     key = ""
+    copy_failed = False
 
     def docker_login(self):
         distro_push_repos = self.get_data(
@@ -575,6 +576,7 @@ class ManagerContainerPush(Manager):
                     log.info("Copy was successful")
                 else:
                     log.error("Copy failed!")
+                    self.copy_failed = True
 
     def main(self):
         log.debug("dry-run: %s", self.dry_run)
@@ -586,6 +588,9 @@ class ManagerContainerPush(Manager):
         )
         self.docker_login()
         self.push_images()
+        if self.copy_failed:
+            log.error("Errors were encountered copying images!")
+            sys.exit(1)
         log.info("Done")
 
 
