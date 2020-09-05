@@ -499,6 +499,7 @@ class ManagerContainerPush(Manager):
             "exclude_repos",
             can_skip=True,
         )
+
         for repo, metadata in self.parent.manifest["push_repos"].items():
             if "gitlab-master" in repo:
                 # Images have already been pushed to gitlab by this point
@@ -572,17 +573,13 @@ class ManagerContainerPush(Manager):
                 if self.dry_run:
                     log.debug("dry-run; not copying")
                     continue
-                #  --src-creds USERNAME[:PASSWORD]
-                #  --dest-creds USERNAME[:PASSWORD]
-                log.debug(self.repo_creds)
                 if self.skopeocmd(
                     (
                         "copy",
-                        "--src-creds {}:{}".format(
-                            self.repo_creds[self.image_name]["user"],
-                            self.repo_creds[self.image_name]["pass"],
-                        ),
-                        "--dest-creds {}:{}".format(
+                        "--src-creds",
+                        "{}:{}".format("gitlab-ci-token", os.getenv("CI_JOB_TOKEN")),
+                        "--dest-creds",
+                        "{}:{}".format(
                             self.repo_creds[repo]["user"], self.repo_creds[repo]["pass"]
                         ),
                         f"docker://{self.image_name}:{tag}",
