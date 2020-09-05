@@ -1,6 +1,19 @@
 ---
 
 push_repos:
+  # Dev Only
+  gitlab-internal:
+    only_if: NV_CI_INTERNAL
+    # WARNING: Set your user creds if debugging. Password should not be set in this file! It should be stored in
+    # ~/.docker/config.json on the machine where this command is running.
+    # user: jesusa
+    # pass: flimflam
+    user: "gitlab-ci-token"
+    pass: CI_JOB_TOKEN
+    registry:
+      x86_64: gitlab-master.nvidia.com:5005/cuda-installer/cuda
+      ppc64le: gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le
+      arm64: gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-arm64
   artifactory:
     only_if: NV_ARTIFACTORY
     user: ARTIFACTORY_USER

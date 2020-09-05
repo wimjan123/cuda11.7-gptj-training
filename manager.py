@@ -500,6 +500,10 @@ class ManagerContainerPush(Manager):
             can_skip=True,
         )
         for repo, metadata in self.parent.manifest["push_repos"].items():
+            if "gitlab-master" in repo:
+                # Images have already been pushed to gitlab by this point
+                log.debug(f"Skipping push to {repo}")
+                continue
             if metadata.get("only_if", False) and not os.getenv(metadata["only_if"]):
                 log.info("repo: '%s' only_if requirement not satisfied", repo)
                 continue
@@ -570,6 +574,7 @@ class ManagerContainerPush(Manager):
                     continue
                 #  --src-creds USERNAME[:PASSWORD]
                 #  --dest-creds USERNAME[:PASSWORD]
+                log.debug(self.repo_creds)
                 if self.skopeocmd(
                     (
                         "copy",
