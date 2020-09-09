@@ -97,8 +97,8 @@ RUN yum install -y xz && NCCL_DOWNLOAD_SUM={{ cuda.components.libnccl2.sha256sum
     curl -fsSL {{ cuda.components.libnccl2.source }} -O && \
     echo "$NCCL_DOWNLOAD_SUM  {{ basename }}" | sha256sum -c - && \
     unxz {{ basename }} && \
-    tar --no-same-owner --keep-old-files --no-overwrite-dir -xvf  {{ basename[:-4] + ".tar" }} -C /usr/local/cuda/include/ --strip-components=2 --wildcards '*/include/*' && \
-    tar --no-same-owner --keep-old-files --no-overwrite-dir -xvf  {{ basename[:-4] + ".tar" }} -C /usr/local/cuda/lib64/ --strip-components=2 --wildcards '*/lib/libnccl.so' && \
+    tar --no-same-owner --keep-old-files -xvf  {{ basename[:-4] + ".tar" }} -C /usr/local/cuda/include/ --strip-components=2 --wildcards '*/include/*' && \
+    tar --no-same-owner --keep-old-files -xvf  {{ basename[:-4] + ".tar" }} -C /usr/local/cuda/lib64/ --strip-components=2 --wildcards '*/lib/libnccl.so' && \
     rm -f {{ basename[:-4] + ".tar" }} && \
     ldconfig
 

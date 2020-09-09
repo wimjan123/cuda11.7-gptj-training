@@ -732,9 +732,9 @@ class ManagerGenerate(Manager):
         cudnn_manifest = self.cuda["components"][cudnn_version_name]
         if "source" in cudnn_manifest:
             cudnn_manifest["basename"] = os.path.basename(cudnn_manifest["source"])
-            cudnn_manifest["dev"]["basename"] = os.path.basename(
-                cudnn_manifest["dev"]["source"]
-            )
+            #  cudnn_manifest["dev"]["basename"] = os.path.basename(
+            #      cudnn_manifest["dev"]["source"]
+            #  )
 
         new_ctx = {
             "cudnn": self.cuda["components"][cudnn_version_name],
@@ -900,6 +900,8 @@ class ManagerGenerate(Manager):
                 if "Dockerfile" in filename.name:
                     continue
                 log.debug("Checking %s", filename)
+                if not self.cuda["use_ml_repo"] and "nvidia-ml" in str(filename):
+                    continue
                 if ".jinja" in filename.name:
                     self.output_template(filename, f"{self.output_path}/{img}")
                 else:

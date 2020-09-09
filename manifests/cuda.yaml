@@ -375,3 +375,172 @@ cuda_v10.2:
       requires: "cuda>=10.2"
       components:
         <<: *cuda10_2_components
+
+
+.requires_v10.1: &cuda10_1_requires
+  requires: "cuda>=10.1 brand=tesla,driver>=396,driver<397 brand=tesla,driver>=410,driver<411 brand=tesla,driver>=418,driver<419"
+
+
+.components_v10.1: &cuda10_1_components
+  build_version: 243
+  libcublas:
+    version: 10.2.1.243-1
+  libcublas_dev:
+    version: 10.2.1.243-1
+  libnccl2:
+    version: 2.7.8-1
+  libnccl2_dev:
+    version: 2.7.8-1
+  cudnn8:
+    version: 8.0.2.39-1
+  cudnn7:
+    version: 7.6.5.32-1
+
+
+cuda_v10.1:
+  dist_base_path: dist/10.1
+  ubuntu18.04:
+    template_path: templates/ubuntu
+    base_image: ubuntu:18.04
+    push_repos:
+      - artifactory
+      - docker.io
+      - nvcr.io
+    x86_64:
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
+      ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/x86_64
+      no_os_suffix: True
+      <<: *cuda10_1_requires
+      components:
+        <<: *cuda10_1_components
+    ppc64le:
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le
+      ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/ppc64el
+      no_os_suffix: True
+      requires: "cuda>=10.1"
+      components:
+        <<: *cuda10_1_components
+  ubuntu16.04:
+    template_path: templates/ubuntu
+    base_image: ubuntu:16.04
+    push_repos:
+      - artifactory
+      - docker.io
+      - nvcr.io
+    x86_64:
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
+      ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604/x86_64
+      <<: *cuda10_1_requires
+      components:
+        <<: *cuda10_1_components
+  centos8:
+    template_path: templates/redhat
+    base_image: centos:8
+    push_repos:
+      - artifactory
+      - docker.io
+      - nvcr.io
+    x86_64:
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
+      repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64
+      ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel8/x86_64
+      <<: *cuda10_1_requires
+      components:
+        <<: *cuda10_1_components
+        # cudnn7 and nccl are not in the ML repo for rhel8
+        cudnn7:
+          version: 7.6.5.32
+          sha256sum: 600267f2caaed2fd58eb214ba669d8ea35f396a7d19b94822e6b36f9f7088c20
+        libnccl2:
+          version: 2.7.8
+          sha256sum: 673535e03774aff57806fcc092b72b049e6303d48b8dfaafa3247a2b1c538ef6
+          source: https://developer.download.nvidia.com/compute/redist/nccl/v2.7/nccl_2.7.8-1+cuda10.1_x86_64.txz
+  centos7:
+    template_path: templates/redhat
+    base_image: centos:7
+    push_repos:
+      - artifactory
+      - docker.io
+      - nvcr.io
+    x86_64:
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
+      repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64
+      ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7/x86_64
+      <<: *cuda10_1_requires
+      components:
+        <<: *cuda10_1_components
+        # TODO: version is different for rhel7
+        cudnn7:
+          version: 7.6.5.32-1
+    ppc64le:
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le
+      repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7/ppc64le
+      ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7/ppc64le
+      requires: "cuda>=10.1"
+      components:
+        <<: *cuda10_1_components
+  centos6:
+    template_path: templates/redhat
+    base_image: centos:6
+    push_repos:
+      - artifactory
+      - docker.io
+      - nvcr.io
+    x86_64:
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
+      repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel6/x86_64
+      <<: *cuda10_1_requires
+      components:
+        <<: *cuda10_1_components
+        cudnn8:
+          version: 8.0.3.33
+          sha256sum: 4752ac6aea4e4d2226061610d6843da6338ef75a93518aa9ce50d0f58df5fb07
+        cudnn7:
+          version: 7.6.5.32
+          sha256sum: 7eaec8039a2c30ab0bc758d303588767693def6bf49b22485a2c00bf2e136cb3
+  ubi8:
+    template_path: templates/redhat
+    base_image: registry.access.redhat.com/ubi8/ubi:latest
+    push_repos:
+      - artifactory
+      - docker.io
+      - nvcr.io
+    x86_64:
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
+      repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64
+      ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel8/x86_64
+      <<: *cuda10_1_requires
+      components:
+        <<: *cuda10_1_components
+        # cudnn7 is not in the ML repo for rhel8
+        cudnn7:
+          version: 7.6.5.32
+          sha256sum: 7eaec8039a2c30ab0bc758d303588767693def6bf49b22485a2c00bf2e136cb3
+        libnccl2:
+          version: 2.7.8
+          sha256sum: 673535e03774aff57806fcc092b72b049e6303d48b8dfaafa3247a2b1c538ef6
+          source: https://developer.download.nvidia.com/compute/redist/nccl/v2.7/nccl_2.7.8-1+cuda10.1_x86_64.txz
+  ubi7:
+    template_path: templates/redhat
+    base_image: registry.access.redhat.com/ubi7/ubi:latest
+    push_repos:
+      - artifactory
+      - docker.io
+      - nvcr.io
+    x86_64:
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
+      repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64
+      ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7/x86_64
+      <<: *cuda10_1_requires
+      components:
+        <<: *cuda10_1_components
+        # TODO: version is different for rhel7
+        cudnn7:
+          version: 7.6.5.32-1
+    ppc64le:
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le
+      repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7/ppc64le
+      ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7/ppc64le
+      requires: "cuda>=10_1"
+      components:
+        <<: *cuda10_1_components
