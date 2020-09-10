@@ -27,9 +27,9 @@
 variables:
   # Need a value of two here for checking the manifest in the last commit
   GIT_DEPTH: "2"
-  DRY_RUN: 1
-  NO_SCAN: "true" # Only use in development
-  NO_TEST: "true" # Only use in development
+  {# DRY_RUN: 1 #}
+  {# NO_SCAN: "true" # Only use in development #}
+  {# NO_TEST: "true" # Only use in development #}
 
 before_script:
   - 'echo "ARCH: $ARCH"'
@@ -179,7 +179,7 @@ prepare:
   <<: *tags_definition
   script:
     - |
-      # WAR until we have better needs/rules support in the pipelines
+      # NO_TEST SET -- WAR until we have better needs/rules support in the pipelines
       if [[ -z $NO_TEST ]]; then
         bash -e ./test/scripts/bats_install.sh
         bash -e ./test/scripts/run_tests.sh
@@ -193,9 +193,9 @@ prepare:
   stage: scan
   <<: *tags_definition
   script:
-    # WAR until we have better needs/rules support in the pipelines
+    # NO_SCAN SET - WAR until we have better needs/rules support in the pipelines
     - |
-      if [[ $NO_SCAN == "true" ]]; then
+      if [[ -z $NO_SCAN ]]; then
         git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab-master.nvidia.com/sectooling/scanning/contamer.git
         cd contamer
         pip3 install -r requirements.txt
