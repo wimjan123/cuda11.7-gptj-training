@@ -420,13 +420,16 @@ vulnerabilities        package                      HIGH Vulnerability found in 
 
 #### CUDA 10.2
 
-TODO: Readd the centos6 10.2 docker scripts...
+Repos: [NOT POSTED] nvcr.io/nvidia/cuda (x86_64)
+Repos: [NOT POSTED] docker.io/nvidia/cuda (x86_64)
 
-- [`10.2-base-centos6` (*10.2/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/10.2/centos6-x86_64/base/Dockerfile)
-- [`10.2-runtime-centos6` (*10.2/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/10.2/centos6-x86_64/runtime/Dockerfile)
-- [`10.2-cudnn7-runtime-centos6` (*10.2/runtime/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/10.2/centos6-x86_64/runtime/cudnn7/Dockerfile)
-- [`10.2-devel-centos6` (*10.2/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/10.2/centos6-x86_64/devel/Dockerfile)
-- [`10.2-cudnn7-devel-centos6` (*10.2/devel/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/10.2/centos6-x86_64/devel/cudnn7/Dockerfile)
+- `10.2-base-centos6` [(*10.2/x86_64/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/10.2/centos6-x86_64/base/Dockerfile)
+- `10.2-runtime-centos6` [(*10.2/x86_64/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/10.2/centos6-x86_64/runtime/Dockerfile)
+- `10.2-cudnn8-runtime-centos6` [(*10.2/x86_64/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/10.2/centos6-x86_64/runtime/cudnn8/Dockerfile)
+- `10.2-cudnn7-runtime-centos6` [(*10.2/x86_64/runtime/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/10.2/centos6-x86_64/runtime/cudnn7/Dockerfile)
+- `10.2-devel-centos6` [(*10.2/x86_64/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/10.2/centos6-x86_64/devel/Dockerfile)
+- `10.2-cudnn8-devel-centos6` [(*10.2/x86_64/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/10.2/centos6-x86_64/devel/cudnn8/Dockerfile)
+- `10.2-cudnn7-devel-centos6` [(*10.2/x86_64/devel/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/10.2/centos6-x86_64/devel/cudnn7/Dockerfile)
 
 #### CUDA 10.1
 

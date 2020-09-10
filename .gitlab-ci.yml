@@ -657,6 +657,61 @@ centos8-v11.0-deploy-arm64:
       artifacts: true
     - job: centos8-v11.0-scan-arm64
 
+.centos7_11_0_x86_64_variables: &centos7_11_0_x86_64_variables
+  ARCH: "x86_64"
+  DIST_BASE_PATH: "dist/11.0"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  OS: "centos7"
+  OS_NAME: "centos"
+  OS_VERSION: "7"
+  CUDA_VERSION: "11.0"
+
+.centos7_11_0_x86_64_only: &centos7_11_0_x86_64_only
+  variables:
+    <<: *centos7_11_0_x86_64_variables
+  only:
+    variables:
+      - $centos7_11_0_x86_64 == "true"
+      - $all == "true"
+
+centos7-v11.0-x86_64:
+  <<: *cuda_base_definition
+  <<: *centos7_11_0_x86_64_only
+
+centos7-v11.0-cudnn8-x86_64:
+  <<: *cudnn_definition
+  <<: *centos7_11_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos7_11_0_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: centos7-v11.0-x86_64
+      artifacts: true
+
+centos7-v11.0-test-x86_64:
+  needs: ["centos7-v11.0-x86_64"]
+  <<: *test_definition
+  <<: *centos7_11_0_x86_64_only
+
+centos7-v11.0-scan-x86_64:
+  needs: ["centos7-v11.0-x86_64", "centos7-v11.0-test-x86_64"]
+  <<: *scan_definition
+  <<: *centos7_11_0_x86_64_only
+
+centos7-v11.0-deploy-x86_64:
+  <<: *deploy_definition
+  <<: *centos7_11_0_x86_64_only
+  needs:
+    - job: centos7-v11.0-test-x86_64
+      artifacts: true
+    - job: centos7-v11.0-scan-x86_64
+    - job: centos7-v11.0-cudnn8-x86_64
+
 .ubi8_11_0_x86_64_variables: &ubi8_11_0_x86_64_variables
   ARCH: "x86_64"
   DIST_BASE_PATH: "dist/11.0"
@@ -806,61 +861,6 @@ ubi8-v11.0-deploy-arm64:
     - job: ubi8-v11.0-test-arm64
       artifacts: true
     - job: ubi8-v11.0-scan-arm64
-
-.centos7_11_0_x86_64_variables: &centos7_11_0_x86_64_variables
-  ARCH: "x86_64"
-  DIST_BASE_PATH: "dist/11.0"
-  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
-  MANIFEST: "manifests/cuda.yaml"
-  OS: "centos7"
-  OS_NAME: "centos"
-  OS_VERSION: "7"
-  CUDA_VERSION: "11.0"
-
-.centos7_11_0_x86_64_only: &centos7_11_0_x86_64_only
-  variables:
-    <<: *centos7_11_0_x86_64_variables
-  only:
-    variables:
-      - $centos7_11_0_x86_64 == "true"
-      - $all == "true"
-
-centos7-v11.0-x86_64:
-  <<: *cuda_base_definition
-  <<: *centos7_11_0_x86_64_only
-
-centos7-v11.0-cudnn8-x86_64:
-  <<: *cudnn_definition
-  <<: *centos7_11_0_x86_64_only
-  # Variables overwritten here. Don't move this section.
-  variables:
-    <<: *centos7_11_0_x86_64_variables
-    CUDNN_VERSION: "cudnn8"
-  artifacts:
-    reports:
-      dotenv: cudnn8finaltags.env
-  needs:
-    - job: centos7-v11.0-x86_64
-      artifacts: true
-
-centos7-v11.0-test-x86_64:
-  needs: ["centos7-v11.0-x86_64"]
-  <<: *test_definition
-  <<: *centos7_11_0_x86_64_only
-
-centos7-v11.0-scan-x86_64:
-  needs: ["centos7-v11.0-x86_64", "centos7-v11.0-test-x86_64"]
-  <<: *scan_definition
-  <<: *centos7_11_0_x86_64_only
-
-centos7-v11.0-deploy-x86_64:
-  <<: *deploy_definition
-  <<: *centos7_11_0_x86_64_only
-  needs:
-    - job: centos7-v11.0-test-x86_64
-      artifacts: true
-    - job: centos7-v11.0-scan-x86_64
-    - job: centos7-v11.0-cudnn8-x86_64
 
 .ubi7_11_0_x86_64_variables: &ubi7_11_0_x86_64_variables
   ARCH: "x86_64"
@@ -1199,76 +1199,6 @@ centos8-v10.2-deploy-x86_64:
     - job: centos8-v10.2-cudnn8-x86_64
     - job: centos8-v10.2-cudnn7-x86_64
 
-.ubi8_10_2_x86_64_variables: &ubi8_10_2_x86_64_variables
-  ARCH: "x86_64"
-  DIST_BASE_PATH: "dist/10.2"
-  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
-  MANIFEST: "manifests/cuda.yaml"
-  OS: "ubi8"
-  OS_NAME: "ubi"
-  OS_VERSION: "8"
-  CUDA_VERSION: "10.2"
-
-.ubi8_10_2_x86_64_only: &ubi8_10_2_x86_64_only
-  variables:
-    <<: *ubi8_10_2_x86_64_variables
-  only:
-    variables:
-      - $ubi8_10_2_x86_64 == "true"
-      - $all == "true"
-
-ubi8-v10.2-x86_64:
-  <<: *cuda_base_definition
-  <<: *ubi8_10_2_x86_64_only
-
-ubi8-v10.2-cudnn8-x86_64:
-  <<: *cudnn_definition
-  <<: *ubi8_10_2_x86_64_only
-  # Variables overwritten here. Don't move this section.
-  variables:
-    <<: *ubi8_10_2_x86_64_variables
-    CUDNN_VERSION: "cudnn8"
-  artifacts:
-    reports:
-      dotenv: cudnn8finaltags.env
-  needs:
-    - job: ubi8-v10.2-x86_64
-      artifacts: true
-
-ubi8-v10.2-cudnn7-x86_64:
-  <<: *cudnn_definition
-  <<: *ubi8_10_2_x86_64_only
-  # Variables overwritten here. Don't move this section.
-  variables:
-    <<: *ubi8_10_2_x86_64_variables
-    CUDNN_VERSION: "cudnn7"
-  artifacts:
-    reports:
-      dotenv: cudnn7finaltags.env
-  needs:
-    - job: ubi8-v10.2-x86_64
-      artifacts: true
-
-ubi8-v10.2-test-x86_64:
-  needs: ["ubi8-v10.2-x86_64"]
-  <<: *test_definition
-  <<: *ubi8_10_2_x86_64_only
-
-ubi8-v10.2-scan-x86_64:
-  needs: ["ubi8-v10.2-x86_64", "ubi8-v10.2-test-x86_64"]
-  <<: *scan_definition
-  <<: *ubi8_10_2_x86_64_only
-
-ubi8-v10.2-deploy-x86_64:
-  <<: *deploy_definition
-  <<: *ubi8_10_2_x86_64_only
-  needs:
-    - job: ubi8-v10.2-test-x86_64
-      artifacts: true
-    - job: ubi8-v10.2-scan-x86_64
-    - job: ubi8-v10.2-cudnn8-x86_64
-    - job: ubi8-v10.2-cudnn7-x86_64
-
 .centos7_10_2_x86_64_variables: &centos7_10_2_x86_64_variables
   ARCH: "x86_64"
   DIST_BASE_PATH: "dist/10.2"
@@ -1408,6 +1338,146 @@ centos7-v10.2-deploy-ppc64le:
     - job: centos7-v10.2-scan-ppc64le
     - job: centos7-v10.2-cudnn8-ppc64le
     - job: centos7-v10.2-cudnn7-ppc64le
+
+.centos6_10_2_x86_64_variables: &centos6_10_2_x86_64_variables
+  ARCH: "x86_64"
+  DIST_BASE_PATH: "dist/10.2"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  OS: "centos6"
+  OS_NAME: "centos"
+  OS_VERSION: "6"
+  CUDA_VERSION: "10.2"
+
+.centos6_10_2_x86_64_only: &centos6_10_2_x86_64_only
+  variables:
+    <<: *centos6_10_2_x86_64_variables
+  only:
+    variables:
+      - $centos6_10_2_x86_64 == "true"
+      - $all == "true"
+
+centos6-v10.2-x86_64:
+  <<: *cuda_base_definition
+  <<: *centos6_10_2_x86_64_only
+
+centos6-v10.2-cudnn8-x86_64:
+  <<: *cudnn_definition
+  <<: *centos6_10_2_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos6_10_2_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: centos6-v10.2-x86_64
+      artifacts: true
+
+centos6-v10.2-cudnn7-x86_64:
+  <<: *cudnn_definition
+  <<: *centos6_10_2_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos6_10_2_x86_64_variables
+    CUDNN_VERSION: "cudnn7"
+  artifacts:
+    reports:
+      dotenv: cudnn7finaltags.env
+  needs:
+    - job: centos6-v10.2-x86_64
+      artifacts: true
+
+centos6-v10.2-test-x86_64:
+  needs: ["centos6-v10.2-x86_64"]
+  <<: *test_definition
+  <<: *centos6_10_2_x86_64_only
+
+centos6-v10.2-scan-x86_64:
+  needs: ["centos6-v10.2-x86_64", "centos6-v10.2-test-x86_64"]
+  <<: *scan_definition
+  <<: *centos6_10_2_x86_64_only
+
+centos6-v10.2-deploy-x86_64:
+  <<: *deploy_definition
+  <<: *centos6_10_2_x86_64_only
+  needs:
+    - job: centos6-v10.2-test-x86_64
+      artifacts: true
+    - job: centos6-v10.2-scan-x86_64
+    - job: centos6-v10.2-cudnn8-x86_64
+    - job: centos6-v10.2-cudnn7-x86_64
+
+.ubi8_10_2_x86_64_variables: &ubi8_10_2_x86_64_variables
+  ARCH: "x86_64"
+  DIST_BASE_PATH: "dist/10.2"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  OS: "ubi8"
+  OS_NAME: "ubi"
+  OS_VERSION: "8"
+  CUDA_VERSION: "10.2"
+
+.ubi8_10_2_x86_64_only: &ubi8_10_2_x86_64_only
+  variables:
+    <<: *ubi8_10_2_x86_64_variables
+  only:
+    variables:
+      - $ubi8_10_2_x86_64 == "true"
+      - $all == "true"
+
+ubi8-v10.2-x86_64:
+  <<: *cuda_base_definition
+  <<: *ubi8_10_2_x86_64_only
+
+ubi8-v10.2-cudnn8-x86_64:
+  <<: *cudnn_definition
+  <<: *ubi8_10_2_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi8_10_2_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubi8-v10.2-x86_64
+      artifacts: true
+
+ubi8-v10.2-cudnn7-x86_64:
+  <<: *cudnn_definition
+  <<: *ubi8_10_2_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi8_10_2_x86_64_variables
+    CUDNN_VERSION: "cudnn7"
+  artifacts:
+    reports:
+      dotenv: cudnn7finaltags.env
+  needs:
+    - job: ubi8-v10.2-x86_64
+      artifacts: true
+
+ubi8-v10.2-test-x86_64:
+  needs: ["ubi8-v10.2-x86_64"]
+  <<: *test_definition
+  <<: *ubi8_10_2_x86_64_only
+
+ubi8-v10.2-scan-x86_64:
+  needs: ["ubi8-v10.2-x86_64", "ubi8-v10.2-test-x86_64"]
+  <<: *scan_definition
+  <<: *ubi8_10_2_x86_64_only
+
+ubi8-v10.2-deploy-x86_64:
+  <<: *deploy_definition
+  <<: *ubi8_10_2_x86_64_only
+  needs:
+    - job: ubi8-v10.2-test-x86_64
+      artifacts: true
+    - job: ubi8-v10.2-scan-x86_64
+    - job: ubi8-v10.2-cudnn8-x86_64
+    - job: ubi8-v10.2-cudnn7-x86_64
 
 .ubi7_10_2_x86_64_variables: &ubi7_10_2_x86_64_variables
   ARCH: "x86_64"

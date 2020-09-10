@@ -10,18 +10,6 @@ redhat6: &redhat6_definition
       cudnn7:
         version: "7.6.5.32"
         sha256sum: "600267f2caaed2fd58eb214ba669d8ea35f396a7d19b94822e6b36f9f7088c20"
-    v10.1:
-      build_version: 243
-      requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=396,driver<397 brand=tesla,driver>=410,driver<411"
-      cudnn7:
-        version: "7.6.5.32"
-        sha256sum: "7eaec8039a2c30ab0bc758d303588767693def6bf49b22485a2c00bf2e136cb3"
-    v10.0:
-      build_version: 130
-      requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=410,driver<411"
-      cudnn7:
-        version: "7.6.5.32"
-        sha256sum: "28355e395f0b2b93ac2c83b61360b35ba6cd0377e44e78be197b6b61b4b492ba"
     v9.2:
       build_version: 148
       cudnn7:
@@ -53,24 +41,6 @@ redhat7: &redhat7_definition
   template_path: redhat
   cuda:
     repo_url: "http://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64"
-    v10.2:
-      build_version: 89
-      requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=396,driver<397 brand=tesla,driver>=410,driver<411 brand=tesla,driver>=418,driver<419"
-      cudnn7:
-        version: "7.6.5.32"
-        sha256sum: "600267f2caaed2fd58eb214ba669d8ea35f396a7d19b94822e6b36f9f7088c20"
-    v10.1:
-      build_version: 243
-      requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=396,driver<397 brand=tesla,driver>=410,driver<411"
-      cudnn7:
-        version: "7.6.5.32"
-        sha256sum: "7eaec8039a2c30ab0bc758d303588767693def6bf49b22485a2c00bf2e136cb3"
-    v10.0:
-      build_version: 130
-      requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=410,driver<411"
-      cudnn7:
-        version: "7.6.5.32"
-        sha256sum: "28355e395f0b2b93ac2c83b61360b35ba6cd0377e44e78be197b6b61b4b492ba"
     v9.2:
       build_version: 148
       cudnn7:
@@ -102,24 +72,6 @@ redhat8: &redhat8_definition
   template_path: redhat
   cuda:
     repo_url: "http://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64"
-    v10.2:
-      build_version: 89
-      requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=396,driver<397 brand=tesla,driver>=410,driver<411 brand=tesla,driver>=418,driver<419"
-      cudnn7:
-        version: "7.6.5.32"
-        sha256sum: "600267f2caaed2fd58eb214ba669d8ea35f396a7d19b94822e6b36f9f7088c20"
-    v10.1:
-      build_version: 243
-      requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=396,driver<397 brand=tesla,driver>=410,driver<411"
-      cudnn7:
-        version: "7.6.5.32"
-        sha256sum: "7eaec8039a2c30ab0bc758d303588767693def6bf49b22485a2c00bf2e136cb3"
-    v10.0:
-      build_version: 130
-      requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=410,driver<411"
-      cudnn7:
-        version: "7.6.5.32"
-        sha256sum: "7eaec8039a2c30ab0bc758d303588767693def6bf49b22485a2c00bf2e136cb3"
     v9.2:
       build_version: 148
       cudnn7:
@@ -147,58 +99,10 @@ redhat8: &redhat8_definition
         version: "5.1.10"
         sha256sum: "c10719b36f2dd6e9ddc63e3189affaa1a94d7d027e63b71c3f64d449ab0645ce"
 
-centos6:
-  base_image: centos:6
-  <<: *redhat6_definition
-
-centos7:
-  base_image: centos:7
-  <<: *redhat7_definition
-
-ubi7:
-  base_image: registry.access.redhat.com/ubi7/ubi:latest
-  <<: *redhat7_definition
-
-ubi8:
-  template_path: redhat
-  base_image: registry.access.redhat.com/ubi8/ubi:latest
-  cuda:
-    repo_url: "http://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64"
-    v10.2:
-      build_version: 89
-      requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=396,driver<397 brand=tesla,driver>=410,driver<411 brand=tesla,driver>=418,driver<419"
-      cudnn7:
-        version: "7.6.5.32"
-        sha256sum: "600267f2caaed2fd58eb214ba669d8ea35f396a7d19b94822e6b36f9f7088c20"
-    v10.1:
-      build_version: 243
-      requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=396,driver<397 brand=tesla,driver>=410,driver<411"
-      cudnn7:
-        version: "7.6.5.32"
-        sha256sum: "7eaec8039a2c30ab0bc758d303588767693def6bf49b22485a2c00bf2e136cb3"
-
 ubuntu18.04:
   base_image: ubuntu:18.04
   template_path: ubuntu
   cuda:
-    v10.2:
-      build_version: 89
-      requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=396,driver<397 brand=tesla,driver>=410,driver<411 brand=tesla,driver>=418,driver<419"
-      nccl_version: 2.5.6
-      cudnn7:
-        version: "7.6.5.32"
-    v10.1:
-      build_version: 243
-      requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=396,driver<397 brand=tesla,driver>=410,driver<411"
-      nccl_version: 2.4.8
-      cudnn7:
-        version: "7.6.5.32"
-    v10.0:
-      build_version: 130
-      nccl_version: 2.4.8
-      requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=410,driver<411"
-      cudnn7:
-        version: "7.6.5.32"
     v9.2:
       build_version: 148
       nccl_version: 2.4.2
@@ -209,24 +113,6 @@ ubuntu16.04:
   template_path: ubuntu
   base_image: ubuntu:16.04
   cuda:
-    v10.2:
-      build_version: 89
-      requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=396,driver<397 brand=tesla,driver>=410,driver<411 brand=tesla,driver>=418,driver<419"
-      nccl_version: 2.5.6
-      cudnn7:
-        version: "7.6.5.32"
-    v10.1:
-      build_version: 243
-      requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=396,driver<397 brand=tesla,driver>=410,driver<411"
-      nccl_version: 2.4.8
-      cudnn7:
-        version: "7.6.5.32"
-    v10.0:
-      build_version: 130
-      nccl_version: 2.5.6
-      requires: "brand=tesla,driver>=384,driver<385 brand=tesla,driver>=410,driver<411"
-      cudnn7:
-        version: "7.6.5.32"
     v9.2:
       build_version: 148
       nccl_version: 2.4.8
