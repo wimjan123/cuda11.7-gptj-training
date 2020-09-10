@@ -605,28 +605,6 @@ cuda_v10.0:
       <<: *cuda10_0_requires
       components:
         <<: *cuda10_0_components
-  centos8:
-    template_path: templates/redhat
-    base_image: centos:8
-    push_repos:
-      - artifactory
-      - docker.io
-      - nvcr.io
-    x86_64:
-      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
-      repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64
-      ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel8/x86_64
-      <<: *cuda10_0_requires
-      components:
-        <<: *cuda10_0_components
-        # cudnn7 and nccl are not in the ML repo for rhel8
-        cudnn7:
-          version: 7.6.5.32
-          sha256sum: 600267f2caaed2fd58eb214ba669d8ea35f396a7d19b94822e6b36f9f7088c20
-        libnccl2:
-          version: 2.6.4
-          sha256sum: 57ab59ea45afe76ba5de6ced5e73c3bef1d7afc089fe1ad75128fc9890116adb
-          source: https://developer.download.nvidia.com/compute/redist/nccl/v2.6/nccl_2.6.4-1+cuda10.0_x86_64.txz
   centos7:
     template_path: templates/redhat
     base_image: centos:7
@@ -666,29 +644,7 @@ cuda_v10.0:
         <<: *cuda10_0_components
         cudnn7:
           version: 7.6.5.32
-          sha256sum: 7eaec8039a2c30ab0bc758d303588767693def6bf49b22485a2c00bf2e136cb3
-  ubi8:
-    template_path: templates/redhat
-    base_image: registry.access.redhat.com/ubi8/ubi:latest
-    push_repos:
-      - artifactory
-      - docker.io
-      - nvcr.io
-    x86_64:
-      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
-      repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8/x86_64
-      ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel8/x86_64
-      <<: *cuda10_0_requires
-      components:
-        <<: *cuda10_0_components
-        # cudnn7 is not in the ML repo for rhel8
-        cudnn7:
-          version: 7.6.5.32
-          sha256sum: 7eaec8039a2c30ab0bc758d303588767693def6bf49b22485a2c00bf2e136cb3
-        libnccl2:
-          version: 2.6.4
-          sha256sum: 57ab59ea45afe76ba5de6ced5e73c3bef1d7afc089fe1ad75128fc9890116adb
-          source: https://developer.download.nvidia.com/compute/redist/nccl/v2.6/nccl_2.6.4-1+cuda10.0_x86_64.txz
+          sha256sum: 28355e395f0b2b93ac2c83b61360b35ba6cd0377e44e78be197b6b61b4b492ba
   ubi7:
     template_path: templates/redhat
     base_image: registry.access.redhat.com/ubi7/ubi:latest
