@@ -47,6 +47,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libnccl2=$NCCL_VERSION-1+cuda{{ cuda.version.major }}.{{ cuda.version.minor }} \
     && apt-mark hold libnccl2 \
     {% endif %}
+    {% if cuda.version.major | int == 10 and cuda.version.minor | int == 1 %}
+    {# apt from auto upgrading the cublas package. See https://gitlab.com/nvidia/container-images/cuda/-/issues/88 #}
+    && apt-mark hold libcublas10 \
+    {% endif %}
     && rm -rf /var/lib/apt/lists/*
 
 {% if "libnccl2" in cuda.components and "source" in cuda.components.libnccl2 %}

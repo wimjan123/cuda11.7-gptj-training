@@ -18,7 +18,7 @@ function docker_run() {
 }
 
 function docker_build() {
-    run docker build "$@"
+    run docker build --pull "$@"
     echo "docker run $@ (status=$status):" >&2
     echo "$output" >&2
 }

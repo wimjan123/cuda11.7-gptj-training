@@ -10,6 +10,7 @@ fi
 image="${IMAGE_NAME}:${CUDA_VERSION}-${BASE_IMAGE}-${OS}${IMAGE_TAG_SUFFIX}"
 
 function setup() {
+    docker pull ${image}
     check_runtime
 }
 

@@ -123,14 +123,14 @@ prepare:
     - 'echo "TAG_DEVEL: ${TAG_DEVEL}"'
     - docker manifest inspect centos:8 # for debugging
     - docker buildx create --use --platform linux/${ARCH} --name cuda-${ARCH}
-    - docker buildx build --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_BASE} "${DIST_BASE_PATH}/base"
+    - docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_BASE} "${DIST_BASE_PATH}/base"
                           --build-arg BUILDKIT_INLINE_CACHE=1
                           --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}
-    - docker buildx build --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_RUNTIME}
+    - docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_RUNTIME}
                           --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/runtime"
                           --build-arg BUILDKIT_INLINE_CACHE=1
                           --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}
-    - docker buildx build --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_DEVEL} ${TAG_LATEST}
+    - docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_DEVEL} ${TAG_LATEST}
                           --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel"
                           --build-arg BUILDKIT_INLINE_CACHE=1
                           --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
@@ -159,11 +159,11 @@ prepare:
         export CUDA_EXTRA_TAGS="${CUDA_EXTRA_TAGS} ${CUDA_VERSION}-${CUDNN_VERSION}-runtime${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-${CUDNN_VERSION}-devel${IMAGE_TAG_SUFFIX}";
       fi
     - docker buildx create --use --platform linux/${ARCH} --name cuda-${ARCH}
-    - docker buildx build --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_RUNTIME}
+    - docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_RUNTIME}
                   --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/runtime/${CUDNN_VERSION}"
                   --build-arg BUILDKIT_INLINE_CACHE=1
                   --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}
-    - docker buildx build --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_DEVEL}
+    - docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_DEVEL}
                   --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel/${CUDNN_VERSION}"
                   --build-arg BUILDKIT_INLINE_CACHE=1
                   --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
