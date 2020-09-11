@@ -65,11 +65,14 @@ Repos: docker.io/nvidia/cuda (x86_64), docker.io/nvidia/cuda-ppc64le (ppc64le)
 
 #### CUDA 9.2
 
-- [`9.2-base`, `9.2-base-ubuntu18.04` (*9.2/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubuntu18.04/9.2/base/Dockerfile)
-- [`9.2-runtime`, `9.2-runtime-ubuntu18.04` (*9.2/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubuntu18.04/9.2/runtime/Dockerfile)
-- [`9.2-cudnn7-runtime`, `9.2-cudnn7-runtime-ubuntu18.04` (*9.2/runtime/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubuntu18.04/9.2/runtime/cudnn7/Dockerfile)
-- [`9.2-devel`, `9.2-devel-ubuntu18.04` (*9.2/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubuntu18.04/9.2/devel/Dockerfile)
-- [`9.2-cudnn7-devel`, `9.2-cudnn7-devel-ubuntu18.04` (*9.2/devel/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubuntu18.04/9.2/devel/cudnn7/Dockerfile)
+Repos: nvcr.io/nvidia/cuda (x86_64)
+Repos: docker.io/nvidia/cuda (x86_64)
+
+- `9.2-base,           9.2-base-ubuntu18.04` [(*9.2/x86_64/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/ubuntu18.04-x86_64/base/Dockerfile)
+- `9.2-runtime,        9.2-runtime-ubuntu18.04` [(*9.2/x86_64/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/ubuntu18.04-x86_64/runtime/Dockerfile)
+- `9.2-devel,          9.2-devel-ubuntu18.04` [(*9.2/x86_64/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/ubuntu18.04-x86_64/devel/Dockerfile)
+- `9.2-cudnn7-runtime, 9.2-cudnn7-runtime-ubuntu18.04` [(*9.2/x86_64/runtime/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/ubuntu18.04-x86_64/runtime/cudnn7/Dockerfile)
+- `9.2-cudnn7-devel,   9.2-cudnn7-devel-ubuntu18.04` [(*9.2/x86_64/devel/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/ubuntu18.04-x86_64/devel/cudnn7/Dockerfile)
 
 ### Ubuntu 16.04
 
@@ -120,11 +123,14 @@ Repos: docker.io/nvidia/cuda (x86_64)
 
 #### CUDA 9.2
 
-- [`9.2-base-ubuntu16.04` (*9.2/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubuntu16.04/9.2/base/Dockerfile)
-- [`9.2-runtime-ubuntu16.04` (*9.2/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubuntu16.04/9.2/runtime/Dockerfile)
-- [`9.2-cudnn7-runtime-ubuntu16.04` (*9.2/runtime/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubuntu16.04/9.2/runtime/cudnn7/Dockerfile)
-- [`9.2-devel-ubuntu16.04` (*9.2/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubuntu16.04/9.2/devel/Dockerfile)
-- [`9.2-cudnn7-devel-ubuntu16.04` (*9.2/devel/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubuntu16.04/9.2/devel/cudnn7/Dockerfile)
+Repos: nvcr.io/nvidia/cuda (x86_64)
+Repos: docker.io/nvidia/cuda (x86_64)
+
+- `9.2-base-ubuntu16.04` [(*9.2/x86_64/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/ubuntu16.04-x86_64/base/Dockerfile)
+- `9.2-runtime-ubuntu16.04` [(*9.2/x86_64/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/ubuntu16.04-x86_64/runtime/Dockerfile)
+- `9.2-cudnn7-runtime-ubuntu16.04` [(*9.2/x86_64/runtime/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/ubuntu16.04-x86_64/runtime/cudnn7/Dockerfile)
+- `9.2-devel-ubuntu16.04` [(*9.2/x86_64/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/ubuntu16.04-x86_64/devel/Dockerfile)
+- `9.2-cudnn7-devel-ubuntu16.04` [(*9.2/x86_64/devel/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/ubuntu16.04-x86_64/devel/cudnn7/Dockerfile)
 
 #### CUDA 9.1
 
@@ -242,11 +248,14 @@ Repos: docker.io/nvidia/cuda (x86_64), docker.io/nvidia/cuda-ppc64le (ppc64le)
 
 #### CUDA 9.2
 
-- [`9.2-base-ubi7` (*9.2/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubi7/9.2/base/Dockerfile)
-- [`9.2-runtime-ubi7` (*9.2/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubi7/9.2/runtime/Dockerfile)
-- [`9.2-cudnn7-runtime-ubi7` (*9.2/runtime/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubi7/9.2/runtime/cudnn7/Dockerfile)
-- [`9.2-devel-ubi7` (*9.2/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubi7/9.2/devel/Dockerfile)
-- [`9.2-cudnn7-devel-ubi7` (*9.2/devel/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/ubi7/9.2/devel/cudnn7/Dockerfile)
+Repos: nvcr.io/nvidia/cuda (x86_64), nvcr.io/nvidia/cuda-ppc64le (ppc64le)
+Repos: docker.io/nvidia/cuda (x86_64), docker.io/nvidia/cuda-ppc64le (ppc64le)
+
+- `9.2-base-ubi7` [(*9.2/x86_64/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/ubi7-x86_64/base/Dockerfile),  [(*9.2/ppc64le/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/ubi7-ppc64le/base/Dockerfile)
+- `9.2-runtime-ubi7` [(*9.2/x86_64/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/ubi7-x86_64/runtime/Dockerfile),  [(*9.2/ppc64le/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/ubi7-ppc64le/runtime/Dockerfile)
+- `9.2-cudnn7-runtime-ubi7` [(*9.2/x86_64/runtime/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/ubi7-x86_64/runtime/cudnn7/Dockerfile),  [(*9.2/ppc64le/runtime/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/ubi7-ppc64le/runtime/cudnn7/Dockerfile)
+- `9.2-devel-ubi7` [(*9.2/x86_64/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/ubi7-x86_64/devel/Dockerfile),  [(*9.2/ppc64le/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/ubi7-ppc64le/devel/Dockerfile)
+- `9.2-cudnn7-devel-ubi7` [(*9.2/x86_64/devel/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/ubi7-x86_64/devel/cudnn7/Dockerfile),  [(*9.2/ppc64le/devel/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/ubi7-ppc64le/devel/cudnn7/Dockerfile)
 
 #### CUDA 9.1
 
@@ -364,11 +373,14 @@ Repos: docker.io/nvidia/cuda (x86_64), docker.io/nvidia/cuda-ppc64le (ppc64le)
 
 #### CUDA 9.2
 
-- [`9.2-base-centos7` (*9.2/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/centos7/9.2/base/Dockerfile)
-- [`9.2-runtime-centos7` (*9.2/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/centos7/9.2/runtime/Dockerfile)
-- [`9.2-cudnn7-runtime-centos7` (*9.2/runtime/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/centos7/9.2/runtime/cudnn7/Dockerfile)
-- [`9.2-devel-centos7` (*9.2/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/centos7/9.2/devel/Dockerfile)
-- [`9.2-cudnn7-devel-centos7` (*9.2/devel/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/centos7/9.2/devel/cudnn7/Dockerfile)
+Repos: nvcr.io/nvidia/cuda (x86_64), nvcr.io/nvidia/cuda-ppc64le (ppc64le)
+Repos: docker.io/nvidia/cuda (x86_64), docker.io/nvidia/cuda-ppc64le (ppc64le)
+
+- `9.2-base-centos7` [(*9.2/x86_64/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/centos7-x86_64/base/Dockerfile),  [(*9.2/ppc64le/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/centos7-ppc64le/base/Dockerfile)
+- `9.2-runtime-centos7` [(*9.2/x86_64/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/centos7-x86_64/runtime/Dockerfile),  [(*9.2/ppc64le/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/centos7-ppc64le/runtime/Dockerfile)
+- `9.2-cudnn7-runtime-centos7` [(*9.2/x86_64/runtime/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/centos7-x86_64/runtime/cudnn7/Dockerfile),  [(*9.2/ppc64le/runtime/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/centos7-ppc64le/runtime/cudnn7/Dockerfile)
+- `9.2-devel-centos7` [(*9.2/x86_64/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/centos7-x86_64/devel/Dockerfile),  [(*9.2/ppc64le/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/centos7-ppc64le/devel/Dockerfile)
+- `9.2-cudnn7-devel-centos7` [(*9.2/x86_64/devel/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/centos7-x86_64/devel/cudnn7/Dockerfile),  [(*9.2/ppc64le/devel/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/centos7-ppc64le/devel/cudnn7/Dockerfile)
 
 #### CUDA 9.1
 
@@ -455,11 +467,14 @@ Repos: [NOT POSTED] docker.io/nvidia/cuda (x86_64)
 
 #### CUDA 9.2
 
-- [`9.2-base-centos6` (*9.2/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/centos6/9.2/base/Dockerfile)
-- [`9.2-runtime-centos6` (*9.2/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/centos6/9.2/runtime/Dockerfile)
-- [`9.2-cudnn7-runtime-centos6` (*9.2/runtime/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/centos6/9.2/runtime/cudnn7/Dockerfile)
-- [`9.2-devel-centos6` (*9.2/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/centos6/9.2/devel/Dockerfile)
-- [`9.2-cudnn7-devel-centos6` (*9.2/devel/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/centos6/9.2/devel/cudnn7/Dockerfile)
+Repos: [NOT POSTED] nvcr.io/nvidia/cuda (x86_64)
+Repos: [NOT POSTED] docker.io/nvidia/cuda (x86_64)
+
+- `9.2-base-centos6` [(*9.2/x86_64/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/centos6-x86_64/base/Dockerfile)
+- `9.2-runtime-centos6` [(*9.2/x86_64/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/centos6-x86_64/runtime/Dockerfile)
+- `9.2-cudnn7-runtime-centos6` [(*9.2/x86_64/runtime/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/centos6-x86_64/runtime/cudnn7/Dockerfile)
+- `9.2-devel-centos6` [(*9.2/x86_64/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/centos6-x86_64/devel/Dockerfile)
+- `9.2-cudnn7-devel-centos6` [(*9.2/x86_64/devel/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/centos6-x86_64/devel/cudnn7/Dockerfile)
 
 #### CUDA 9.1
 

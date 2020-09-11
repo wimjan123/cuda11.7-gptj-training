@@ -42,8 +42,9 @@ LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 {% endif %}
 {% if "libnccl2" in cuda.components %}
     {% set libnccl2_component_version = cuda.components.libnccl2.version + "+cuda" + cuda.version.major + "." + cuda.version.minor %}
-{% endif -%}
 ENV NCCL_VERSION {{ cuda.components.libnccl2.version[:-2] }}
+
+{% endif -%}
 
 {% if cuda.version.major | int <= 10 %}
   {% set cuda_pkg_version = "$CUDA_PKG_VERSION" %}
@@ -70,6 +71,10 @@ RUN yum install -y \
     {% if cuda.version.major | int == 9 and cuda.version.minor | int == 0 %}
     cuda-core-{{ cuda.version.major }}-{{ cuda.version.minor }}-{{ cuda.version.full }}.3-1 \
     cuda-cublas-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}-{{ cuda.version.full }}.4-1 \
+    {% elif cuda.version.major | int == 9 and cuda.version.minor | int == 2 %}
+    cuda-cublas-dev-$CUDA_PKG_VERSION \
+    {% else %}
+    libcublas-devel-{{ libcublas_dev_component_version }} \
     {% endif %}
     cuda-cudart-dev{{ dev_to_devel }}-{{ cudart_dev_component_version or cuda_pkg_version }} \
     cuda-libraries-dev{{ dev_to_devel }}-{{ libraries_dev_component_version or cuda_pkg_version }} \
@@ -80,7 +85,6 @@ RUN yum install -y \
     {% else %}
     libnpp-devel-{{ libnpp_dev_component_version or cuda_pkg_version }} \
     {% endif %}
-    libcublas-devel-{{ libcublas_dev_component_version }} \
     {% if libnccl2_component_version and "libnccl2" in cuda.components and "source" not in cuda.components.libnccl2 %}
     libnccl-devel-{{ libnccl2_component_version }} \
     {% endif %}

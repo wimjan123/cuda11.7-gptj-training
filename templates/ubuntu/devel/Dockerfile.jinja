@@ -38,7 +38,8 @@ LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 {% endif %}
 {% if "libnccl2_dev" in cuda.components %}
 ENV NCCL_VERSION {{ cuda.components.libnccl2_dev.version[:-2] }}
-{% endif %}
+
+{% endif -%}
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-nvml-dev-{{ nvml_dev_component_version if nvml_dev_component_version and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
