@@ -566,7 +566,7 @@ cuda_v10.1:
       image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7/ppc64le
       ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7/ppc64le
-      requires: "cuda>=10_1"
+      requires: "cuda>=10.1"
       components:
         <<: *cuda10_1_components
 
