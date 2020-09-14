@@ -44,7 +44,9 @@ ENV NCCL_VERSION {{ cuda.components.libnccl2_dev.version[:-2] }}
 RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-nvml-dev-{{ nvml_dev_component_version if nvml_dev_component_version and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
     cuda-command-line-tools-{{ cmdline_tools_component_version if cmdline_tools_component_version and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
+{% if (cuda.version.major | int >= 9 and cuda.version.minor | int > 0) or (cuda.version.major | int > 9 and cuda.version.minor | int >= 0) %}
     cuda-nvprof-{{ nvprof_component_version if nvprof_component_version and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
+{% endif %}
     {% if ((cuda.arch != "arm64" or cuda.arch == "ppc64le") and cuda.version.major | int <= 10) or cuda.version.build == 89 %}
     cuda-npp-dev-{{ libnpp_component_version if libnpp_component_version and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
     {% else %}

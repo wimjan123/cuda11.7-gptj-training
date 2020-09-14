@@ -2,7 +2,7 @@ ARG IMAGE_NAME
 FROM ${IMAGE_NAME}:9.0-devel-ubuntu16.04
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 
-ENV CUDNN_VERSION 7.6.4.38
+ENV CUDNN_VERSION 7.2.1.38
 
 LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
 
