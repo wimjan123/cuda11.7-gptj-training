@@ -816,3 +816,108 @@ cuda_v9.2:
         libnccl2:
           version: 2.4.8
           sha256sum: 9c51cc56cec85703fa748bfba5e517cea22b7371fa059a316beaf0e9e021b473
+
+
+.requires_v9.1: &cuda9_1_requires
+  requires: "cuda>=9.1"
+
+
+.components_v9.1: &cuda9_1_components
+  build_version: 85
+
+
+cuda_v9.1:
+  dist_base_path: dist/9.1
+  ubuntu16.04:
+    template_path: templates/ubuntu
+    base_image: ubuntu:16.04
+    push_repos:
+      - artifactory
+      - docker.io
+      - nvcr.io
+    x86_64:
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
+      repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64
+      ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604/x86_64
+      no_os_suffix: True
+      <<: *cuda9_1_requires
+      components:
+        <<: *cuda9_1_components
+        cudnn7:
+          version: 7.1.2.21
+    ppc64le:
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le
+      repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/ppc64el
+      ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604/ppc64el
+      no_os_suffix: True
+      <<: *cuda9_1_requires
+      components:
+        <<: *cuda9_1_components
+        cudnn7:
+          version: 7.1.3.16
+  centos7:
+    template_path: templates/redhat
+    base_image: centos:7
+    push_repos:
+      - artifactory
+      - docker.io
+      - nvcr.io
+    x86_64:
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
+      repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64
+      <<: *cuda9_1_requires
+      components:
+        <<: *cuda9_1_components
+        cudnn7:
+          version: 7.1.2
+          sha256sum: c61000ed700bc5a009bc2e135bbdf736c9743212b2174a2fc9018a66cc0979ec
+    ppc64le:
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le
+      repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7/ppc64le
+      requires: "cuda>=9.1"
+      components:
+        <<: *cuda9_1_components
+        cudnn7:
+          version: 7.0.5
+          sha256sum: 68834ffe96c91fa1b13517a4b5b0358f8433ed2d30f146b7bb41dd0ea50c55ce
+  centos6:
+    template_path: templates/redhat
+    base_image: centos:6
+    push_repos:
+      - artifactory
+      - docker.io
+      - nvcr.io
+    x86_64:
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
+      repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel6/x86_64
+      <<: *cuda9_1_requires
+      components:
+        <<: *cuda9_1_components
+        cudnn7:
+          version: 7.1.2
+          sha256sum: c61000ed700bc5a009bc2e135bbdf736c9743212b2174a2fc9018a66cc0979ec
+  ubi7:
+    template_path: templates/redhat
+    base_image: registry.access.redhat.com/ubi7/ubi:latest
+    push_repos:
+      - artifactory
+      - docker.io
+      - nvcr.io
+    x86_64:
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
+      repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64
+      <<: *cuda9_1_requires
+      components:
+        <<: *cuda9_1_components
+        cudnn7:
+          version: 7.1.2
+          sha256sum: c61000ed700bc5a009bc2e135bbdf736c9743212b2174a2fc9018a66cc0979ec
+    ppc64le:
+      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le
+      repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7/ppc64le
+      requires: "cuda>=9.1"
+      components:
+        <<: *cuda9_1_components
+        cudnn7:
+          version: 7.0.5
+          sha256sum: 68834ffe96c91fa1b13517a4b5b0358f8433ed2d30f146b7bb41dd0ea50c55ce

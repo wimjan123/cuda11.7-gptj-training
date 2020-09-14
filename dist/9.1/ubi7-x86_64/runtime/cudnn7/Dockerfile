@@ -2,7 +2,7 @@ ARG IMAGE_NAME
 FROM ${IMAGE_NAME}:9.1-runtime-ubi7
 LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 
-ENV CUDNN_VERSION 7.1.2.21
+ENV CUDNN_VERSION 7.1.2
 LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
 
 # cuDNN license: https://developer.nvidia.com/cudnn/license_agreement

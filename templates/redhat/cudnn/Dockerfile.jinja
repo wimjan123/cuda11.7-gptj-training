@@ -51,9 +51,20 @@ RUN yum install -y \
   {% endif %}
 # cuDNN license: https://developer.nvidia.com/cudnn/license_agreement
 RUN CUDNN_DOWNLOAD_SUM={{ cuda.cudnn.sha256sum }} && \
-    curl -fsSL http://developer.download.nvidia.com/compute/redist/cudnn/v{{ cuda.cudnn.version[:cuda.cudnn.version.rfind(".")] }}/cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-{{ arch }}-v{{ cudnn_version }}.tgz -O && \
-    echo "$CUDNN_DOWNLOAD_SUM  cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-{{ arch }}-v{{ cudnn_version}}.tgz" | sha256sum -c - && \
-    tar --no-same-owner -xzf cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-{{ arch }}-v{{ cudnn_version }}.tgz -C /usr/local {% if cuda.cudnn.target == "runtime" -%}--wildcards '{{ archive_path }}' {% endif -%} && \
-    rm cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-{{ arch }}-v{{ cudnn_version }}.tgz && \
+    {# Versioning is all over the place for early cudnn #}
+    {% if cuda.version.major | int == 9 and cuda.version.minor | int == 1 %}
+        {% set cudnn_url_version = cuda.cudnn.version %}
+        {% set cudnn_url_version2 = cuda.cudnn.version[:cuda.cudnn.version.rfind(".")] %}
+        {% if arch == "ppc64le" %}
+        {% set cudnn_url_version2 = cuda.cudnn.version[0] %}
+        {% endif %}
+    {% else %}
+        {% set cudnn_url_version = cuda.cudnn.version[:cuda.cudnn.version.rfind(".")] %}
+        {% set cudnn_url_version2 = cudnn_version %}
+    {% endif %}
+    curl -fsSL http://developer.download.nvidia.com/compute/redist/cudnn/v{{ cudnn_url_version }}/cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-{{ arch }}-v{{ cudnn_url_version2 }}.tgz -O && \
+    echo "$CUDNN_DOWNLOAD_SUM  cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-{{ arch }}-v{{ cudnn_url_version2 }}.tgz" | sha256sum -c - && \
+    tar --no-same-owner -xzf cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-{{ arch }}-v{{ cudnn_url_version2 }}.tgz -C /usr/local {% if cuda.cudnn.target == "runtime" -%}--wildcards '{{ archive_path }}' {% endif -%} && \
+    rm cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-{{ arch }}-v{{ cudnn_url_version2 }}.tgz && \
     ldconfig
 {% endif %}
