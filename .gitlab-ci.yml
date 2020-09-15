@@ -79,17 +79,32 @@ prepare:
 .cuda_template_depricated: &cuda_definition_deprecated
   image: gitlab-cuda-builder
   stage: cuda
+  retry: 2
   <<: *tags_definition
   script:
     - if [[ "${NO_OS_SUFFIX}" == "true" ]]; then
         export TAG_RUNTIME=" -t ${IMAGE_NAME}:${CUDA_VERSION}-runtime ";
         export TAG_DEVEL=" -t ${IMAGE_NAME}:${CUDA_VERSION}-devel ";
+        export CUDA_TAGS="${CUDA_VERSION}-runtime ${CUDA_VERSION}-devel ";
       fi
-    - if [[ "${LATEST}" == "true" ]]; then
-        export TAG_LATEST=" -t ${IMAGE_NAME}:latest ";
+    - if [[ -z $DIST_BASE_PATH ]]; then
+        export DIST_BASE_PATH="dist/${OS}/${CUDA_VERSION}/${ARCH}";
+      else
+        export DIST_BASE_PATH="${DIST_BASE_PATH}/${OS}-${ARCH}";
       fi
-    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}" ${TAG_RUNTIME} ${TAG_LATEST} "dist/${OS}/${CUDA_VERSION}/runtime"
-    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}" ${TAG_DEVEL} --build-arg "IMAGE_NAME=${IMAGE_NAME}" "dist/${OS}/${CUDA_VERSION}/devel"
+    - docker buildx create --use --platform linux/${ARCH} --name cuda-${ARCH}
+    - docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}" ${TAG_RUNTIME} "${DIST_BASE_PATH}/runtime"
+                          --build-arg BUILDKIT_INLINE_CACHE=1
+                          --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}
+    - docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}" ${TAG_DEVEL} "${DIST_BASE_PATH}/devel"
+                          --build-arg "IMAGE_NAME=${IMAGE_NAME}"
+                          --build-arg BUILDKIT_INLINE_CACHE=1
+                          --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}
+    - 'echo "CUDA_TAGS=\"${CUDA_TAGS} ${CUDA_VERSION}-runtime-${OS} ${CUDA_VERSION}-devel-${OS}\"" >> tags.env'
+    - cat tags.env
+  artifacts:
+    reports:
+      dotenv: tags.env
 
 .cuda_base_template: &cuda_base_definition
   image: gitlab-cuda-builder
@@ -117,7 +132,6 @@ prepare:
     - 'echo "TAG_BASE: ${TAG_BASE}"'
     - 'echo "TAG_RUNTIME: ${TAG_RUNTIME}"'
     - 'echo "TAG_DEVEL: ${TAG_DEVEL}"'
-    - docker manifest inspect centos:8 # for debugging
     - docker buildx create --use --platform linux/${ARCH} --name cuda-${ARCH}
     - docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_BASE} "${DIST_BASE_PATH}/base"
                           --build-arg BUILDKIT_INLINE_CACHE=1
@@ -130,7 +144,6 @@ prepare:
                           --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel"
                           --build-arg BUILDKIT_INLINE_CACHE=1
                           --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
-    # Gitlab makes it really silly to pass information between stages, dotenv files are very limited, read the docs if issues are encountered
     - 'echo "CUDA_TAGS=\"${CUDA_TAGS} ${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}\"" >> tags.env'
     - cat tags.env
   artifacts:
@@ -195,13 +208,13 @@ prepare:
         git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab-master.nvidia.com/sectooling/scanning/contamer.git
         cd contamer
         pip3 install -r requirements.txt
-        docker pull ${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}
+        docker pull ${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
 
-        python3 contamer.py -ls --fail-on-non-os ${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX} \
+        python3 contamer.py -ls --fail-on-non-os ${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX} \
             --suppress-vulns CVE-2020-14352 CVE-2020-15888 # librepo, lua-libs packages WAIVED via https://nvbugswb.nvidia.com/NvBugs5/SWBug.aspx?bugid=3028123&cmtNo=35
 
         export CONTAMER_RET=$?
-        docker rmi -f ${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}
+        docker rmi -f ${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
         if [[ $CONTAMER_RET -ne 0 ]]; then
           exit 1;
         else
@@ -3923,4 +3936,601 @@ ubi7-v9.0-deploy-ppc64le:
       artifacts: true
     - job: ubi7-v9.0-scan-ppc64le
     - job: ubi7-v9.0-cudnn7-ppc64le
+
+.ubuntu16_04_8_0_x86_64_variables: &ubuntu16_04_8_0_x86_64_variables
+  ARCH: "x86_64"
+  DIST_BASE_PATH: "dist/8.0"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  NO_OS_SUFFIX: "true"
+  OS: "ubuntu16.04"
+  OS_NAME: "ubuntu"
+  OS_VERSION: "16.04"
+  CUDA_VERSION: "8.0"
+
+.ubuntu16_04_8_0_x86_64_only: &ubuntu16_04_8_0_x86_64_only
+  variables:
+    <<: *ubuntu16_04_8_0_x86_64_variables
+  only:
+    variables:
+      - $ubuntu16_04_8_0_x86_64 == "true"
+      - $all == "true"
+
+ubuntu16.04-v8.0-x86_64:
+  <<: *cuda_definition_deprecated
+  <<: *ubuntu16_04_8_0_x86_64_only
+
+ubuntu16.04-v8.0-cudnn7-x86_64:
+  <<: *cudnn_definition
+  <<: *ubuntu16_04_8_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu16_04_8_0_x86_64_variables
+    CUDNN_VERSION: "cudnn7"
+  artifacts:
+    reports:
+      dotenv: cudnn7finaltags.env
+  needs:
+    - job: ubuntu16.04-v8.0-x86_64
+      artifacts: true
+
+ubuntu16.04-v8.0-cudnn6-x86_64:
+  <<: *cudnn_definition
+  <<: *ubuntu16_04_8_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu16_04_8_0_x86_64_variables
+    CUDNN_VERSION: "cudnn6"
+  artifacts:
+    reports:
+      dotenv: cudnn6finaltags.env
+  needs:
+    - job: ubuntu16.04-v8.0-x86_64
+      artifacts: true
+
+ubuntu16.04-v8.0-cudnn5-x86_64:
+  <<: *cudnn_definition
+  <<: *ubuntu16_04_8_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu16_04_8_0_x86_64_variables
+    CUDNN_VERSION: "cudnn5"
+  artifacts:
+    reports:
+      dotenv: cudnn5finaltags.env
+  needs:
+    - job: ubuntu16.04-v8.0-x86_64
+      artifacts: true
+
+ubuntu16.04-v8.0-test-x86_64:
+  needs: ["ubuntu16.04-v8.0-x86_64"]
+  <<: *test_definition
+  <<: *ubuntu16_04_8_0_x86_64_only
+
+ubuntu16.04-v8.0-scan-x86_64:
+  needs: ["ubuntu16.04-v8.0-x86_64", "ubuntu16.04-v8.0-test-x86_64"]
+  <<: *scan_definition
+  <<: *ubuntu16_04_8_0_x86_64_only
+
+ubuntu16.04-v8.0-deploy-x86_64:
+  <<: *deploy_definition
+  <<: *ubuntu16_04_8_0_x86_64_only
+  needs:
+    - job: ubuntu16.04-v8.0-test-x86_64
+      artifacts: true
+    - job: ubuntu16.04-v8.0-scan-x86_64
+    - job: ubuntu16.04-v8.0-cudnn7-x86_64
+    - job: ubuntu16.04-v8.0-cudnn6-x86_64
+    - job: ubuntu16.04-v8.0-cudnn5-x86_64
+
+.ubuntu16_04_8_0_ppc64le_variables: &ubuntu16_04_8_0_ppc64le_variables
+  ARCH: "ppc64le"
+  DIST_BASE_PATH: "dist/8.0"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le"
+  MANIFEST: "manifests/cuda.yaml"
+  NO_OS_SUFFIX: "true"
+  OS: "ubuntu16.04"
+  OS_NAME: "ubuntu"
+  OS_VERSION: "16.04"
+  CUDA_VERSION: "8.0"
+
+.ubuntu16_04_8_0_ppc64le_only: &ubuntu16_04_8_0_ppc64le_only
+  variables:
+    <<: *ubuntu16_04_8_0_ppc64le_variables
+  only:
+    variables:
+      - $ubuntu16_04_8_0_ppc64le == "true"
+      - $all == "true"
+
+ubuntu16.04-v8.0-ppc64le:
+  <<: *cuda_definition_deprecated
+  <<: *ubuntu16_04_8_0_ppc64le_only
+
+ubuntu16.04-v8.0-cudnn7-ppc64le:
+  <<: *cudnn_definition
+  <<: *ubuntu16_04_8_0_ppc64le_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu16_04_8_0_ppc64le_variables
+    CUDNN_VERSION: "cudnn7"
+  artifacts:
+    reports:
+      dotenv: cudnn7finaltags.env
+  needs:
+    - job: ubuntu16.04-v8.0-ppc64le
+      artifacts: true
+
+ubuntu16.04-v8.0-cudnn6-ppc64le:
+  <<: *cudnn_definition
+  <<: *ubuntu16_04_8_0_ppc64le_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu16_04_8_0_ppc64le_variables
+    CUDNN_VERSION: "cudnn6"
+  artifacts:
+    reports:
+      dotenv: cudnn6finaltags.env
+  needs:
+    - job: ubuntu16.04-v8.0-ppc64le
+      artifacts: true
+
+ubuntu16.04-v8.0-cudnn5-ppc64le:
+  <<: *cudnn_definition
+  <<: *ubuntu16_04_8_0_ppc64le_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu16_04_8_0_ppc64le_variables
+    CUDNN_VERSION: "cudnn5"
+  artifacts:
+    reports:
+      dotenv: cudnn5finaltags.env
+  needs:
+    - job: ubuntu16.04-v8.0-ppc64le
+      artifacts: true
+
+ubuntu16.04-v8.0-test-ppc64le:
+  needs: ["ubuntu16.04-v8.0-ppc64le"]
+  <<: *test_definition
+  <<: *ubuntu16_04_8_0_ppc64le_only
+
+ubuntu16.04-v8.0-scan-ppc64le:
+  needs: ["ubuntu16.04-v8.0-ppc64le", "ubuntu16.04-v8.0-test-ppc64le"]
+  <<: *scan_definition
+  <<: *ubuntu16_04_8_0_ppc64le_only
+
+ubuntu16.04-v8.0-deploy-ppc64le:
+  <<: *deploy_definition
+  <<: *ubuntu16_04_8_0_ppc64le_only
+  needs:
+    - job: ubuntu16.04-v8.0-test-ppc64le
+      artifacts: true
+    - job: ubuntu16.04-v8.0-scan-ppc64le
+    - job: ubuntu16.04-v8.0-cudnn7-ppc64le
+    - job: ubuntu16.04-v8.0-cudnn6-ppc64le
+    - job: ubuntu16.04-v8.0-cudnn5-ppc64le
+
+.centos7_8_0_x86_64_variables: &centos7_8_0_x86_64_variables
+  ARCH: "x86_64"
+  DIST_BASE_PATH: "dist/8.0"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  OS: "centos7"
+  OS_NAME: "centos"
+  OS_VERSION: "7"
+  CUDA_VERSION: "8.0"
+
+.centos7_8_0_x86_64_only: &centos7_8_0_x86_64_only
+  variables:
+    <<: *centos7_8_0_x86_64_variables
+  only:
+    variables:
+      - $centos7_8_0_x86_64 == "true"
+      - $all == "true"
+
+centos7-v8.0-x86_64:
+  <<: *cuda_definition_deprecated
+  <<: *centos7_8_0_x86_64_only
+
+centos7-v8.0-cudnn7-x86_64:
+  <<: *cudnn_definition
+  <<: *centos7_8_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos7_8_0_x86_64_variables
+    CUDNN_VERSION: "cudnn7"
+  artifacts:
+    reports:
+      dotenv: cudnn7finaltags.env
+  needs:
+    - job: centos7-v8.0-x86_64
+      artifacts: true
+
+centos7-v8.0-cudnn6-x86_64:
+  <<: *cudnn_definition
+  <<: *centos7_8_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos7_8_0_x86_64_variables
+    CUDNN_VERSION: "cudnn6"
+  artifacts:
+    reports:
+      dotenv: cudnn6finaltags.env
+  needs:
+    - job: centos7-v8.0-x86_64
+      artifacts: true
+
+centos7-v8.0-cudnn5-x86_64:
+  <<: *cudnn_definition
+  <<: *centos7_8_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos7_8_0_x86_64_variables
+    CUDNN_VERSION: "cudnn5"
+  artifacts:
+    reports:
+      dotenv: cudnn5finaltags.env
+  needs:
+    - job: centos7-v8.0-x86_64
+      artifacts: true
+
+centos7-v8.0-test-x86_64:
+  needs: ["centos7-v8.0-x86_64"]
+  <<: *test_definition
+  <<: *centos7_8_0_x86_64_only
+
+centos7-v8.0-scan-x86_64:
+  needs: ["centos7-v8.0-x86_64", "centos7-v8.0-test-x86_64"]
+  <<: *scan_definition
+  <<: *centos7_8_0_x86_64_only
+
+centos7-v8.0-deploy-x86_64:
+  <<: *deploy_definition
+  <<: *centos7_8_0_x86_64_only
+  needs:
+    - job: centos7-v8.0-test-x86_64
+      artifacts: true
+    - job: centos7-v8.0-scan-x86_64
+    - job: centos7-v8.0-cudnn7-x86_64
+    - job: centos7-v8.0-cudnn6-x86_64
+    - job: centos7-v8.0-cudnn5-x86_64
+
+.centos7_8_0_ppc64le_variables: &centos7_8_0_ppc64le_variables
+  ARCH: "ppc64le"
+  DIST_BASE_PATH: "dist/8.0"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le"
+  MANIFEST: "manifests/cuda.yaml"
+  OS: "centos7"
+  OS_NAME: "centos"
+  OS_VERSION: "7"
+  CUDA_VERSION: "8.0"
+
+.centos7_8_0_ppc64le_only: &centos7_8_0_ppc64le_only
+  variables:
+    <<: *centos7_8_0_ppc64le_variables
+  only:
+    variables:
+      - $centos7_8_0_ppc64le == "true"
+      - $all == "true"
+
+centos7-v8.0-ppc64le:
+  <<: *cuda_definition_deprecated
+  <<: *centos7_8_0_ppc64le_only
+
+centos7-v8.0-cudnn7-ppc64le:
+  <<: *cudnn_definition
+  <<: *centos7_8_0_ppc64le_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos7_8_0_ppc64le_variables
+    CUDNN_VERSION: "cudnn7"
+  artifacts:
+    reports:
+      dotenv: cudnn7finaltags.env
+  needs:
+    - job: centos7-v8.0-ppc64le
+      artifacts: true
+
+centos7-v8.0-cudnn6-ppc64le:
+  <<: *cudnn_definition
+  <<: *centos7_8_0_ppc64le_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos7_8_0_ppc64le_variables
+    CUDNN_VERSION: "cudnn6"
+  artifacts:
+    reports:
+      dotenv: cudnn6finaltags.env
+  needs:
+    - job: centos7-v8.0-ppc64le
+      artifacts: true
+
+centos7-v8.0-cudnn5-ppc64le:
+  <<: *cudnn_definition
+  <<: *centos7_8_0_ppc64le_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos7_8_0_ppc64le_variables
+    CUDNN_VERSION: "cudnn5"
+  artifacts:
+    reports:
+      dotenv: cudnn5finaltags.env
+  needs:
+    - job: centos7-v8.0-ppc64le
+      artifacts: true
+
+centos7-v8.0-test-ppc64le:
+  needs: ["centos7-v8.0-ppc64le"]
+  <<: *test_definition
+  <<: *centos7_8_0_ppc64le_only
+
+centos7-v8.0-scan-ppc64le:
+  needs: ["centos7-v8.0-ppc64le", "centos7-v8.0-test-ppc64le"]
+  <<: *scan_definition
+  <<: *centos7_8_0_ppc64le_only
+
+centos7-v8.0-deploy-ppc64le:
+  <<: *deploy_definition
+  <<: *centos7_8_0_ppc64le_only
+  needs:
+    - job: centos7-v8.0-test-ppc64le
+      artifacts: true
+    - job: centos7-v8.0-scan-ppc64le
+    - job: centos7-v8.0-cudnn7-ppc64le
+    - job: centos7-v8.0-cudnn6-ppc64le
+    - job: centos7-v8.0-cudnn5-ppc64le
+
+.centos6_8_0_x86_64_variables: &centos6_8_0_x86_64_variables
+  ARCH: "x86_64"
+  DIST_BASE_PATH: "dist/8.0"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  OS: "centos6"
+  OS_NAME: "centos"
+  OS_VERSION: "6"
+  CUDA_VERSION: "8.0"
+
+.centos6_8_0_x86_64_only: &centos6_8_0_x86_64_only
+  variables:
+    <<: *centos6_8_0_x86_64_variables
+  only:
+    variables:
+      - $centos6_8_0_x86_64 == "true"
+      - $all == "true"
+
+centos6-v8.0-x86_64:
+  <<: *cuda_definition_deprecated
+  <<: *centos6_8_0_x86_64_only
+
+centos6-v8.0-cudnn7-x86_64:
+  <<: *cudnn_definition
+  <<: *centos6_8_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos6_8_0_x86_64_variables
+    CUDNN_VERSION: "cudnn7"
+  artifacts:
+    reports:
+      dotenv: cudnn7finaltags.env
+  needs:
+    - job: centos6-v8.0-x86_64
+      artifacts: true
+
+centos6-v8.0-cudnn6-x86_64:
+  <<: *cudnn_definition
+  <<: *centos6_8_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos6_8_0_x86_64_variables
+    CUDNN_VERSION: "cudnn6"
+  artifacts:
+    reports:
+      dotenv: cudnn6finaltags.env
+  needs:
+    - job: centos6-v8.0-x86_64
+      artifacts: true
+
+centos6-v8.0-cudnn5-x86_64:
+  <<: *cudnn_definition
+  <<: *centos6_8_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos6_8_0_x86_64_variables
+    CUDNN_VERSION: "cudnn5"
+  artifacts:
+    reports:
+      dotenv: cudnn5finaltags.env
+  needs:
+    - job: centos6-v8.0-x86_64
+      artifacts: true
+
+centos6-v8.0-test-x86_64:
+  needs: ["centos6-v8.0-x86_64"]
+  <<: *test_definition
+  <<: *centos6_8_0_x86_64_only
+
+centos6-v8.0-scan-x86_64:
+  needs: ["centos6-v8.0-x86_64", "centos6-v8.0-test-x86_64"]
+  <<: *scan_definition
+  <<: *centos6_8_0_x86_64_only
+
+centos6-v8.0-deploy-x86_64:
+  <<: *deploy_definition
+  <<: *centos6_8_0_x86_64_only
+  needs:
+    - job: centos6-v8.0-test-x86_64
+      artifacts: true
+    - job: centos6-v8.0-scan-x86_64
+    - job: centos6-v8.0-cudnn7-x86_64
+    - job: centos6-v8.0-cudnn6-x86_64
+    - job: centos6-v8.0-cudnn5-x86_64
+
+.ubi7_8_0_x86_64_variables: &ubi7_8_0_x86_64_variables
+  ARCH: "x86_64"
+  DIST_BASE_PATH: "dist/8.0"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  OS: "ubi7"
+  OS_NAME: "ubi"
+  OS_VERSION: "7"
+  CUDA_VERSION: "8.0"
+
+.ubi7_8_0_x86_64_only: &ubi7_8_0_x86_64_only
+  variables:
+    <<: *ubi7_8_0_x86_64_variables
+  only:
+    variables:
+      - $ubi7_8_0_x86_64 == "true"
+      - $all == "true"
+
+ubi7-v8.0-x86_64:
+  <<: *cuda_definition_deprecated
+  <<: *ubi7_8_0_x86_64_only
+
+ubi7-v8.0-cudnn7-x86_64:
+  <<: *cudnn_definition
+  <<: *ubi7_8_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi7_8_0_x86_64_variables
+    CUDNN_VERSION: "cudnn7"
+  artifacts:
+    reports:
+      dotenv: cudnn7finaltags.env
+  needs:
+    - job: ubi7-v8.0-x86_64
+      artifacts: true
+
+ubi7-v8.0-cudnn6-x86_64:
+  <<: *cudnn_definition
+  <<: *ubi7_8_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi7_8_0_x86_64_variables
+    CUDNN_VERSION: "cudnn6"
+  artifacts:
+    reports:
+      dotenv: cudnn6finaltags.env
+  needs:
+    - job: ubi7-v8.0-x86_64
+      artifacts: true
+
+ubi7-v8.0-cudnn5-x86_64:
+  <<: *cudnn_definition
+  <<: *ubi7_8_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi7_8_0_x86_64_variables
+    CUDNN_VERSION: "cudnn5"
+  artifacts:
+    reports:
+      dotenv: cudnn5finaltags.env
+  needs:
+    - job: ubi7-v8.0-x86_64
+      artifacts: true
+
+ubi7-v8.0-test-x86_64:
+  needs: ["ubi7-v8.0-x86_64"]
+  <<: *test_definition
+  <<: *ubi7_8_0_x86_64_only
+
+ubi7-v8.0-scan-x86_64:
+  needs: ["ubi7-v8.0-x86_64", "ubi7-v8.0-test-x86_64"]
+  <<: *scan_definition
+  <<: *ubi7_8_0_x86_64_only
+
+ubi7-v8.0-deploy-x86_64:
+  <<: *deploy_definition
+  <<: *ubi7_8_0_x86_64_only
+  needs:
+    - job: ubi7-v8.0-test-x86_64
+      artifacts: true
+    - job: ubi7-v8.0-scan-x86_64
+    - job: ubi7-v8.0-cudnn7-x86_64
+    - job: ubi7-v8.0-cudnn6-x86_64
+    - job: ubi7-v8.0-cudnn5-x86_64
+
+.ubi7_8_0_ppc64le_variables: &ubi7_8_0_ppc64le_variables
+  ARCH: "ppc64le"
+  DIST_BASE_PATH: "dist/8.0"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le"
+  MANIFEST: "manifests/cuda.yaml"
+  OS: "ubi7"
+  OS_NAME: "ubi"
+  OS_VERSION: "7"
+  CUDA_VERSION: "8.0"
+
+.ubi7_8_0_ppc64le_only: &ubi7_8_0_ppc64le_only
+  variables:
+    <<: *ubi7_8_0_ppc64le_variables
+  only:
+    variables:
+      - $ubi7_8_0_ppc64le == "true"
+      - $all == "true"
+
+ubi7-v8.0-ppc64le:
+  <<: *cuda_definition_deprecated
+  <<: *ubi7_8_0_ppc64le_only
+
+ubi7-v8.0-cudnn7-ppc64le:
+  <<: *cudnn_definition
+  <<: *ubi7_8_0_ppc64le_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi7_8_0_ppc64le_variables
+    CUDNN_VERSION: "cudnn7"
+  artifacts:
+    reports:
+      dotenv: cudnn7finaltags.env
+  needs:
+    - job: ubi7-v8.0-ppc64le
+      artifacts: true
+
+ubi7-v8.0-cudnn6-ppc64le:
+  <<: *cudnn_definition
+  <<: *ubi7_8_0_ppc64le_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi7_8_0_ppc64le_variables
+    CUDNN_VERSION: "cudnn6"
+  artifacts:
+    reports:
+      dotenv: cudnn6finaltags.env
+  needs:
+    - job: ubi7-v8.0-ppc64le
+      artifacts: true
+
+ubi7-v8.0-cudnn5-ppc64le:
+  <<: *cudnn_definition
+  <<: *ubi7_8_0_ppc64le_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi7_8_0_ppc64le_variables
+    CUDNN_VERSION: "cudnn5"
+  artifacts:
+    reports:
+      dotenv: cudnn5finaltags.env
+  needs:
+    - job: ubi7-v8.0-ppc64le
+      artifacts: true
+
+ubi7-v8.0-test-ppc64le:
+  needs: ["ubi7-v8.0-ppc64le"]
+  <<: *test_definition
+  <<: *ubi7_8_0_ppc64le_only
+
+ubi7-v8.0-scan-ppc64le:
+  needs: ["ubi7-v8.0-ppc64le", "ubi7-v8.0-test-ppc64le"]
+  <<: *scan_definition
+  <<: *ubi7_8_0_ppc64le_only
+
+ubi7-v8.0-deploy-ppc64le:
+  <<: *deploy_definition
+  <<: *ubi7_8_0_ppc64le_only
+  needs:
+    - job: ubi7-v8.0-test-ppc64le
+      artifacts: true
+    - job: ubi7-v8.0-scan-ppc64le
+    - job: ubi7-v8.0-cudnn7-ppc64le
+    - job: ubi7-v8.0-cudnn6-ppc64le
+    - job: ubi7-v8.0-cudnn5-ppc64le
 

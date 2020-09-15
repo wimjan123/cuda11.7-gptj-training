@@ -56,7 +56,25 @@ RUN CUDNN_DOWNLOAD_SUM={{ cuda.cudnn.sha256sum }} && \
         {% set cudnn_url_version = cuda.cudnn.version %}
         {% set cudnn_url_version2 = cuda.cudnn.version[:cuda.cudnn.version.rfind(".")] %}
         {% if arch == "ppc64le" %}
-        {% set cudnn_url_version2 = cuda.cudnn.version[0] %}
+            {% set cudnn_url_version2 = cuda.cudnn.version[0] %}
+        {% endif %}
+    {% elif cuda.version.major | int == 8 and cuda.version.minor | int == 0 %}
+        {% if cudnn_version[0] | int == 5 or cudnn_version[0] | int == 6 %}
+            {% set cudnn_url_version = cuda.cudnn.version[:cuda.cudnn.version.rfind(".")] %}
+            {% set cudnn_url_version2 = cuda.cudnn.version[:cuda.cudnn.version.rfind(".")] %}
+        {% elif cudnn_version[0] | int == 7 %}
+            {% set cudnn_url_version = cuda.cudnn.version[:cuda.cudnn.version.rfind(".")] %}
+            {% if arch == "ppc64le" %}
+                {% set cudnn_url_version2 = cuda.cudnn.version[:cuda.cudnn.version.rfind(".")-4] %}
+            {% else %}
+                {% set cudnn_url_version2 = cuda.cudnn.version[:cuda.cudnn.version.rfind(".")-2] %}
+            {% endif %}
+        {% else %}
+            {% set cudnn_url_version = cuda.cudnn.version[:3] %}
+            {% set cudnn_url_version2 = cuda.cudnn.version[:cuda.cudnn.version.rfind(".")] %}
+            {% if arch == "ppc64le" %}
+                {% set cudnn_url_version2 = cuda.cudnn.version[0] %}
+            {% endif %}
         {% endif %}
     {% else %}
         {% set cudnn_url_version = cuda.cudnn.version[:cuda.cudnn.version.rfind(".")] %}

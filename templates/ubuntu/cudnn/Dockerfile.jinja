@@ -3,13 +3,17 @@ FROM ${IMAGE_NAME}:{{ cuda.version.major }}.{{ cuda.version.minor }}-{{ cuda.cud
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 
 {% if cuda.version.major | int == 8 %}
-RUN echo "deb https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu{{ cuda.os.version | replace(".", "") }}/x86_64 /" > /etc/apt/sources.list.d/nvidia-ml.list
+    {% set arch = cuda.arch  %}
+    {% if cuda.arch == "ppc64le" %}
+        {% set arch = cuda.arch | replace("le", "el") %}
+    {% endif %}
+RUN echo "deb https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu{{ cuda.os.version | replace(".", "") }}/{{ arch }} /" > /etc/apt/sources.list.d/nvidia-ml.list
 
 {% endif -%}
 
 {% set cudnn_version = cuda.cudnn.version %}
 {% if "-" in cuda.cudnn.version %}
-  {% set cudnn_version = cuda.cudnn.version[:-2] %}
+    {% set cudnn_version = cuda.cudnn.version[:-2] %}
 {% endif -%}
 
 ENV CUDNN_VERSION {{ cudnn_version }}

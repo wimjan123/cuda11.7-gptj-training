@@ -83,17 +83,32 @@ prepare:
 .cuda_template_depricated: &cuda_definition_deprecated
   image: gitlab-cuda-builder
   stage: cuda
+  retry: 2
   <<: *tags_definition
   script:
     - if [[ "${NO_OS_SUFFIX}" == "true" ]]; then
         export TAG_RUNTIME=" -t ${IMAGE_NAME}:${CUDA_VERSION}-runtime ";
         export TAG_DEVEL=" -t ${IMAGE_NAME}:${CUDA_VERSION}-devel ";
+        export CUDA_TAGS="${CUDA_VERSION}-runtime ${CUDA_VERSION}-devel ";
       fi
-    - if [[ "${LATEST}" == "true" ]]; then
-        export TAG_LATEST=" -t ${IMAGE_NAME}:latest ";
+    - if [[ -z $DIST_BASE_PATH ]]; then
+        export DIST_BASE_PATH="dist/${OS}/${CUDA_VERSION}/${ARCH}";
+      else
+        export DIST_BASE_PATH="${DIST_BASE_PATH}/${OS}-${ARCH}";
       fi
-    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}" ${TAG_RUNTIME} ${TAG_LATEST} "dist/${OS}/${CUDA_VERSION}/runtime"
-    - docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}" ${TAG_DEVEL} --build-arg "IMAGE_NAME=${IMAGE_NAME}" "dist/${OS}/${CUDA_VERSION}/devel"
+    - docker buildx create --use --platform linux/${ARCH} --name cuda-${ARCH}
+    - docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}" ${TAG_RUNTIME} "${DIST_BASE_PATH}/runtime"
+                          --build-arg BUILDKIT_INLINE_CACHE=1
+                          --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}
+    - docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}" ${TAG_DEVEL} "${DIST_BASE_PATH}/devel"
+                          --build-arg "IMAGE_NAME=${IMAGE_NAME}"
+                          --build-arg BUILDKIT_INLINE_CACHE=1
+                          --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}
+    - 'echo "CUDA_TAGS=\"${CUDA_TAGS} ${CUDA_VERSION}-runtime-${OS} ${CUDA_VERSION}-devel-${OS}\"" >> tags.env'
+    - cat tags.env
+  artifacts:
+    reports:
+      dotenv: tags.env
 
 .cuda_base_template: &cuda_base_definition
   image: gitlab-cuda-builder
@@ -121,7 +136,6 @@ prepare:
     - 'echo "TAG_BASE: ${TAG_BASE}"'
     - 'echo "TAG_RUNTIME: ${TAG_RUNTIME}"'
     - 'echo "TAG_DEVEL: ${TAG_DEVEL}"'
-    - docker manifest inspect centos:8 # for debugging
     - docker buildx create --use --platform linux/${ARCH} --name cuda-${ARCH}
     - docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_BASE} "${DIST_BASE_PATH}/base"
                           --build-arg BUILDKIT_INLINE_CACHE=1
@@ -134,7 +148,6 @@ prepare:
                           --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel"
                           --build-arg BUILDKIT_INLINE_CACHE=1
                           --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
-    # Gitlab makes it really silly to pass information between stages, dotenv files are very limited, read the docs if issues are encountered
     - 'echo "CUDA_TAGS=\"${CUDA_TAGS} ${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}\"" >> tags.env'
     - cat tags.env
   artifacts:
@@ -199,13 +212,13 @@ prepare:
         git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab-master.nvidia.com/sectooling/scanning/contamer.git
         cd contamer
         pip3 install -r requirements.txt
-        docker pull ${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}
+        docker pull ${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
 
-        python3 contamer.py -ls --fail-on-non-os ${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX} \
+        python3 contamer.py -ls --fail-on-non-os ${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX} \
             --suppress-vulns CVE-2020-14352 CVE-2020-15888 # librepo, lua-libs packages WAIVED via https://nvbugswb.nvidia.com/NvBugs5/SWBug.aspx?bugid=3028123&cmtNo=35
 
         export CONTAMER_RET=$?
-        docker rmi -f ${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}
+        docker rmi -f ${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
         if [[ $CONTAMER_RET -ne 0 ]]; then
           exit 1;
         else
@@ -305,7 +318,11 @@ cleanup:
       - $all == "true"
 
 {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ arch }}:
+{% if cuda_version == "8.0" %}
+  <<: *cuda_definition_deprecated
+{% else %}
   <<: *cuda_base_definition
+{% endif %}
   <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
 
 {% set cudnn_stages = [] %}

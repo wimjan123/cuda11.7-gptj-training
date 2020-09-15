@@ -864,9 +864,7 @@ class ManagerGenerate(Manager):
                 # for CUDA 8, runtime == base
                 base = "base"
             # cuda image
-            temp_path = self.parent.manifest[f"{self.distro}{self.distro_version}"][
-                "template_path"
-            ]
+            temp_path = self.cuda["template_path"]
             log.debug("temp_path: %s, output_path: %s", temp_path, self.output_path)
             self.output_template(
                 template_path=pathlib.Path(f"{temp_path}/{base}/Dockerfile.jinja"),

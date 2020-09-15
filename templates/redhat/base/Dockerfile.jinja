@@ -38,7 +38,7 @@ RUN yum upgrade -y && yum install -y \
     cuda-cusparse-$CUDA_PKG_VERSION \
     cuda-npp-$CUDA_PKG_VERSION \
     cuda-cudart-$CUDA_PKG_VERSION \
-{%- else %}
+{% else %}
     cuda-cudart-{{ cudart_component_version if cuda.version.major | int == 11 else "$CUDA_PKG_VERSION" }} \
 {% endif %}
 {% if cuda.version.major | int >= 10 %}
