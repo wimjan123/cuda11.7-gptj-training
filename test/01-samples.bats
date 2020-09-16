@@ -30,7 +30,13 @@ function dq_rhel() {
     fi
     printf "%s\n" "RUN ${pkgmgr} install -y make ${pkgcomp} git" >> Dockerfile
     if [[ "${CUDA_VERSION}" == "8.0" ]]; then
-		printf "%s\n" "RUN ${pkgmgr} install -y cuda-samples-8-0" >> Dockerfile
+		if [[ "${OS}" == "ubi7" ]]; then
+			# Dependencies are broken for cuda 8.0 samples on ubi7
+			printf "%s\n" "RUN rpm -Uvh --nodeps \$(repoquery --location cuda-samples-8-0)" >> Dockerfile
+			printf "%s\n" "RUN ${pkgmgr} install -y make" >> Dockerfile
+		else
+			printf "%s\n" "RUN ${pkgmgr} install -y cuda-samples-8-0" >> Dockerfile
+		fi
 	fi
 }
 

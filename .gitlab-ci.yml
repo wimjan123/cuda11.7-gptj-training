@@ -27,7 +27,6 @@
 variables:
   # Need a value of two here for checking the manifest in the last commit
   GIT_DEPTH: "2"
-  DRY_RUN: 1
 
 before_script:
   - 'echo "ARCH: $ARCH"'
@@ -265,6 +264,8 @@ cleanup:
   stage: cleanup
   <<: *tags_definition
   script:
+    # Remove all of the images on the host pulled down for test
+    - docker images | grep 'gitlab-master.nvidia.com:5005/cuda-installer' | awk '{ print $3 }' | xargs docker rmi
     - docker system prune -f
   rules:
     - if: '$TRIGGER == "true"'

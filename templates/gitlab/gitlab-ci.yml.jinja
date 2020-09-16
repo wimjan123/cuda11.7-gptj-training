@@ -27,7 +27,7 @@
 variables:
   # Need a value of two here for checking the manifest in the last commit
   GIT_DEPTH: "2"
-  DRY_RUN: 1
+  {# DRY_RUN: 1 #}
   {# NO_SCAN: "true" # Only use in development #}
   {# NO_TEST: "true" # Only use in development #}
 
@@ -270,7 +270,9 @@ cleanup:
   stage: cleanup
   <<: *tags_definition
   script:
-    {# - docker ps | grep "buildkit" | awk '{ print $1 }' | xargs docker rm -f #}
+	{# - docker ps | grep "buildkit" | awk '{ print $1 }' | xargs docker rm -f #}
+    # Remove all of the images on the host pulled down for test
+    - docker images | grep 'gitlab-master.nvidia.com:5005/cuda-installer' | awk '{ print $3 }' | xargs docker rmi
     - docker system prune -f
   rules:
     - if: '$TRIGGER == "true"'
