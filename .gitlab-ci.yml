@@ -59,10 +59,13 @@ stages:
 prepare:
   image: docker:stable
   stage: prepare
+  variables:
+    IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder"
   script:
-    - docker build -t gitlab-cuda-builder .
+    - docker build -t gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder --cache-from gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder .
+    - docker push gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
   tags:
-    - cuda-docker
+    - docker
   only:
     refs:
       - master
@@ -72,11 +75,11 @@ prepare:
 
 .tags_template: &tags_definition
   tags:
-    - cuda-docker
+    - docker
 
 # Only used for CUDA 8.0, will be removed once CUDA 8 support is dropped
 .cuda_template_depricated: &cuda_definition_deprecated
-  image: gitlab-cuda-builder
+  image: gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
   stage: cuda
   retry: 2
   <<: *tags_definition
@@ -106,7 +109,7 @@ prepare:
       dotenv: tags.env
 
 .cuda_base_template: &cuda_base_definition
-  image: gitlab-cuda-builder
+  image: gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
   stage: cuda
   retry: 2
   <<: *tags_definition
@@ -150,7 +153,7 @@ prepare:
       dotenv: tags.env
 
 .cudnn_template: &cudnn_definition
-  image: gitlab-cuda-builder
+  image: gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
   stage: cudnn
   retry: 2
   <<: *tags_definition
@@ -182,9 +185,10 @@ prepare:
     - cat ${CUDNN_VERSION}finaltags.env
 
 .test_template: &test_definition
-  image: gitlab-cuda-builder
+  image: gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
   stage: test
-  <<: *tags_definition
+  tags:
+    - cuda-test
   script:
     - |
       # NO_TEST SET -- WAR until we have better needs/rules support in the pipelines
@@ -197,7 +201,7 @@ prepare:
 
 
 .scan_template: &scan_definition
-  image: gitlab-cuda-builder
+  image: gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
   stage: scan
   <<: *tags_definition
   script:
@@ -224,7 +228,7 @@ prepare:
       fi
 
 .deploy_template: &deploy_definition
-  image: gitlab-cuda-builder
+  image: gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
   stage: deploy
   <<: *tags_definition
   script:
@@ -243,7 +247,7 @@ prepare:
         ${IMAGE_TAG_SUFFIX:+`echo "--tag-suffix ${IMAGE_TAG_SUFFIX}"`} ${DRY_RUN:+"-n"}
 
 trigger:
-  image: gitlab-cuda-builder
+  image: gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
   stage: trigger
   <<: *tags_definition
   variables:
@@ -260,7 +264,7 @@ trigger:
       - $TRIGGER_OVERRIDE
 
 cleanup:
-  image: gitlab-cuda-builder
+  image: gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
   stage: cleanup
   <<: *tags_definition
   script:
