@@ -4,6 +4,12 @@ A full list of tags that are supproted with CUDA, cuDNN, and security updates.
 
 ### Ubuntu 20.04
 
+#### CUDA 11.0 Update 1
+
+- [`11.0-base-ubuntu20.04` (*11.0/ubuntu20.04-x86_64/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu20.04-x86_64/base/Dockerfile)
+- [`11.0-runtime-ubuntu20.04` (*11.0/ubuntu20.04-x86_64/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu20.04-x86_64/runtime/Dockerfile)
+- [`11.0-devel-ubuntu20.04` (*11.0/ubuntu20.04-x86_64/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu20.04-x86_64/devel/Dockerfile)
+
 #### CUDA 11.0 RC
 
 TODO: Re-add the scripts/tags to the automation
@@ -15,6 +21,14 @@ TODO: Re-add the scripts/tags to the automation
 - `11.0-cudnn8-devel-ubuntu20.04-rc` [(*11.0/x86_64/devel/cudnn8/Dockerfile*)]()
 
 ### Ubuntu 18.04
+
+#### CUDA 11.0 Update 1
+
+- [`11.0-base-ubuntu18.04` (*11.0/ubuntu18.04-x86_64/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu18.04-x86_64/base/Dockerfile)
+- [`11.0-runtime-ubuntu18.04` (*11.0/ubuntu18.04-x86_64/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu18.04-x86_64/runtime/Dockerfile)
+- [`11.0-cudnn8-runtime-ubuntu18.04` (*11.0/ubuntu18.04-x86_64/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu18.04-x86_64/runtime/cudnn8/Dockerfile)
+- [`11.0-devel-ubuntu18.04` (*11.0/ubuntu18.04-x86_64/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu18.04-x86_64/devel/Dockerfile)
+- [`11.0-cudnn8-devel-ubuntu18.04` (*11.0/ubuntu18.04-x86_64/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu18.04-x86_64/devel/cudnn8/Dockerfile)
 
 #### CUDA 11.0 RC
 
@@ -75,6 +89,14 @@ Repos: docker.io/nvidia/cuda (x86_64)
 - `9.2-cudnn7-devel,   9.2-cudnn7-devel-ubuntu18.04` [(*9.2/x86_64/devel/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/9.2/ubuntu18.04-x86_64/devel/cudnn7/Dockerfile)
 
 ### Ubuntu 16.04
+
+#### CUDA 11.0 Update 1
+
+- [`11.0-base-ubuntu16.04` (*11.0/ubuntu18.04-x86_64/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu16.04-x86_64/base/Dockerfile)
+- [`11.0-runtime-ubuntu16.04` (*11.0/ubuntu18.04-x86_64/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu16.04-x86_64/runtime/Dockerfile)
+- [`11.0-cudnn8-runtime-ubuntu16.04` (*11.0/ubuntu18.04-x86_64/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu16.04-x86_64/runtime/cudnn8/Dockerfile)
+- [`11.0-devel-ubuntu16.04` (*11.0/ubuntu18.04-x86_64/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu16.04-x86_64/devel/Dockerfile)
+- [`11.0-cudnn8-devel-ubuntu16.04` (*11.0/ubuntu18.04-x86_64/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubuntu16.04-x86_64/devel/cudnn8/Dockerfile)
 
 #### CUDA 11.0 RC
 
@@ -171,6 +193,14 @@ Repos: docker.io/nvidia/cuda (x86_64), docker.io/nvidia/cuda-ppc64le (ppc64le)
 
 ### Red Hat UBI 8
 
+#### CUDA 11.0 Update 1
+
+- [`11.0-base-ubi8` (*11.0/ubuntu18.04-x86_64/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubi8-x86_64/base/Dockerfile)
+- [`11.0-runtime-ubi8` (*11.0/ubuntu18.04-x86_64/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubi8-x86_64/runtime/Dockerfile)
+- [`11.0-cudnn8-runtime-ubi8` (*11.0/ubuntu18.04-x86_64/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubi8-x86_64/runtime/cudnn8/Dockerfile)
+- [`11.0-devel-ubi8` (*11.0/ubuntu18.04-x86_64/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubi8-x86_64/devel/Dockerfile)
+- [`11.0-cudnn8-devel-ubi8` (*11.0/ubuntu18.04-x86_64/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubi8-x86_64/devel/cudnn8/Dockerfile)
+
 #### CUDA 11.0 RC
 
 TODO: Re-add the scripts/tags to the automation
@@ -208,6 +238,14 @@ Repos: docker.io/nvidia/cuda (x86_64)
 - `10.1-cudnn8-devel-ubi8` [(*10.1/x86_64/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/10.1/ubi8-x86_64/devel/cudnn8/Dockerfile)
 
 ### Red Hat UBI 7
+
+#### CUDA 11.0 Update 1
+
+- [`11.0-base-ubi7` (*11.0/ubuntu18.04-x86_64/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubi7-x86_64/base/Dockerfile)
+- [`11.0-runtime-ubi7` (*11.0/ubuntu18.04-x86_64/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubi7-x86_64/runtime/Dockerfile)
+- [`11.0-cudnn8-runtime-ubi7` (*11.0/ubuntu18.04-x86_64/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubi7-x86_64/runtime/cudnn8/Dockerfile)
+- [`11.0-devel-ubi7` (*11.0/ubuntu18.04-x86_64/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubi7-x86_64/devel/Dockerfile)
+- [`11.0-cudnn8-devel-ubi7` (*11.0/ubuntu18.04-x86_64/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/ubi7-x86_64/devel/cudnn8/Dockerfile)
 
 #### CUDA 11.0 RC
 
@@ -306,6 +344,14 @@ Repos: docker.io/nvidia/cuda (x86_64), docker.io/nvidia/cuda-ppc64le (ppc64le)
 
 ### CentOS 8
 
+#### CUDA 11.0 Update 1
+
+- [`11.0-base-centos8` (*11.0/ubuntu18.04-x86_64/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos8-x86_64/base/Dockerfile)
+- [`11.0-runtime-centos8` (*11.0/ubuntu18.04-x86_64/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos8-x86_64/runtime/Dockerfile)
+- [`11.0-cudnn8-runtime-centos8` (*11.0/ubuntu18.04-x86_64/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos8-x86_64/runtime/cudnn8/Dockerfile)
+- [`11.0-devel-centos8` (*11.0/ubuntu18.04-x86_64/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos8-x86_64/devel/Dockerfile)
+- [`11.0-cudnn8-devel-centos8` (*11.0/ubuntu18.04-x86_64/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos8-x86_64/devel/cudnn8/Dockerfile)
+
 #### CUDA 11.0 RC
 
 TODO: Re-add the scripts/tags to the automation
@@ -343,6 +389,14 @@ Repos: docker.io/nvidia/cuda (x86_64)
 - `10.1-cudnn8-devel-centos8` [(*10.1/x86_64/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/dist/10.1/centos8-x86_64/devel/cudnn8/Dockerfile)
 
 ### CentOS 7
+
+#### CUDA 11.0 Update 1
+
+- [`11.0-base-centos7` (*11.0/ubuntu18.04-x86_64/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos7-x86_64/base/Dockerfile)
+- [`11.0-runtime-centos7` (*11.0/ubuntu18.04-x86_64/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos7-x86_64/runtime/Dockerfile)
+- [`11.0-cudnn8-runtime-centos7` (*11.0/ubuntu18.04-x86_64/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos7-x86_64/runtime/cudnn8/Dockerfile)
+- [`11.0-devel-centos7` (*11.0/ubuntu18.04-x86_64/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos7-x86_64/devel/Dockerfile)
+- [`11.0-cudnn8-devel-centos7` (*11.0/ubuntu18.04-x86_64/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0/centos7-x86_64/devel/cudnn8/Dockerfile)
 
 #### CUDA 11.0 RC
 

@@ -732,9 +732,9 @@ class ManagerGenerate(Manager):
         cudnn_manifest = self.cuda["components"][cudnn_version_name]
         if "source" in cudnn_manifest:
             cudnn_manifest["basename"] = os.path.basename(cudnn_manifest["source"])
-            #  cudnn_manifest["dev"]["basename"] = os.path.basename(
-            #      cudnn_manifest["dev"]["source"]
-            #  )
+            cudnn_manifest["dev"]["basename"] = os.path.basename(
+                cudnn_manifest["dev"]["source"]
+            )
 
         new_ctx = {
             "cudnn": self.cuda["components"][cudnn_version_name],

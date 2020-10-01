@@ -14,6 +14,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-get purge --auto-remove -y gnupg-curl \
     && rm -rf /var/lib/apt/lists/*
 
+ENV CUDA_VERSION 11.0.3
+
 # For libraries in the cuda-compat-* package: https://docs.nvidia.com/cuda/eula/index.html#attachment-a
 RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-cudart-11-0=11.0.221-1 \

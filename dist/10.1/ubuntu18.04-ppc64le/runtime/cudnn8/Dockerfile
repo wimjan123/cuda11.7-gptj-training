@@ -2,7 +2,7 @@ ARG IMAGE_NAME
 FROM ${IMAGE_NAME}:10.1-runtime-ubuntu18.04
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 
-ENV CUDNN_VERSION 8.0.2.39
+ENV CUDNN_VERSION 8.0.3.33
 
 LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
 

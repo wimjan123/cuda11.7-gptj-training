@@ -9,7 +9,11 @@ function setup() {
 }
 
 @test "check_architecture" {
+    narch=${ARCH}
+    if [[ ${ARCH} == "arm64" ]]; then
+        narch="aarch64"
+    fi
     docker pull ${image}
-    docker_run --rm --gpus 0 ${image} bash -c "[[ \$(uname -m) == ${ARCH} ]] || false"
+    docker_run --rm --gpus 0 ${image} bash -c "[[ \$(uname -m) == ${narch} ]] || false"
     [ "$status" -eq 0 ]
 }

@@ -5,7 +5,7 @@ ENV DOCKER_TLS_CERTDIR "/certs"
 
 ENV DOCKER_CLI_EXPERIMENTAL enabled
 
-ENV BUILDX_URL https://github.com/docker/buildx/releases/download/v0.4.1/buildx-v0.4.1.linux-amd64
+ENV BUILDX_URL https://github.com/docker/buildx/releases/download/v0.4.2/buildx-v0.4.2.linux-amd64
 
 RUN mkdir -p $HOME/.docker/cli-plugins/
 
@@ -31,4 +31,4 @@ COPY pyproject.toml /root/
 
 WORKDIR /root
 
-RUN source $HOME/.poetry/env && poetry config virtualenvs.create false && poetry install
+RUN . $HOME/.poetry/env && poetry config virtualenvs.create false && poetry install

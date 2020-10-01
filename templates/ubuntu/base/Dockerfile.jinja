@@ -40,11 +40,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 {% endif %}
     && rm -rf /var/lib/apt/lists/*
 
-{% if cuda.version.major | int != 11 %}
 ENV CUDA_VERSION {{ cuda.version.full }}
+{% if cuda.version.major | int != 11 %}
 ENV CUDA_PKG_VERSION {{ cuda.version.major }}-{{ cuda.version.minor }}=$CUDA_VERSION-1
-
-{% endif -%}
+{% endif %}
 
 {% if "cudart" in cuda.components %}
 {% set cudart_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.cudart.version %}

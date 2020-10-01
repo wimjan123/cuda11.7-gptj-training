@@ -17,8 +17,8 @@ COPY cuda.repo /etc/yum.repos.d/cuda.repo
 COPY nvidia-ml.repo /etc/yum.repos.d/nvidia-ml.repo
 {% endif %}
 
-{% if cuda.version.major | int != 11 %}
 ENV CUDA_VERSION {{ cuda.version.full }}
+{% if cuda.version.major | int != 11 %}
 ENV CUDA_PKG_VERSION {{ cuda.version.major }}-{{ cuda.version.minor }}-$CUDA_VERSION-1
 {% endif %}
 
