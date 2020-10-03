@@ -52,7 +52,7 @@ For a full list of supported tags, click [*here*](https://gitlab.com/nvidia/cont
 
 ## LATEST CUDA 11.1
 
-Visit [OpenSource @ Nvidia](https://developer.download.nvidia.com/compute/cuda/opensource/image/11.1/) for the GPL sources of the packages contained in the CUDA base image layers.
+Visit [OpenSource @ Nvidia](https://developer.download.nvidia.com/compute/cuda/opensource/image/) for the GPL sources of the packages contained in the CUDA base image layers.
 
 ### Ubuntu 20.04
 
