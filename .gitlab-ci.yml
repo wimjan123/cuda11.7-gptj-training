@@ -231,7 +231,6 @@ prepare:
   image: gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
   stage: deploy
   retry: 2
-  parallel: 5
   <<: *tags_definition
   script:
     - for tag in $(env | grep 'CUDA.*_TAGS' | cut -f2 -d=); do

@@ -433,6 +433,9 @@ class ManagerTrigger(Manager):
 class ManagerContainerPush(Manager):
     DESCRIPTION = "Login and push to the container registries"
 
+    RETRY_COUNT = 3
+    RETRY_WAIT_SECS = 30
+
     image_name = cli.SwitchAttr(
         "--image-name", str, help="The image name to tag", default="", mandatory=True
     )
@@ -575,23 +578,39 @@ class ManagerContainerPush(Manager):
                 if self.dry_run:
                     log.debug("dry-run; not copying")
                     continue
-                if self.skopeocmd(
-                    (
-                        "copy",
-                        "--src-creds",
-                        "{}:{}".format("gitlab-ci-token", os.getenv("CI_JOB_TOKEN")),
-                        "--dest-creds",
-                        "{}:{}".format(
-                            self.repo_creds[repo]["user"], self.repo_creds[repo]["pass"]
-                        ),
-                        f"docker://{self.image_name}:{tag}",
-                        f"docker://{repo}:{tag}",
-                    )
-                ):
-                    log.info("Copy was successful")
-                else:
-                    log.error("Copy failed!")
-                    self.copy_failed = True
+                for attempt in range(self.RETRY_COUNT):
+                    if self.skopeocmd(
+                        (
+                            "copy",
+                            "--src-creds",
+                            "{}:{}".format(
+                                "gitlab-ci-token", os.getenv("CI_JOB_TOKEN")
+                            ),
+                            "--dest-creds",
+                            "{}:{}".format(
+                                self.repo_creds[repo]["user"],
+                                self.repo_creds[repo]["pass"],
+                            ),
+                            f"docker://{self.image_name}:{tag}",
+                            f"docker://{repo}:{tag}",
+                        )
+                    ):
+                        log.info("Copy was successful")
+                        break
+                    else:
+                        if attempt < self.RETRY_COUNT:
+                            log.warning(
+                                "Copy Attempt failed! ({} of {})".format(
+                                    attempt + 1, self.RETRY_COUNT
+                                )
+                            )
+                            log.warning(
+                                "Sleeping {} seconds".format(self.RETRY_WAIT_SECS)
+                            )
+                            time.sleep(self.RETRY_WAIT_SECS)
+                        else:
+                            log.warning("Copy failed!")
+                            self.copy_failed = True
 
     def main(self):
         log.debug("dry-run: %s", self.dry_run)
