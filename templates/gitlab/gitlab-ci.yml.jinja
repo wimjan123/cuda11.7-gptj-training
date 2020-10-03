@@ -237,6 +237,8 @@ prepare:
 .deploy_template: &deploy_definition
   image: {{ gitlab_builder_image }}
   stage: deploy
+  retry: 2
+  parallel: 5
   <<: *tags_definition
   script:
     - for tag in $(env | grep 'CUDA.*_TAGS' | cut -f2 -d=); do

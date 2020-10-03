@@ -560,25 +560,25 @@ cuda_v10.2:
         #   dev:
         #     sha256sum: f445312fc30c2ca36cf17b85b2d39817e510db867d9484af439bb80762f67eea
         #     source: https://developer.download.nvidia.com/compute/redist/cudnn/v8.0.4/RHEL7_3-ppc64le/libcudnn8-devel-8.0.4.30-1.cuda10.2.ppc64le.rpm
-  centos6:
-    template_path: templates/redhat
-    base_image: centos:6
-    push_repos:
-      - artifactory
-      - docker.io
-      - nvcr.io
-    x86_64:
-      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
-      repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel6/x86_64
-      <<: *cuda10_2_requires
-      components:
-        <<: *cuda10_2_components
-        cudnn8:
-          version: 8.0.4.30
-          sha256sum: c12c69eb16698eacac40aa46b9ce399d4cd86efb6ff0c105142f8a28fcfb980e
-        cudnn7:
-          version: 7.6.5.32
-          sha256sum: 600267f2caaed2fd58eb214ba669d8ea35f396a7d19b94822e6b36f9f7088c20
+  # centos6:
+  #   template_path: templates/redhat
+  #   base_image: centos:6
+  #   push_repos:
+  #     - artifactory
+  #     - docker.io
+  #     - nvcr.io
+  #   x86_64:
+  #     image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
+  #     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel6/x86_64
+  #     <<: *cuda10_2_requires
+  #     components:
+  #       <<: *cuda10_2_components
+  #       cudnn8:
+  #         version: 8.0.4.30
+  #         sha256sum: c12c69eb16698eacac40aa46b9ce399d4cd86efb6ff0c105142f8a28fcfb980e
+  #       cudnn7:
+  #         version: 7.6.5.32
+  #         sha256sum: 600267f2caaed2fd58eb214ba669d8ea35f396a7d19b94822e6b36f9f7088c20
   ubi8:
     template_path: templates/redhat
     base_image: registry.access.redhat.com/ubi8/ubi:latest
@@ -737,25 +737,25 @@ cuda_v10.1:
       requires: "cuda>=10.1"
       components:
         <<: *cuda10_1_components
-  centos6:
-    template_path: templates/redhat
-    base_image: centos:6
-    push_repos:
-      - artifactory
-      - docker.io
-      - nvcr.io
-    x86_64:
-      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
-      repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel6/x86_64
-      <<: *cuda10_1_requires
-      components:
-        <<: *cuda10_1_components
-        cudnn8:
-          version: 8.0.4.30
-          sha256sum: eb4b888e61715168f57a0a0a21c281ada6856b728e5112618ed15f8637487715
-        cudnn7:
-          version: 7.6.5.32
-          sha256sum: 7eaec8039a2c30ab0bc758d303588767693def6bf49b22485a2c00bf2e136cb3
+  # centos6:
+  #   template_path: templates/redhat
+  #   base_image: centos:6
+  #   push_repos:
+  #     - artifactory
+  #     - docker.io
+  #     - nvcr.io
+  #   x86_64:
+  #     image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
+  #     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel6/x86_64
+  #     <<: *cuda10_1_requires
+  #     components:
+  #       <<: *cuda10_1_components
+  #       cudnn8:
+  #         version: 8.0.4.30
+  #         sha256sum: eb4b888e61715168f57a0a0a21c281ada6856b728e5112618ed15f8637487715
+  #       cudnn7:
+  #         version: 7.6.5.32
+  #         sha256sum: 7eaec8039a2c30ab0bc758d303588767693def6bf49b22485a2c00bf2e136cb3
   ubi8:
     template_path: templates/redhat
     base_image: registry.access.redhat.com/ubi8/ubi:latest
@@ -887,22 +887,22 @@ cuda_v10.0:
       requires: "cuda>=10.0"
       components:
         <<: *cuda10_0_components
-  centos6:
-    template_path: templates/redhat
-    base_image: centos:6
-    push_repos:
-      - artifactory
-      - docker.io
-      - nvcr.io
-    x86_64:
-      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
-      repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel6/x86_64
-      <<: *cuda10_0_requires
-      components:
-        <<: *cuda10_0_components
-        cudnn7:
-          version: 7.6.5.32
-          sha256sum: 28355e395f0b2b93ac2c83b61360b35ba6cd0377e44e78be197b6b61b4b492ba
+  # centos6:
+  #   template_path: templates/redhat
+  #   base_image: centos:6
+  #   push_repos:
+  #     - artifactory
+  #     - docker.io
+  #     - nvcr.io
+  #   x86_64:
+  #     image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
+  #     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel6/x86_64
+  #     <<: *cuda10_0_requires
+  #     components:
+  #       <<: *cuda10_0_components
+  #       cudnn7:
+  #         version: 7.6.5.32
+  #         sha256sum: 28355e395f0b2b93ac2c83b61360b35ba6cd0377e44e78be197b6b61b4b492ba
   ubi7:
     template_path: templates/redhat
     base_image: registry.access.redhat.com/ubi7/ubi:latest
@@ -1005,25 +1005,25 @@ cuda_v9.2:
         libnccl2:
           version: 2.4.8
           sha256sum: 9c51cc56cec85703fa748bfba5e517cea22b7371fa059a316beaf0e9e021b473
-  centos6:
-    template_path: templates/redhat
-    base_image: centos:6
-    push_repos:
-      - artifactory
-      - docker.io
-      - nvcr.io
-    x86_64:
-      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
-      repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel6/x86_64
-      <<: *cuda9_2_requires
-      components:
-        <<: *cuda9_2_components
-        cudnn7:
-          version: 7.6.5.32
-          sha256sum: a2a2c7a8ba7b16d323b651766ee37dcfdbc2b50d920f73f8fde85005424960e4
-        libnccl2:
-          version: 2.4.8
-          sha256sum: 9c51cc56cec85703fa748bfba5e517cea22b7371fa059a316beaf0e9e021b473
+  # centos6:
+  #   template_path: templates/redhat
+  #   base_image: centos:6
+  #   push_repos:
+  #     - artifactory
+  #     - docker.io
+  #     - nvcr.io
+  #   x86_64:
+  #     image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
+  #     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel6/x86_64
+  #     <<: *cuda9_2_requires
+  #     components:
+  #       <<: *cuda9_2_components
+  #       cudnn7:
+  #         version: 7.6.5.32
+  #         sha256sum: a2a2c7a8ba7b16d323b651766ee37dcfdbc2b50d920f73f8fde85005424960e4
+  #       libnccl2:
+  #         version: 2.4.8
+  #         sha256sum: 9c51cc56cec85703fa748bfba5e517cea22b7371fa059a316beaf0e9e021b473
   ubi7:
     template_path: templates/redhat
     base_image: registry.access.redhat.com/ubi7/ubi:latest
@@ -1119,22 +1119,22 @@ cuda_v9.1:
         cudnn7:
           version: 7.0.5
           sha256sum: 68834ffe96c91fa1b13517a4b5b0358f8433ed2d30f146b7bb41dd0ea50c55ce
-  centos6:
-    template_path: templates/redhat
-    base_image: centos:6
-    push_repos:
-      - artifactory
-      - docker.io
-      - nvcr.io
-    x86_64:
-      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
-      repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel6/x86_64
-      <<: *cuda9_1_requires
-      components:
-        <<: *cuda9_1_components
-        cudnn7:
-          version: 7.1.2
-          sha256sum: c61000ed700bc5a009bc2e135bbdf736c9743212b2174a2fc9018a66cc0979ec
+  # centos6:
+  #   template_path: templates/redhat
+  #   base_image: centos:6
+  #   push_repos:
+  #     - artifactory
+  #     - docker.io
+  #     - nvcr.io
+  #   x86_64:
+  #     image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
+  #     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel6/x86_64
+  #     <<: *cuda9_1_requires
+  #     components:
+  #       <<: *cuda9_1_components
+  #       cudnn7:
+  #         version: 7.1.2
+  #         sha256sum: c61000ed700bc5a009bc2e135bbdf736c9743212b2174a2fc9018a66cc0979ec
   ubi7:
     template_path: templates/redhat
     base_image: registry.access.redhat.com/ubi7/ubi:latest
@@ -1224,22 +1224,22 @@ cuda_v9.0:
         cudnn7:
           version: 7.2.1.38
           sha256sum: 4c0937b5618cb0d1d7eed195b3a4ba6a49e061f9e734f5702b030c8522cdfc9c
-  centos6:
-    template_path: templates/redhat
-    base_image: centos:6
-    push_repos:
-      - artifactory
-      - docker.io
-      - nvcr.io
-    x86_64:
-      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
-      repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel6/x86_64
-      <<: *cuda9_0_requires
-      components:
-        <<: *cuda9_0_components
-        cudnn7:
-          version: 7.6.5.32
-          sha256sum: bd0a4c0090d5b02feec3f195738968690cc2470b9bc6026e6fe8ff245cd261c8
+  # centos6:
+  #   template_path: templates/redhat
+  #   base_image: centos:6
+  #   push_repos:
+  #     - artifactory
+  #     - docker.io
+  #     - nvcr.io
+  #   x86_64:
+  #     image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
+  #     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel6/x86_64
+  #     <<: *cuda9_0_requires
+  #     components:
+  #       <<: *cuda9_0_components
+  #       cudnn7:
+  #         version: 7.6.5.32
+  #         sha256sum: bd0a4c0090d5b02feec3f195738968690cc2470b9bc6026e6fe8ff245cd261c8
   ubi7:
     template_path: templates/redhat
     base_image: registry.access.redhat.com/ubi7/ubi:latest
@@ -1349,28 +1349,28 @@ cuda_v8.0:
         cudnn5:
           version: 5.1.10
           sha256sum: 663aac0328f821d90ae9c74ee43e90751706546c2ce769ea9c96f92864300af6
-  centos6:
-    template_path: templates/redhat
-    base_image: centos:6
-    push_repos:
-      - artifactory
-      - docker.io
-      - nvcr.io
-    x86_64:
-      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
-      repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel6/x86_64
-      <<: *cuda8_0_requires
-      components:
-        <<: *cuda8_0_components
-        cudnn7:
-          version: 7.1.2.21
-          sha256sum: a5dfd656811fe9c43d87c40338cec5e1a85ad5a9cd3b5f1e95dd67d5e126aacc
-        cudnn6:
-          version: 6.0.21
-          sha256sum: 9b09110af48c9a4d7b6344eb4b3e344daa84987ed6177d5c44319732f3bb7f9c
-        cudnn5:
-          version: 5.1.10
-          sha256sum: c10719b36f2dd6e9ddc63e3189affaa1a94d7d027e63b71c3f64d449ab0645ce
+  # centos6:
+  #   template_path: templates/redhat
+  #   base_image: centos:6
+  #   push_repos:
+  #     - artifactory
+  #     - docker.io
+  #     - nvcr.io
+  #   x86_64:
+  #     image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
+  #     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel6/x86_64
+  #     <<: *cuda8_0_requires
+  #     components:
+  #       <<: *cuda8_0_components
+  #       cudnn7:
+  #         version: 7.1.2.21
+  #         sha256sum: a5dfd656811fe9c43d87c40338cec5e1a85ad5a9cd3b5f1e95dd67d5e126aacc
+  #       cudnn6:
+  #         version: 6.0.21
+  #         sha256sum: 9b09110af48c9a4d7b6344eb4b3e344daa84987ed6177d5c44319732f3bb7f9c
+  #       cudnn5:
+  #         version: 5.1.10
+  #         sha256sum: c10719b36f2dd6e9ddc63e3189affaa1a94d7d027e63b71c3f64d449ab0645ce
   ubi7:
     template_path: templates/redhat
     base_image: registry.access.redhat.com/ubi7/ubi:latest
