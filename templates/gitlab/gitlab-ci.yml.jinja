@@ -56,7 +56,7 @@ stages:
   - test
   - scan
   - deploy
-  - cleanup
+  {# - cleanup #}
 
 # builds the gitlab-cuda-builder image
 prepare:
@@ -271,26 +271,26 @@ trigger:
       - $TRIGGER == null
       - $TRIGGER_OVERRIDE
 
-cleanup:
-  image: {{ gitlab_builder_image }}
-  stage: cleanup
-  <<: *tags_definition
-  script:
-    # Remove all of the images on the host pulled down for test
-    # FIXME: this only works for one runner!!
-    - docker images | grep 'gitlab-master.nvidia.com:5005/cuda-installer' | grep -v "gitlab.*builder" | awk '{ print $3 }' | xargs --no-run-if-empty docker rmi || true
-    {# It' would become difficult to manage all the builder instances for all the possible runners here, so this section is #}
-    {# commented out for now #}
-    {# - docker buildx create --use --platform linux/ppc64le --driver-opt image=moby/buildkit:master --name cuda-ppc64le #}
-    {# - docker buildx stop cuda-ppc64le || true #}
-    {# - docker buildx create --use --platform linux/arm64 --driver-opt image=moby/buildkit:master --name cuda-arm64 #}
-    {# - docker buildx stop cuda-arm64 || true #}
-    {# - docker buildx create --use --platform linux/x86_64 --driver-opt image=moby/buildkit:master --name cuda-x86_64 #}
-    {# - docker buildx stop cuda-x86_64 || true #}
-    - docker system prune -f
-  rules:
-    - if: '$TRIGGER == "true"'
-      when: always
+{# cleanup: #}
+{#   image: {{ gitlab_builder_image }} #}
+{#   stage: cleanup #}
+{#   <<: *tags_definition #}
+{#   script: #}
+{#     # Remove all of the images on the host pulled down for test #}
+{#     # FIXME: this only works for one runner!! #}
+{#     - docker images | grep 'gitlab-master.nvidia.com:5005/cuda-installer' | grep -v "gitlab.*builder" | awk '{ print $3 }' | xargs --no-run-if-empty docker rmi || true #}
+{#     [> It' would become difficult to manage all the builder instances for all the possible runners here, so this section is <] #}
+{#     [> commented out for now <] #}
+{#     [> - docker buildx create --use --platform linux/ppc64le --driver-opt image=moby/buildkit:master --name cuda-ppc64le <] #}
+{#     [> - docker buildx stop cuda-ppc64le || true <] #}
+{#     [> - docker buildx create --use --platform linux/arm64 --driver-opt image=moby/buildkit:master --name cuda-arm64 <] #}
+{#     [> - docker buildx stop cuda-arm64 || true <] #}
+{#     [> - docker buildx create --use --platform linux/x86_64 --driver-opt image=moby/buildkit:master --name cuda-x86_64 <] #}
+{#     [> - docker buildx stop cuda-x86_64 || true <] #}
+{#     - docker system prune -f #}
+{#   rules: #}
+{#     - if: '$TRIGGER == "true"' #}
+{#       when: always #}
 
 {% for cuda_version in cuda if not cuda_version.startswith("manifest") %}
 {% for pipeline in cuda[cuda_version] %}

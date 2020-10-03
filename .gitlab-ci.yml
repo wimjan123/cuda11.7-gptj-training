@@ -53,7 +53,6 @@ stages:
   - test
   - scan
   - deploy
-  - cleanup
 
 # builds the gitlab-cuda-builder image
 prepare:
@@ -264,18 +263,6 @@ trigger:
       - $TRIGGER == null
       - $TRIGGER_OVERRIDE
 
-cleanup:
-  image: gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
-  stage: cleanup
-  <<: *tags_definition
-  script:
-    # Remove all of the images on the host pulled down for test
-    # FIXME: this only works for one runner!!
-    - docker images | grep 'gitlab-master.nvidia.com:5005/cuda-installer' | grep -v "gitlab.*builder" | awk '{ print $3 }' | xargs --no-run-if-empty docker rmi || true
-    - docker system prune -f
-  rules:
-    - if: '$TRIGGER == "true"'
-      when: always
 
 .ubuntu20_04_11_1_x86_64_variables: &ubuntu20_04_11_1_x86_64_variables
   ARCH: "x86_64"
