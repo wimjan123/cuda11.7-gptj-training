@@ -101,7 +101,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     {% endif %}
     && rm -rf /var/lib/apt/lists/*
 
-{% if cuda.version.major | int == 10 and cuda.version.minor | int == 1 %}
+{% if cuda.version.major | int == 10 and cuda.version.minor | int != 2 %}
 # apt from auto upgrading the cublas package. See https://gitlab.com/nvidia/container-images/cuda/-/issues/88
 RUN apt-mark hold libcublas-dev
 

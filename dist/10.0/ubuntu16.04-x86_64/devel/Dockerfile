@@ -17,4 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-mark hold libnccl-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# apt from auto upgrading the cublas package. See https://gitlab.com/nvidia/container-images/cuda/-/issues/88
+RUN apt-mark hold libcublas-dev
+
 ENV LIBRARY_PATH /usr/local/cuda/lib64/stubs
