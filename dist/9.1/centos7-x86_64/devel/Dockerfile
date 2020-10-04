@@ -4,6 +4,7 @@ FROM ${IMAGE_NAME}:9.1-runtime-centos7
 LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 
 RUN yum install -y \
+    make \
     cuda-nvml-dev-$CUDA_PKG_VERSION \
     cuda-command-line-tools-$CUDA_PKG_VERSION \
     libcublas-devel- \

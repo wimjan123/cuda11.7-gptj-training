@@ -6,6 +6,7 @@ LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 ENV NCCL_VERSION 2.7.8
 
 RUN yum install -y \
+    make \
     cuda-nvml-devel-11-1-11.1.74-1 \
     cuda-command-line-tools-11-1-11.1.0-1 \
     libcublas-devel-11-1-11.2.1.74-1 \

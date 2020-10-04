@@ -7,6 +7,7 @@ ENV NCCL_VERSION 2.7.8
 
 # setopt flag prevents yum from auto upgrading. See https://gitlab.com/nvidia/container-images/cuda/-/issues/88
 RUN yum install --setopt=obsoletes=0 -y \
+    make \
     cuda-nvml-dev-$CUDA_PKG_VERSION \
     cuda-command-line-tools-$CUDA_PKG_VERSION \
     libcublas-devel-10.2.1.243-1 \

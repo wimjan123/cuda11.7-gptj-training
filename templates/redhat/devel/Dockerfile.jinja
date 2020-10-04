@@ -56,6 +56,7 @@ RUN yum install --setopt=obsoletes=0 -y \
 {% else %}
 RUN yum install -y \
 {% endif %}
+    make \
     cuda-nvml-dev{{ dev_to_devel }}-{{ nvml_dev_component_version or cuda_pkg_version }} \
     cuda-command-line-tools-{{ cmdline_tools_component_version or cuda_pkg_version }} \
 {% if cuda.version.major | int == 8 -%}
