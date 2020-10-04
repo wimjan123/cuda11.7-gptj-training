@@ -52,13 +52,13 @@ RUN yum install -y \
 # cuDNN license: https://developer.nvidia.com/cudnn/license_agreement
 RUN CUDNN_DOWNLOAD_SUM={{ cuda.cudnn.sha256sum }} && \
     {# Versioning is all over the place for early cudnn #}
-    {% if cuda.version.major | int == 9 and cuda.version.minor | int == 1 %}
+    {% if cuda.version.major_minor == "9.1" %}
         {% set cudnn_url_version = cuda.cudnn.version %}
         {% set cudnn_url_version2 = cuda.cudnn.version[:cuda.cudnn.version.rfind(".")] %}
         {% if arch == "ppc64le" %}
             {% set cudnn_url_version2 = cuda.cudnn.version[0] %}
         {% endif %}
-    {% elif cuda.version.major | int == 8 and cuda.version.minor | int == 0 %}
+    {% elif cuda.version.major_minor == "8.0" %}
         {% if cudnn_version[0] | int == 5 or cudnn_version[0] | int == 6 %}
             {% set cudnn_url_version = cuda.cudnn.version[:cuda.cudnn.version.rfind(".")] %}
             {% set cudnn_url_version2 = cuda.cudnn.version[:cuda.cudnn.version.rfind(".")] %}

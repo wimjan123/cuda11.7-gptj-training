@@ -9,7 +9,7 @@ ENV NCCL_VERSION 2.6.4
 RUN yum install --setopt=obsoletes=0 -y \
     cuda-nvml-dev-$CUDA_PKG_VERSION \
     cuda-command-line-tools-$CUDA_PKG_VERSION \
-    libcublas-devel-10.1.0.105-1 \
+    cuda-cublas-dev-$CUDA_PKG_VERSION \
     cuda-cudart-dev-$CUDA_PKG_VERSION \
     cuda-libraries-dev-$CUDA_PKG_VERSION \
     cuda-minimal-build-$CUDA_PKG_VERSION \

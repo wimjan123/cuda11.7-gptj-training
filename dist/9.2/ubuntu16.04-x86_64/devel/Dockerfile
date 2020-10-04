@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-npp-dev-$CUDA_PKG_VERSION \
     cuda-libraries-dev-$CUDA_PKG_VERSION \
     cuda-minimal-build-$CUDA_PKG_VERSION \
+    cuda-cublas-dev-9-2=9.2.148.1-1 \
     && rm -rf /var/lib/apt/lists/*
 
 ENV LIBRARY_PATH /usr/local/cuda/lib64/stubs

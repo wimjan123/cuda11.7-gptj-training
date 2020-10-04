@@ -56,33 +56,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-libraries-dev-{{ libraries_dev_component_version if libraries_dev_component_version and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
     cuda-minimal-build-{{ minimal_build_component_version if minimal_build_component_version and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
 {% endif %}
-{% if cuda.version.major | int > 10 %}
-    {# libnccl2_dev can be unset if libnccl2.source is being used #}
-    {% if cuda.components.libnccl2_dev and not "source" in cuda.components.libnccl2 %}
-    libnccl-dev={{ libnccl2_dev_component_version }} \
-    {% endif %}
-    libcublas-dev-{{ libcublas_dev_component_version if libcublas_dev_component_version and cuda.version.major | int >= 10 else "10.2." + cuda.version.minor + "." + cuda.version.build + "-1" }} \
-    libcusparse-{{ libcusparse_component_version if libcusparse_component_version and cuda.version.major | int >= 10 else "10.2." + cuda.version.minor + "." + cuda.version.build + "-1" }} \
-    libcusparse-dev-{{ libcusparse_dev_component_version if libcusparse_dev_component_version and cuda.version.major | int >= 10 else "10.2." + cuda.version.minor + "." + cuda.version.build + "-1" }} \
-{% elif cuda.version.major | int == 10 %}
-    {% if "libcublas_dev" in cuda.components %}
-        {% set cublas_dev_vers = cuda.components.libcublas_dev.version %}
-    {% else %}
-        {% set cublas_dev_vers = "%s.%s.%s.%s-1" | format(cuda.version.major, cuda.version.minor, cuda.version.minor, cuda.version.build) %}
-    {% endif %}
-    {% if cuda.version.build != 89 %}
-        {% set haz10_2 = "-10-2" if cuda.arch == "arm64" and cuda.version.minor | int == 2 %}
-    {% endif %}
-    libcublas-dev{{ haz10_2 }}={{ cublas_dev_vers }} \
-    {# libnccl2_dev can be unset if libnccl2.source is being used #}
-    {% if cuda.components.libnccl2_dev %}
-    libnccl-dev={{ libnccl2_dev_component_version }} \
-    {% endif %}
-{% endif %}
-{% if cuda.version.major | int == 9 and cuda.version.minor | int == 0 %}
-    cuda-core-{{ cuda.version.major }}-{{ cuda.version.minor }}={{ cuda.version.full }}.3-1 \
-    cuda-cublas-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}={{ cuda.version.full }}.4-1 \
-{% elif cuda.version.major | int == 8 and cuda.version.minor | int == 0 %}
+{% if cuda.version.major_minor == "8.0" %}
     cuda-core-$CUDA_PKG_VERSION \
     cuda-misc-headers-$CUDA_PKG_VERSION \
     cuda-nvrtc-dev-$CUDA_PKG_VERSION \
@@ -95,15 +69,55 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-npp-dev-$CUDA_PKG_VERSION \
     cuda-cudart-dev-$CUDA_PKG_VERSION \
     cuda-driver-dev-$CUDA_PKG_VERSION \
+{% elif cuda.version.major | int < 11  %}
+    {% if "libcublas_dev" in cuda.components %}
+        {% if cuda.version.major_minor in ["10.1", "10.2"] %}
+            {% set l4t = (cuda.arch == "arm64" and cuda.version.build != 89) %}
+            {% set suffix = "" %}
+            {# {% set suffix = "-{}-{}".format(cuda.version.major, cuda.version.minor) %} #}
+            {# {% set suffix = "10" if not l4t else "-{}-{}".form(cuda.version.major, cuda.version.minor) %} #}
+            {% set cublas_dev_vers = suffix + "=" + cuda.components.libcublas_dev.version %}
+            {# {% set cublas_dev_vers = "=" + cuda.components.libcublas_dev.version %} #}
+        {% else %}
+            {% set cublas_dev_vers = "-" + libcublas_dev_component_version %}
+        {% endif %}
+    {% endif %}
+    {% if cuda.version.major_minor in ["9.0", "9.1", "9.2", "10.0"] %}
+        {% if cuda.version.major_minor == "9.0" %}
+    cuda-core-9-0=9.0.176.3-1 \
+            {% set cublas_dev_vers = "-9-0=9.0.176.4-1" %}
+        {% endif %}
+        {% if cuda.version.major_minor == "9.1" %}{% set cublas_dev_vers = "-9-1=9.1.85.3-1" %}{% endif %}
+        {% if cuda.version.major_minor == "9.2" %}{% set cublas_dev_vers = "-9-2=9.2.148.1-1" %}{% endif %}
+    cuda-cublas-dev{{ cublas_dev_vers }} \
+    {% else %}
+    libcublas-dev{{ cublas_dev_vers }} \
+    {% endif %}
+    {# libnccl2_dev can be unset if libnccl2.source is being used #}
+    {% if cuda.components.libnccl2_dev %}
+    libnccl-dev={{ libnccl2_dev_component_version }} \
+    {% endif %}
+{% else %}
+    {# libnccl2_dev can be unset if libnccl2.source is being used #}
+    {% if cuda.components.libnccl2_dev and not "source" in cuda.components.libnccl2 %}
+    libnccl-dev={{ libnccl2_dev_component_version }} \
+    {% endif %}
+    libcublas-dev-{{ libcublas_dev_component_version if libcublas_dev_component_version and cuda.version.major | int >= 10 else "10.2.{}.{}-1".format(cuda.version.minor, cuda.version.build) }} \
+    libcusparse-{{ libcusparse_component_version if libcusparse_component_version and cuda.version.major | int >= 10 else "10.2.{}.{}-1".format(cuda.version.minor, cuda.version.build) }} \
+    libcusparse-dev-{{ libcusparse_dev_component_version if libcusparse_dev_component_version and cuda.version.major | int >= 10 else "10.2.{}.{}-1".format(cuda.version.minor, cuda.version.build) }} \
 {% endif %}
     {% if cuda.components.libnccl2_dev and not "source" in cuda.components.libnccl2 %}
     && apt-mark hold libnccl-dev \
     {% endif %}
     && rm -rf /var/lib/apt/lists/*
 
-{% if cuda.version.major | int == 10 and cuda.version.minor | int != 2 %}
+{% if cuda.version.major_minor in ["10.0", "10.1"] %}
+    {% set cublas_pkg_name = "cuda-cublas-dev-{}-{}".format(cuda.version.major, cuda.version.minor) %}
+    {% if cuda.version.major_minor == "10.1" %}
+        {% set cublas_pkg_name = "libcublas-dev" %}
+    {% endif %}
 # apt from auto upgrading the cublas package. See https://gitlab.com/nvidia/container-images/cuda/-/issues/88
-RUN apt-mark hold libcublas-dev
+RUN apt-mark hold {{ cublas_pkg_name }}
 
 {% endif -%}
 

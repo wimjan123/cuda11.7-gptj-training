@@ -27,9 +27,9 @@
 variables:
   # Need a value of two here for checking the manifest in the last commit
   GIT_DEPTH: "2"
-  {# DRY_RUN: 1 #}
-  {# NO_SCAN: "true" # Only use in development #}
-  {# NO_TEST: "true" # Only use in development #}
+  DRY_RUN: 1
+  NO_SCAN: "true" # Only use in development
+  NO_TEST: "true" # Only use in development
 
 before_script:
   - 'echo "ARCH: $ARCH"'

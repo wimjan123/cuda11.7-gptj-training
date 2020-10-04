@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-libraries-$CUDA_PKG_VERSION \
     cuda-npp-$CUDA_PKG_VERSION \
     cuda-nvtx-$CUDA_PKG_VERSION \
+    cuda-cublas-9-2=9.2.148.1-1 \
     libnccl2=$NCCL_VERSION-1+cuda9.2 \
     && apt-mark hold libnccl2 \
     && rm -rf /var/lib/apt/lists/*

@@ -30,28 +30,44 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     {% elif cuda.version.major | int > 10 %}
     libnpp-{{ libnpp_component_version if libnpp_component_version and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
     {% endif %}
-    {% if cuda.version.major | int == 9 and cuda.version.minor | int == 0 %}
-    cuda-cublas-{{ cuda.version.major }}-{{ cuda.version.minor }}={{ cuda.version.full }}.4-1 \
-    {% endif %}
-    {% if (cuda.version.major | int == 9 and cuda.version.minor | int == 2) or cuda.version.major | int >= 10 %}
+    {% if (cuda.version.major_minor == "9.2" ) or cuda.version.major | int >= 10 %}
     cuda-nvtx-{{ nvtx_component_version if nvtx_component_version and cuda.version.major | int >= 10 else "$CUDA_PKG_VERSION" }} \
     {% endif %}
-    {% if cuda.version.major | int == 10 and cuda.version.minor | int >= 1 %}
-        {# Check against build version is a workaround #}
-        {% set haz10_2 = "-10-2" if cuda.arch == "arm64" and cuda.version.build != 89 else "10" %}
-    libcublas{{ haz10_2 }}=10.2.{{ cuda.version.minor }}.{{ cuda.version.build }}-1 \
-    {% elif cuda.version.major | int > 10 %}
-    libcublas-{{ libcublas_component_version }} \
+    {% if "libcublas" in cuda.components %}
+        {% if cuda.version.major_minor in ["10.1", "10.2"] %}
+            {% set l4t = (cuda.arch == "arm64" and cuda.version.build != 89) %}
+            {% set suffix = "10" if not l4t else "-10-2" %}
+            {% set cublas_vers = suffix + "=" + cuda.components.libcublas.version %}
+        {% else %}
+            {% set cublas_vers = "-" + libcublas_component_version %}
+        {% endif %}
+    {% endif %}
+    {% if cuda.version.major_minor in ["9.0", "9.1", "9.2", "10.0"] %}
+        {# This should never change at this point #}
+        {% if cuda.version.major_minor == "9.0" %}
+            {% set cublas_vers = "-9-0=9.0.176.4-1" %}
+        {% endif %}
+        {% if cuda.version.major_minor == "9.1" %}{% set cublas_vers = "-9-1=9.1.85.3-1" %}{% endif %}
+        {% if cuda.version.major_minor == "9.2" %}{% set cublas_vers = "-9-2=9.2.148.1-1" %}{% endif %}
+    cuda-cublas{{ cublas_vers }} \
+    {% else %}
+    libcublas{{ cublas_vers }} \
     {% endif %}
     {% if "libnccl2" in cuda.components and "source" not in cuda.components.libnccl2 %}
     libnccl2=$NCCL_VERSION-1+cuda{{ cuda.version.major }}.{{ cuda.version.minor }} \
     && apt-mark hold libnccl2 \
     {% endif %}
-    {% if cuda.version.major | int == 10 and cuda.version.minor | int == 1 %}
-    {# apt from auto upgrading the cublas package. See https://gitlab.com/nvidia/container-images/cuda/-/issues/88 #}
-    && apt-mark hold libcublas10 \
-    {% endif %}
     && rm -rf /var/lib/apt/lists/*
+
+{% if cuda.version.major_minor in ["10.0", "10.1"] %}
+    {% set cublas_pkg_name = "cuda-cublas-{}-{}".format(cuda.version.major, cuda.version.minor) %}
+    {% if cuda.version.major_minor == "10.1" %}
+        {% set cublas_pkg_name = "libcublas10" %}
+    {% endif %}
+# apt from auto upgrading the cublas package. See https://gitlab.com/nvidia/container-images/cuda/-/issues/88
+RUN apt-mark hold {{ cublas_pkg_name }}
+
+{% endif -%}
 
 {% if "libnccl2" in cuda.components and "source" in cuda.components.libnccl2 %}
     {% set arch = cuda.arch %}

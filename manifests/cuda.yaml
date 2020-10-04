@@ -815,10 +815,11 @@ cuda_v10.1:
 
 .components_v10.0: &cuda10_0_components
   build_version: 130
+  # "libcublas" translates to "cuda-cublas" for cuda versions < 10.1
   libcublas:
-    version: 10.1.0.105-1
+    version: 10.0.130-1
   libcublas_dev:
-    version: 10.1.0.105-1
+    version: 10.0.130-1
   libnccl2:
     version: 2.6.4-1
   libnccl2_dev:

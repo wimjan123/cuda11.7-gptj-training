@@ -399,6 +399,8 @@ class ManagerTrigger(Manager):
         project_id = os.getenv("CI_PROJECT_ID")
         dry_run = os.getenv("DRY_RUN")
         token = os.getenv("CI_JOB_TOKEN")
+        if not token:
+            log.warning("CI_JOB_TOKEN is unset!")
         ref = os.getenv("CI_COMMIT_REF_NAME")
         payload = {"token": token, "ref": ref, "variables[TRIGGER]": "true"}
         if self.trigger_all:
@@ -836,6 +838,7 @@ class ManagerGenerate(Manager):
                 "full": f"{self.cuda_version}.{build_version}",
                 "major": major,
                 "minor": minor,
+                "major_minor": self.cuda_version,
                 "build": build_version,
             },
             "os": {"distro": self.distro, "version": self.distro_version},
