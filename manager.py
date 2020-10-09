@@ -109,10 +109,17 @@ class ManagerTrigger(Manager):
     trigger_explicit = []
     key = ""
     pipeline_name = "default"
+    CI_API_V4_URL = "https://gitlab-master.nvidia.com/api/v4"
+    CI_PROJECT_ID = 12064
+    CI_COMMIT_REF_NAME = "master"
 
     dry_run = cli.Flag(
         ["-n", "--dry-run"], help="Show output but don't make any changes."
     )
+
+    no_test = cli.Flag(["--no-test"], help="Don't run smoke tests")
+
+    no_scan = cli.Flag(["--no-scan"], help="Don't run security scans")
 
     trigger_override = cli.SwitchAttr(
         "--trigger-override",
@@ -396,13 +403,15 @@ class ManagerTrigger(Manager):
         return True
 
     def kickoff(self):
-        url = os.getenv("CI_API_V4_URL")
-        project_id = os.getenv("CI_PROJECT_ID")
-        dry_run = os.getenv("DRY_RUN")
+        url = os.getenv("CI_API_V4_URL") or self.CI_API_V4_URL
+        project_id = os.getenv("CI_PROJECT_ID") or self.CI_PROJECT_ID
+        dry_run = os.getenv("DRY_RUN") or self.dry_run
+        no_test = os.getenv("NO_TEST") or self.no_test
+        no_scan = os.getenv("NO_SCAN") or self.no_scan
         token = os.getenv("CI_JOB_TOKEN")
         if not token:
             log.warning("CI_JOB_TOKEN is unset!")
-        ref = os.getenv("CI_COMMIT_REF_NAME")
+        ref = os.getenv("CI_COMMIT_REF_NAME") or self.CI_COMMIT_REF_NAME
         payload = {"token": token, "ref": ref, "variables[TRIGGER]": "true"}
         if self.trigger_all:
             payload["variables[all]"] = "true"
@@ -414,6 +423,10 @@ class ManagerTrigger(Manager):
                 payload[f"variables[{job}]"] = "true"
         if dry_run:
             payload[f"variables[DRY_RUN]"] = "true"
+        if no_scan:
+            payload[f"variables[NO_SCAN]"] = "true"
+        if no_test:
+            payload[f"variables[NO_TEST]"] = "true"
         log.debug("payload %s", payload)
         if not self.dry_run:
             r = requests.post(
