@@ -24,12 +24,14 @@
 # $ docker run -it nvidia/cuda-ppc64le:11.0-base-ubuntu18.04-rc
 # < container should run>
 
+
 variables:
   # Need a value of two here for checking the manifest in the last commit
   GIT_DEPTH: "2"
   {# DRY_RUN: 1 #}
   {# NO_SCAN: "true" # Only use in development #}
   {# NO_TEST: "true" # Only use in development #}
+
 
 before_script:
   - 'echo "ARCH: $ARCH"'
@@ -47,6 +49,7 @@ before_script:
   # Login to NGC to pull images
   - docker login -u '$oauthtoken' -p $NVCR_TOKEN nvcr.io
 
+
 stages:
   - prepare
   # trigger stage is a workaround until https://gitlab.com/gitlab-org/gitlab-ce/issues/22972 is implemented
@@ -57,6 +60,7 @@ stages:
   - scan
   - deploy
   {# - cleanup #}
+
 
 # builds the gitlab-cuda-builder image
 prepare:
@@ -79,9 +83,11 @@ prepare:
     {# changes: #}
     {#   - Dockerfile #}
 
+
 .tags_template: &tags_definition
   tags:
     - docker
+
 
 # Only used for CUDA 8.0, will be removed once CUDA 8 support is dropped
 .cuda_template_depricated: &cuda_definition_deprecated
@@ -113,6 +119,7 @@ prepare:
   artifacts:
     reports:
       dotenv: tags.env
+
 
 .cuda_base_template: &cuda_base_definition
   image: {{ gitlab_builder_image }}
@@ -159,6 +166,7 @@ prepare:
     reports:
       dotenv: tags.env
 
+
 .cudnn_template: &cudnn_definition
   image: {{ gitlab_builder_image }}
   stage: cudnn
@@ -191,6 +199,7 @@ prepare:
     - 'echo "CUDA_EXTRA_${CUDNN_VERSION}_TAGS=\"${CUDA_EXTRA_TAGS}\"" >> ${CUDNN_VERSION}finaltags.env'
     - cat ${CUDNN_VERSION}finaltags.env
 
+
 .test_template: &test_definition
   image: {{ gitlab_builder_image }}
   stage: test
@@ -220,19 +229,25 @@ prepare:
         pip3 install -r requirements.txt
         docker pull ${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
 
-        python3 contamer.py -ls --fail-on-non-os ${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX} \
-            --suppress-vulns CVE-2020-14352 CVE-2020-15888 # librepo, lua-libs packages WAIVED via https://nvbugswb.nvidia.com/NvBugs5/SWBug.aspx?bugid=3028123&cmtNo=35
+        # CVE-2020-14352 CVE-2020-15888: librepo, lua-libs packages WAIVED via https://nvbugswb.nvidia.com/NvBugs5/SWBug.aspx?bugid=3028123&cmtNo=35
+        python3 contamer.py --debug-logs -ls --fail-on-non-os ${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX} \
+            --suppress-vulns CVE-2020-14352 CVE-2020-15888 | tee /tmp/output
+        retval=$?
 
-        export CONTAMER_RET=$?
+        echo "Contamer return value: ${retval}";
         docker rmi -f ${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
-        if [[ $CONTAMER_RET -ne 0 ]]; then
-          exit 1;
+        if [[ $retval -ne 0 ]]; then
+            exit 1;
         else
-          echo "Contamer return value: ${CONTAMER_RET}";
+            # we need to look at the output for "Traceback" because contamer doesn't return non-zero on exception failure...
+            if cat /tmp/output | grep -q "Traceback\|Exception: Image analysis failed"; then
+                exit 1;
+            fi
         fi
       else
         exit 0;
       fi
+
 
 .deploy_template: &deploy_definition
   image: {{ gitlab_builder_image }}
