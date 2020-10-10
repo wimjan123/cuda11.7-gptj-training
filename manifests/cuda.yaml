@@ -29,7 +29,7 @@ push_repos:
 
 
 .requires_v11.1: &cuda11_1_requires
-  requires: "cuda>=11.1 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=440,driver<441,driver>=450,driver<451"
+  requires: "cuda>=11.1 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=440,driver<441 brand=tesla,driver>=450,driver<451"
 
 
 .components_v11.1: &cuda11_1_components
@@ -243,7 +243,7 @@ cuda_v11.1:
 
 
 .requires_v11.0: &cuda11_0_requires
-  requires: "cuda>=11.0 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=440,driver<441"
+  requires: "cuda>=11.0 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=440,driver<441 brand=tesla,driver>=450,driver<451"
 
 
 .components_v11.0: &cuda11_0_components
