@@ -69,13 +69,13 @@ ci.trigger = <pipeline>[,...]
 Where pipeline can be:
 
 - `all`: All of the pipelines are built.
-- `<distro><distro_version>-cuda<major>.<minor>`: A specific cuda version for a specific cuda version.
 - `cuda<major>.<minor>`: A cuda version for all distros.
 - `cuda<major>.<minor>-<arch>`: A cuda version for an architecture.
 - `<distro>`: all cuda versions for a distro.
 - `<distro>-<arch>`: all cuda versions for a distro for a particular architecture
 - `<distro><distro_version>`: all cuda versions for a distro version.
 - `<distro><distro_version>-<arch>`: all cuda versions for a distro version for a particular architecture
+- `cuda<major>.<minor>-<distro><distro_version>`: A specific cuda version and distro for all architectures
 - `cuda<major>.<minor>-<distro><distro_version>-<arch>`: A very specify cuda version, distro, and arch.
 - `name:<pipeline_name>`: A named pipeline. See [Named image pipelines](#named-image-pipelines)
 - **TODO**: `cudnn<version>`: A cudnn version for all distros.

@@ -40,7 +40,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 {% endif %}
     && rm -rf /var/lib/apt/lists/*
 
-ENV CUDA_VERSION {{ cuda.version.full }}
+ENV CUDA_VERSION {{ cuda.version.release_label }}
 {% if cuda.version.major | int != 11 %}
 ENV CUDA_PKG_VERSION {{ cuda.version.major }}-{{ cuda.version.minor }}=$CUDA_VERSION-1
 {% endif %}

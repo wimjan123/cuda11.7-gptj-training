@@ -24,22 +24,27 @@
 # $ docker run -it nvidia/cuda-ppc64le:11.0-base-ubuntu18.04-rc
 # < container should run>
 
-
 variables:
   # Need a value of two here for checking the manifest in the last commit
   GIT_DEPTH: "2"
-  {# DRY_RUN: 1 #}
+  {# NO_PUSH: "true" #}
   {# NO_SCAN: "true" # Only use in development #}
   {# NO_TEST: "true" # Only use in development #}
 
-
 before_script:
+  - source util.sh
+  - if [[ ! -z ${RELEASE_LABEL} ]]; then
+        export CUDA_VERSION=${RELEASE_LABEL};
+    fi
+  - 'echo "TRIGGER: ${KITMAKER}"'
+  - 'echo "KITMAKER: ${KITMAKER}"'
   - 'echo "ARCH: $ARCH"'
-  - 'echo "OS: $OS"'
   - 'echo "IMAGE_NAME: $IMAGE_NAME"'
-  - 'echo "OS_NAME: $OS_NAME"'
+  - 'echo "OS: $OS"'
   - 'echo "OS_VERSION: $OS_VERSION"'
+  - 'echo "OS_NAME: $OS_NAME"'
   - 'echo "CUDA_VERSION: $CUDA_VERSION"'
+  - 'echo "RELEASE_LABEL: $RELEASE_LABEL"' # used by kitmaker and cuda versions >= 11.2
   - 'echo "CUDNN_VERSION: $CUDNN_VERSION"'
   - 'echo "IMAGE_TAG_SUFFIX: $IMAGE_TAG_SUFFIX"'
   - 'echo "LATEST: $LATEST"'
@@ -49,18 +54,16 @@ before_script:
   # Login to NGC to pull images
   - docker login -u '$oauthtoken' -p $NVCR_TOKEN nvcr.io
 
-
 stages:
   - prepare
-  # trigger stage is a workaround until https://gitlab.com/gitlab-org/gitlab-ce/issues/22972 is implemented
   - trigger
   - cuda
   - cudnn
   - test
   - scan
   - deploy
-  {# - cleanup #}
-
+  - cleanup_success
+  - cleanup_failed
 
 # builds the gitlab-cuda-builder image
 prepare:
@@ -74,20 +77,13 @@ prepare:
     - docker push {{ gitlab_builder_image }}
   tags:
     - docker
-  only:
-    refs:
-      - master
-    variables:
-      - $TRIGGER == null
-      - $TRIGGER_OVERRIDE
-    {# changes: #}
-    {#   - Dockerfile #}
-
+  rules:
+      - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      - if: '$TRIGGER == null'
 
 .tags_template: &tags_definition
   tags:
     - docker
-
 
 # Only used for CUDA 8.0, will be removed once CUDA 8 support is dropped
 .cuda_template_depricated: &cuda_definition_deprecated
@@ -120,7 +116,6 @@ prepare:
     reports:
       dotenv: tags.env
 
-
 .cuda_base_template: &cuda_base_definition
   image: {{ gitlab_builder_image }}
   stage: cuda
@@ -141,6 +136,19 @@ prepare:
         export DIST_BASE_PATH="dist/${OS}/${CUDA_VERSION}/${ARCH}";
       else
         export DIST_BASE_PATH="${DIST_BASE_PATH}/${OS}-${ARCH}";
+      fi
+    - |
+      if [ ! -z $KITMAKER ] && [ ! -z $TRIGGER ]; then
+          export DIST_BASE_PATH="kitpick"
+          rm -rf kitpick || true
+          mkdir -p kitpick || true
+          find kitpick/
+          NEW_CANDIDATE_URL="${CANDIDATE_URL}"
+          [[ "${CANDIDATE_URL}" != */ ]] && NEW_CANDIDATE_URL="${CANDIDATE_URL}/"
+          retry 3 10 time wget --recursive --directory-prefix="rekt" --reject="index.html*" --no-parent ${NEW_CANDIDATE_URL}
+          cp -R rekt/${CANDIDATE_URL#"http://"}/{base,devel,runtime} kitpick/
+          echo "Contents of kitpick/"
+          find kitpick/
       fi
     - 'echo "DIST_BASE_PATH: ${DIST_BASE_PATH}"'
     - 'echo "TAG_LATEST: ${TAG_LATEST}"'
@@ -165,7 +173,6 @@ prepare:
   artifacts:
     reports:
       dotenv: tags.env
-
 
 .cudnn_template: &cudnn_definition
   image: {{ gitlab_builder_image }}
@@ -199,7 +206,6 @@ prepare:
     - 'echo "CUDA_EXTRA_${CUDNN_VERSION}_TAGS=\"${CUDA_EXTRA_TAGS}\"" >> ${CUDNN_VERSION}finaltags.env'
     - cat ${CUDNN_VERSION}finaltags.env
 
-
 .test_template: &test_definition
   image: {{ gitlab_builder_image }}
   stage: test
@@ -207,47 +213,35 @@ prepare:
     - cuda-test
   script:
     - |
-      # NO_TEST SET -- WAR until we have better needs/rules support in the pipelines
-      if [[ -z $NO_TEST ]]; then
-        bash -e ./test/scripts/bats_install.sh
-        bash -e ./test/scripts/run_tests.sh
-      else
-        exit 0;
-      fi
-
+      bash -e ./test/scripts/bats_install.sh
+      bash -e ./test/scripts/run_tests.sh
 
 .scan_template: &scan_definition
   image: {{ gitlab_builder_image }}
   stage: scan
   <<: *tags_definition
   script:
-    # NO_SCAN SET - WAR until we have better needs/rules support in the pipelines
     - |
-      if [[ -z $NO_SCAN ]]; then
-        git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab-master.nvidia.com/sectooling/scanning/contamer.git
-        cd contamer
-        pip3 install -r requirements.txt
-        docker pull ${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
+      git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab-master.nvidia.com/sectooling/scanning/contamer.git
+      cd contamer
+      pip3 install -r requirements.txt
+      docker pull ${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
 
-        # CVE-2020-14352 CVE-2020-15888: librepo, lua-libs packages WAIVED via https://nvbugswb.nvidia.com/NvBugs5/SWBug.aspx?bugid=3028123&cmtNo=35
-        python3 contamer.py --debug-logs -ls --fail-on-non-os ${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX} \
-            --suppress-vulns CVE-2020-14352 CVE-2020-15888 | tee /tmp/output
-        retval=$?
+      # CVE-2020-14352 CVE-2020-15888: librepo, lua-libs packages WAIVED via https://nvbugswb.nvidia.com/NvBugs5/SWBug.aspx?bugid=3028123&cmtNo=35
+      python3 contamer.py --debug-logs -ls --fail-on-non-os ${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX} \
+          --suppress-vulns CVE-2020-14352 CVE-2020-15888 | tee /tmp/output
+      retval=$?
 
-        echo "Contamer return value: ${retval}";
-        docker rmi -f ${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
-        if [[ $retval -ne 0 ]]; then
-            exit 1;
-        else
-            # we need to look at the output for "Traceback" because contamer doesn't return non-zero on exception failure...
-            if cat /tmp/output | grep -q "Traceback\|Exception: Image analysis failed"; then
-                exit 1;
-            fi
-        fi
+      echo "Contamer return value: ${retval}";
+      docker rmi -f ${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
+      if [[ $retval -ne 0 ]]; then
+          exit 1;
       else
-        exit 0;
+          # we need to look at the output for "Traceback" because contamer doesn't return non-zero on exception failure...
+          if cat /tmp/output | grep -q "Traceback\|Exception: Image analysis failed"; then
+              exit 1;
+          fi
       fi
-
 
 .deploy_template: &deploy_definition
   image: {{ gitlab_builder_image }}
@@ -260,15 +254,24 @@ prepare:
         echo ${tag//\"} >> TAG_MANIFEST;
       done
     - cat TAG_MANIFEST
+    - if [ ! -z $KITMAKER ] && [ ! -z $TRIGGER ]; then
+        retry 3 10 time wget --directory-prefix="kitpick" --reject="index.html*" --no-parent ${CANDIDATE_URL}/manifest-${OS_NAME}-${OS_VERSION}.yml;
+        export MANIFEST="kitpick/manifest-${OS_NAME}-${OS_VERSION}.yml";
+      fi
     - python manager.py ${MANIFEST:+`echo "--manifest ${MANIFEST}"`} push
         --tag-manifest TAG_MANIFEST
         --image-name "${IMAGE_NAME}"
-        --os "${OS_NAME}"
+        --os-name "${OS_NAME}"
         --os-version "${OS_VERSION}"
         --cuda-version "${CUDA_VERSION}"
         --arch "${ARCH}"
         ${PIPELINE_NAME:+`echo "--pipeline-name ${PIPELINE_NAME}"`}
-        ${IMAGE_TAG_SUFFIX:+`echo "--tag-suffix ${IMAGE_TAG_SUFFIX}"`} ${DRY_RUN:+"-n"}
+        ${IMAGE_TAG_SUFFIX:+`echo "--tag-suffix ${IMAGE_TAG_SUFFIX}"`} ${NO_PUSH:+"-n"}
+    - |
+      cat $MANIFEST | grep "${ARCH}.*urm.nvidia.com" | cut -f2 -d: | xargs >> TAG_MANIFEST
+  artifacts:
+    paths:
+      - TAG_MANIFEST
 
 trigger:
   image: {{ gitlab_builder_image }}
@@ -282,31 +285,72 @@ trigger:
     - export CMD="python manager.py ${MANIFEST:+`echo --manifest ${MANIFEST}`} trigger ${TRIGGER_OVERRIDE:+`echo --trigger-override ${ESC_TO}`}"
     - 'echo "COMMAND: $CMD"'
     - $CMD
-  only:
-    variables:
-      - $TRIGGER == null
-      - $TRIGGER_OVERRIDE
+  rules:
+    - if: '$TRIGGER == null'
+    - if: '$TRIGGER_OVERRIDE'
 
-{# cleanup: #}
-{#   image: {{ gitlab_builder_image }} #}
-{#   stage: cleanup #}
-{#   <<: *tags_definition #}
-{#   script: #}
-{#     # Remove all of the images on the host pulled down for test #}
-{#     # FIXME: this only works for one runner!! #}
-{#     - docker images | grep 'gitlab-master.nvidia.com:5005/cuda-installer' | grep -v "gitlab.*builder" | awk '{ print $3 }' | xargs --no-run-if-empty docker rmi || true #}
-{#     [> It' would become difficult to manage all the builder instances for all the possible runners here, so this section is <] #}
-{#     [> commented out for now <] #}
-{#     [> - docker buildx create --use --platform linux/ppc64le --driver-opt image=moby/buildkit:master --name cuda-ppc64le <] #}
-{#     [> - docker buildx stop cuda-ppc64le || true <] #}
-{#     [> - docker buildx create --use --platform linux/arm64 --driver-opt image=moby/buildkit:master --name cuda-arm64 <] #}
-{#     [> - docker buildx stop cuda-arm64 || true <] #}
-{#     [> - docker buildx create --use --platform linux/x86_64 --driver-opt image=moby/buildkit:master --name cuda-x86_64 <] #}
-{#     [> - docker buildx stop cuda-x86_64 || true <] #}
-{#     - docker system prune -f #}
-{#   rules: #}
-{#     - if: '$TRIGGER == "true"' #}
-{#       when: always #}
+# Need to pass these from the trigger
+.kitmaker_variables: &kitmaker_variables
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/${ARCH}"
+
+.kitmaker_only: &kitmaker_only
+  variables:
+    <<: *kitmaker_variables
+  rules:
+    - if: '$TRIGGER == "true" && $KITMAKER == "true"'
+      when: on_success
+
+kitmaker_base:
+  <<: *cuda_base_definition
+  <<: *kitmaker_only
+
+kitmaker_deploy:
+  <<: *deploy_definition
+  <<: *kitmaker_only
+  needs:
+    - job: kitmaker_base
+      artifacts: true
+
+# Requires two stages because CI_JOB_STATUS is not yet available in our infrastructure
+kitmaker_cleanup_success:
+  image: {{ gitlab_builder_image }}
+  stage: cleanup_success
+  <<: *tags_definition
+  script:
+    - |
+      cat TAG_MANIFEST
+      export a_image_name=$(awk '/./{line=$0} END{print line}' TAG_MANIFEST) # get the artifactory repo name
+      sed -i '$ d' TAG_MANIFEST # delete the last line containing the artifactory repo
+      export json_data="{\"status\": \"success\", \"gitlab_pipeline_url\": \"${CI_PIPELINE_URL}\", \"image_name\": \"${a_image_name}\", \"tags\": $(cat TAG_MANIFEST | jq -R . | jq -s . | jq 'map(select(length > 0))' | jq -c .)}"
+      curl -v -X POST -H "Content-Type: application/json" -d "${json_data}" "${WEBHOOK_URL}"
+  variables:
+    <<: *kitmaker_variables
+  rules:
+    - if: '$TRIGGER == "true" && $KITMAKER == "true"'
+      when: on_success
+  needs:
+    - job: kitmaker_base
+      artifacts: true
+    - job: kitmaker_deploy
+
+# Requires two stages because CI_JOB_STATUS is not yet available in our infrastructure
+kitmaker_cleanup_failed:
+  image: {{ gitlab_builder_image }}
+  stage: cleanup_failed
+  <<: *tags_definition
+  script:
+    - |
+      export json_data="{\"status\": \"failed\", \"gitlab_pipeline_url\": \"${CI_PIPELINE_URL}\"}"
+      curl -v -X POST -H "Content-Type: application/json" -d "${json_data}" ${WEBHOOK_URL}
+  variables:
+    <<: *kitmaker_variables
+  rules:
+    - if: '$TRIGGER == "true" && $KITMAKER == "true"'
+      when: on_failure
+  needs:
+    - job: kitmaker_base
+    - job: kitmaker_deploy
+      artifacts: true
 
 {% for cuda_version in cuda if not cuda_version.startswith("manifest") %}
 {% for pipeline in cuda[cuda_version] %}
@@ -344,10 +388,9 @@ trigger:
 .{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only: &{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
   variables:
     <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_variables
-  only:
-    variables:
-      - ${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true"
-      - $all == "true"
+  rules:
+    - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true"'
+    - if: '$all == "true"'
 
 {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ arch }}:
 {% if cuda_version == "8.0" %}
@@ -387,13 +430,42 @@ trigger:
   needs: ["{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ arch }}"]
   <<: *test_definition
   <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true"'
+    - if: '$all == "true"'
 
 {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-scan-{{ arch }}:
-  needs: ["{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ arch }}", "{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-test-{{ arch }}"]
   <<: *scan_definition
   <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
+  needs:
+    - job: {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ arch }}
+    - job: {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-test-{{ arch }}
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true"'
+    - if: '$all == "true"'
 
-{% set needs = ["{}-v{}{}-{}".format(distro, cuda_version, pipeline_name_hyp, arch), "{}-v{}{}-test-{}".format(distro, cuda_version, pipeline_name_hyp, arch), "{}-v{}{}-scan-{}".format(distro, cuda_version, pipeline_name_hyp, arch)] %}
+{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-scan-no-test-{{ arch }}:
+  <<: *scan_definition
+  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
+  # Override rules from only definition
+  needs:
+    - job: {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ arch }}
+  rules:
+    - if: '$NO_SCAN == "true"'
+      when: never
+    - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true" && $NO_TEST == "true"'
+
+{% set needs = [
+    "{}-v{}{}-{}".format(distro, cuda_version, pipeline_name_hyp, arch),
+    "{}-v{}{}-test-{}".format(distro, cuda_version, pipeline_name_hyp, arch),
+    "{}-v{}{}-scan-{}".format(distro, cuda_version, pipeline_name_hyp, arch),
+    "{}-v{}{}-scan-no-test-{}".format(distro, cuda_version, pipeline_name_hyp, arch),
+] %}
 {% if cudnn_stages %}
     {# {% set needs = [] %} #}
     {% for cudnn_stage in cudnn_stages %}
@@ -404,14 +476,89 @@ trigger:
 {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-deploy-{{ arch }}:
   <<: *deploy_definition
   <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
+  # Override rules from only definition
+  rules:
+    - if: '$NO_TEST == "true" || $NO_SCAN == "true"'
+      when: never
+    - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true"'
+    - if: '$all == "true"'
   needs:
   {# This silly workaround is needed because variables lose scope in a for loop #}
   {% set stahp = { 'flag': True } %}
   {% for job in needs %}
+    {% if "-scan-no-test-" in job %}
+    {% else %}
     - job: {{ job }}
-    {% if stahp.flag %}
+      {% if stahp.flag %}
       artifacts: true
-      {% do stahp.update({'flag':False}) %}
+        {% do stahp.update({'flag':False}) %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+
+# workaround for gitlab ci rules when NO_TEST and NO_SCAN are used...
+{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-deploy-{{ arch }}-no-test-no-scan:
+  <<: *deploy_definition
+  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
+  rules:
+    - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true" && $NO_TEST == "true" && $NO_SCAN == "true"'
+  needs:
+  {# This silly workaround is needed because variables lose scope in a for loop #}
+  {% set stahp = { 'flag': True } %}
+  {% for job in needs %}
+    {% if "-test-" in job %}
+    {% elif "-scan-" + arch in job %}
+    {% else %}
+    - job: {{ job }}
+      {% if stahp.flag %}
+      artifacts: true
+        {% do stahp.update({'flag':False}) %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+
+# workaround for gitlab ci rules when NO_TEST is used...
+{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-deploy-{{ arch }}-no-test:
+  <<: *deploy_definition
+  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
+  rules:
+    - if: '$NO_SCAN == "true"'
+      when: never
+    - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true" && $NO_TEST == "true"'
+  needs:
+  {# This silly workaround is needed because variables lose scope in a for loop #}
+  {% set stahp = { 'flag': True } %}
+  {% for job in needs %}
+    {% if not "-scan-no-test-" in job and "-test-" in job %}
+    {% elif not "-scan-no-test-" in job and "-scan-" in job %}
+    {% else %}
+    - job: {{ job }}
+      {% if stahp.flag %}
+      artifacts: true
+        {% do stahp.update({'flag':False}) %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+
+# workaround for gitlab ci rules when NO_SCAN is used...
+{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-deploy-{{ arch }}-no-scan:
+  <<: *deploy_definition
+  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true" && $NO_SCAN == "true"'
+  needs:
+  {# This silly workaround is needed because variables lose scope in a for loop #}
+  {% set stahp = { 'flag': True } %}
+  {% for job in needs %}
+    {% if "-scan-" in job %}
+    {% else %}
+    - job: {{ job }}
+      {% if stahp.flag %}
+      artifacts: true
+        {% do stahp.update({'flag':False}) %}
+      {% endif %}
     {% endif %}
   {% endfor %}
 

@@ -17,7 +17,7 @@ COPY cuda.repo /etc/yum.repos.d/cuda.repo
 COPY nvidia-ml.repo /etc/yum.repos.d/nvidia-ml.repo
 {% endif %}
 
-ENV CUDA_VERSION {{ cuda.version.full }}
+ENV CUDA_VERSION {{ cuda.version.release_label }}
 {% if cuda.version.major | int != 11 %}
 ENV CUDA_PKG_VERSION {{ cuda.version.major }}-{{ cuda.version.minor }}-$CUDA_VERSION-1
 {% endif %}
@@ -32,7 +32,7 @@ RUN yum upgrade -y && yum install -y \
     cuda-nvrtc-$CUDA_PKG_VERSION \
     cuda-nvgraph-$CUDA_PKG_VERSION \
     cuda-cusolver-$CUDA_PKG_VERSION \
-    cuda-cublas-{{ cuda.version.major }}-{{ cuda.version.minor }}-{{ cuda.version.full }}.2-1 \
+    cuda-cublas-{{ cuda.version.major }}-{{ cuda.version.minor }}-{{ cuda.version.release_label }}.2-1 \
     cuda-cufft-$CUDA_PKG_VERSION \
     cuda-curand-$CUDA_PKG_VERSION \
     cuda-cusparse-$CUDA_PKG_VERSION \
