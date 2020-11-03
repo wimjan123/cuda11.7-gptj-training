@@ -29,7 +29,7 @@ RUN yum install -y \
 {% endif %}
     cuda-libraries-{{ libraries_component_version if libraries_component_version else "$CUDA_PKG_VERSION" }} \
     {% if cuda.version.major_minor == "9.0" %}
-    cuda-cublas-{{ cuda.version.major }}-{{ cuda.version.minor }}={{ cuda.version.full }}.4-1 \
+    cuda-cublas-{{ cuda.version.major }}-{{ cuda.version.minor }}={{ cuda.version.release_label }}.4-1 \
     {% elif cuda.version.major_minor == "10.0" %}
     cuda-cublas-$CUDA_PKG_VERSION \
     {% endif %}

@@ -33,7 +33,7 @@ function nvidia_container_runtime_run() {
 function run_nvidia_smi() {
     local image=$1
     docker pull $image >/dev/null 2>&1 || true
-    docker_run --rm --runtime=nvidia -e NVIDIA_VISIBLE_DEVICES=all $image nvidia-smi
+    docker_run --rm --gpus all -e NVIDIA_VISIBLE_DEVICES=all $image nvidia-smi
     [ "$status" -eq 0 ]
 }
 

@@ -14,8 +14,7 @@ function setup() {
 }
 
 function teardown() {
-    # cleanup
-    true
+    cleanup
 }
 
 function dq_ubuntu() {
@@ -46,6 +45,10 @@ function dq_rhel() {
 }
 
 @test "deviceQuery" {
+    # if [ ${IMAGE} =~ *release-candidate* ]; then
+    #     # Need a newer drier on the machine otherwise nvidia-container-runtime throws an error
+    #     skip
+    # fi
     printf "%s\n" "FROM ${image}" > Dockerfile
     [[ "${OS_NAME}" == "ubuntu" ]] && dq_ubuntu
     [[ "${OS_NAME}" == "centos" ]] || [[ "${OS_NAME}" == "ubi" ]] && dq_rhel
