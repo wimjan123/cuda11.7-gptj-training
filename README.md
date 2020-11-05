@@ -7,6 +7,25 @@ Container images are available from:
 - https://ngc.nvidia.com/catalog/containers/nvidia:cuda
 - https://hub.docker.com/r/nvidia/cuda
 
+## Announcement
+
+With the next major release of CUDA at the end of the year, we will be deprecating the use of the "latest" tag for all CUDA container images on NGC and Docker Hub.
+
+After the removal of the latest tag, the following use case will result in the "manifest unknown" error:
+
+```
+$ docker pull nvidia/cuda
+Error response from daemon: manifest for nvidia/cuda:latest not found: manifest unknown: manifest unknown
+```
+
+We will also be using a new tag format that includes the full CUDA version "release label":
+
+```
+nvidia/cuda:11.1.0-devel-ubuntu18.04
+```
+
+Note the extra digit for the version. Future updates will include improvements in how we tag images to include security fixes to include a timestamp.
+
 ## IMAGE SECURITY NOTICE
 
 The CUDA images are scanned for CVE vulnerabilities prior to release and some images may contain CVEs at the time of publication.

@@ -6,6 +6,38 @@ The CUDA Toolkit from NVIDIA provides everything you need to develop GPU-acceler
 
 The CUDA container images provide an easy-to-use distribution for CUDA supported platforms and architectures.
 
+## Announcement
+
+With the next major release of CUDA at the end of the year, we will be deprecating the use of the "latest" tag for all CUDA container images on NGC and Docker Hub.
+
+After the removal of the latest tag, the following use case will result in the "manifest unknown" error:
+
+```
+$ docker pull nvidia/cuda
+Error response from daemon: manifest for nvidia/cuda:latest not found: manifest unknown: manifest unknown
+```
+
+We will also be using a new tag format that includes the full CUDA version "release label":
+
+```
+nvidia/cuda:11.1.0-devel-ubuntu18.04
+```
+
+Note the extra digit for the version. Future updates will include improvements in how we tag images to include security fixes to include a timestamp.
+
+## End User License Agreements
+
+The images are governed by the following NVIDIA End User License Agreements. By pulling and using the CUDA images, you accept the terms and conditions of these licenses.
+Since the images may include components licensed under open-source licenses such as GPL, the sources for these components are archived [here](https://developer.download.nvidia.com/compute/cuda/opensource/image).
+
+### CUDA Toolkit EULA
+
+To view the license for the CUDA Toolkit included in this image, click [*here*](http://docs.nvidia.com/cuda/eula/index.html)
+
+### cuDNN EULA
+
+To view the license for the cuDNN Toolkit included in this image, click [*here*](https://docs.nvidia.com/deeplearning/sdk/cudnn-sla/index.html)
+
 ## Documentation
 
 For more information on CUDA, including the release notes, programming model, APIs and developer tools, visit the [CUDA documentation site](https://docs.nvidia.com/cuda).
@@ -18,19 +50,6 @@ Three flavors of images are provided:
 - `devel`: Builds on the `runtime` and includes headers, development tools for building CUDA images. These images are particularly useful for multi-stage builds.
 
 The Dockerfiles for the images are open-source and licensed under 3-clause BSD. For more information see the Supported Tags section below.
-
-### End User License Agreements
-
-The images are governed by the following NVIDIA End User License Agreements. By pulling and using the CUDA images, you accept the terms and conditions of these licenses.
-Since the images may include components licensed under open-source licenses such as GPL, the sources for these components are archived [here](https://developer.download.nvidia.com/compute/cuda/opensource/image).
-
-#### CUDA Toolkit EULA
-
-To view the license for the CUDA Toolkit included in this image, click [*here*](http://docs.nvidia.com/cuda/eula/index.html)
-
-#### cuDNN EULA
-
-To view the license for the cuDNN Toolkit included in this image, click [*here*](https://docs.nvidia.com/deeplearning/sdk/cudnn-sla/index.html)
 
 ### NVIDIA Container Toolkit
 
@@ -50,7 +69,7 @@ Supported tags are updated to the latest CUDA and cuDNN versions. These tags are
 
 For a full list of supported tags, click [*here*](https://gitlab.com/nvidia/container-images/cuda/blob/master/doc/supported-tags.md).
 
-## LATEST CUDA 11.1
+## LATEST CUDA 11.1 Update 1
 
 Visit [OpenSource @ Nvidia](https://developer.download.nvidia.com/compute/cuda/opensource/image/) for the GPL sources of the packages contained in the CUDA base image layers.
 
