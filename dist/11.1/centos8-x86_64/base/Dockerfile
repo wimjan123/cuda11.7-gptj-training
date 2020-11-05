@@ -9,7 +9,7 @@ RUN NVIDIA_GPGKEY_SUM=d1be581509378368edeec8c1eb2958702feedf3bc3d17011adbf24efac
 COPY cuda.repo /etc/yum.repos.d/cuda.repo
 COPY nvidia-ml.repo /etc/yum.repos.d/nvidia-ml.repo
 
-ENV CUDA_VERSION 11.1.0
+ENV CUDA_VERSION 11.1.1
 
 # For libraries in the cuda-compat-* package: https://docs.nvidia.com/cuda/eula/index.html#attachment-a
 RUN yum upgrade -y && yum install -y \

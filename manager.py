@@ -241,7 +241,6 @@ class ManagerTrigger(Manager):
         "--branch",
         str,
         group="Targeted",
-        excludes=["--manifest", "--trigger-override"],
         help="The branch to trigger against on gitlab.",
         default=None,
     )

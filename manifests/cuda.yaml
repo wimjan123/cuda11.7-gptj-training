@@ -33,7 +33,7 @@ push_repos:
 
 
 .components_v11.1: &cuda11_1_components
-  build_version: 0
+  build_version: 1
   cudart:
     version: 11.1.74-1
   cudart_dev:
@@ -41,31 +41,31 @@ push_repos:
   nvml_dev:
     version: 11.1.74-1
   command_line_tools:
-    version: 11.1.0-1
+    version: 11.1.1-1
   libcublas:
-    version: 11.2.1.74-1
+    version: 11.3.0.106-1
   libcublas_dev:
-    version: 11.2.1.74-1
+    version: 11.3.0.106-1
   libnpp:
-    version: 11.1.1.269-1
+    version: 11.1.2.301-1
   libnpp_dev:
-    version: 11.1.1.269-1
+    version: 11.1.2.301-1
   libraries:
-    version: 11.1.0-1
+    version: 11.1.1-1
   libraries_dev:
-    version: 11.1.0-1
+    version: 11.1.1-1
   minimal_build:
-    version: 11.1.0-1
+    version: 11.1.1-1
   nvtx:
     version: 11.1.74-1
   nvprof:
-    version: 11.1.69-1
+    version: 11.1.105-1
   nvcc:
-    version: 11.1.74-1
+    version: 11.1.105-1
   libcusparse:
-    version: 11.2.0.275-1
+    version: 11.3.0.10-1
   libcusparse_dev:
-    version: 11.2.0.275-1
+    version: 11.3.0.10-1
   libnccl2:
     version: 2.7.8-1
   libnccl2_dev:
