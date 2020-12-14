@@ -27,6 +27,8 @@
 variables:
   # Need a value of two here for checking the manifest in the last commit
   GIT_DEPTH: "2"
+  # If set to "true" this will force the prepare stage to run to build the builder images that contains docker buildx and python dependencies
+  REBUILD_BUILDER: "false"
   {# NO_PUSH: "true" #}
   {# NO_SCAN: "true" # Only use in development #}
   {# NO_TEST: "true" # Only use in development #}
@@ -78,8 +80,7 @@ prepare:
   tags:
     - docker
   rules:
-      - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-      - if: '$TRIGGER == null'
+      - if: '$REBUILD_BUILDER == "true"'
 
 .tags_template: &tags_definition
   tags:
@@ -102,7 +103,7 @@ prepare:
       else
         export DIST_BASE_PATH="${DIST_BASE_PATH}/${OS}-${ARCH}";
       fi
-    - docker buildx create --use --platform linux/${ARCH} --driver-opt image=moby/buildkit:master --name cuda-${ARCH}
+    - docker buildx create --use --platform linux/${ARCH} --driver-opt image=moby/buildkit:v0.7.1 --name cuda-${ARCH}
     - docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}" ${TAG_RUNTIME} "${DIST_BASE_PATH}/runtime"
                           --build-arg BUILDKIT_INLINE_CACHE=1
                           --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}
@@ -156,7 +157,7 @@ prepare:
     - 'echo "TAG_RUNTIME: ${TAG_RUNTIME}"'
     - 'echo "TAG_DEVEL: ${TAG_DEVEL}"'
     # --driver-opt flag is needed to workaround https://github.com/docker/buildx/issues/386
-    - docker buildx create --use --platform linux/${ARCH} --driver-opt image=moby/buildkit:master --name cuda-${ARCH}
+    - docker buildx create --use --platform linux/${ARCH} --driver-opt image=moby/buildkit:v0.7.1 --name cuda-${ARCH}
     - docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_BASE} "${DIST_BASE_PATH}/base"
                           --build-arg BUILDKIT_INLINE_CACHE=1
                           --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}
@@ -191,7 +192,7 @@ prepare:
         TAG_CUDNN_DEVEL=" -t ${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel${IMAGE_TAG_SUFFIX} ";
         export CUDA_EXTRA_TAGS="${CUDA_EXTRA_TAGS} ${CUDA_VERSION}-${CUDNN_VERSION}-runtime${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-${CUDNN_VERSION}-devel${IMAGE_TAG_SUFFIX}";
       fi
-    - docker buildx create --use --platform linux/${ARCH} --driver-opt image=moby/buildkit:master --name cuda-${ARCH}
+    - docker buildx create --use --platform linux/${ARCH} --driver-opt image=moby/buildkit:v0.7.1 --name cuda-${ARCH}
     - docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_RUNTIME}
                   --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/runtime/${CUDNN_VERSION}"
                   --build-arg BUILDKIT_INLINE_CACHE=1
@@ -286,7 +287,7 @@ trigger:
     - 'echo "COMMAND: $CMD"'
     - $CMD
   rules:
-    - if: '$TRIGGER == null'
+    {# - if: '$TRIGGER == null' #}
     - if: '$TRIGGER_OVERRIDE'
 
 # Need to pass these from the trigger
