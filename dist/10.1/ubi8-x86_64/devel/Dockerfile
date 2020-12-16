@@ -6,7 +6,7 @@ LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 ENV NCCL_VERSION 2.7
 
 # setopt flag prevents yum from auto upgrading. See https://gitlab.com/nvidia/container-images/cuda/-/issues/88
-RUN yum install --setopt=obsoletes=0 -y \
+RUN /usr/bin/yum install --setopt=obsoletes=0 -y \
     make \
     cuda-nvml-dev-$CUDA_PKG_VERSION \
     cuda-command-line-tools-$CUDA_PKG_VERSION \
@@ -16,10 +16,10 @@ RUN yum install --setopt=obsoletes=0 -y \
     cuda-minimal-build-$CUDA_PKG_VERSION \
     cuda-nvprof-$CUDA_PKG_VERSION \
     cuda-npp-dev-$CUDA_PKG_VERSION \
-    && yum clean all \
+    && /usr/bin/yum clean all \
     && rm -rf /var/cache/yum/*
 
-RUN yum install -y xz && NCCL_DOWNLOAD_SUM=673535e03774aff57806fcc092b72b049e6303d48b8dfaafa3247a2b1c538ef6 && \
+RUN /usr/bin/yum install -y xz && NCCL_DOWNLOAD_SUM=673535e03774aff57806fcc092b72b049e6303d48b8dfaafa3247a2b1c538ef6 && \
     curl -fsSL https://developer.download.nvidia.com/compute/redist/nccl/v2.7/nccl_2.7.8-1+cuda10.1_x86_64.txz -O && \
     echo "$NCCL_DOWNLOAD_SUM  nccl_2.7.8-1+cuda10.1_x86_64.txz" | sha256sum -c - && \
     unxz nccl_2.7.8-1+cuda10.1_x86_64.txz && \

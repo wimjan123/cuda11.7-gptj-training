@@ -12,7 +12,7 @@ ENV CUDA_VERSION 8.0.61
 ENV CUDA_PKG_VERSION 8-0-$CUDA_VERSION-1
 
 # For libraries in the cuda-compat-* package: https://docs.nvidia.com/cuda/eula/index.html#attachment-a
-RUN yum upgrade -y && yum install -y \
+RUN /usr/bin/yum upgrade -y && /usr/bin/yum install -y \
     cuda-nvrtc-$CUDA_PKG_VERSION \
     cuda-nvgraph-$CUDA_PKG_VERSION \
     cuda-cusolver-$CUDA_PKG_VERSION \
@@ -23,7 +23,7 @@ RUN yum upgrade -y && yum install -y \
     cuda-npp-$CUDA_PKG_VERSION \
     cuda-cudart-$CUDA_PKG_VERSION \
     && ln -s cuda-8.0 /usr/local/cuda \
-    && yum clean all \
+    && /usr/bin/yum clean all \
     && rm -rf /var/cache/yum/*
 
 # nvidia-docker 1.0

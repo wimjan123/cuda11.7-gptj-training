@@ -9,6 +9,7 @@ LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
 RUN CUDNN_DOWNLOAD_SUM=c61000ed700bc5a009bc2e135bbdf736c9743212b2174a2fc9018a66cc0979ec && \
     curl -fsSL http://developer.download.nvidia.com/compute/redist/cudnn/v7.1.2/cudnn-9.1-linux-x64-v7.1.tgz -O && \
     echo "$CUDNN_DOWNLOAD_SUM  cudnn-9.1-linux-x64-v7.1.tgz" | sha256sum -c - && \
+    gunzip cudnn-9.1-linux-x64-v7.1.tgz && \
     tar --no-same-owner -xzf cudnn-9.1-linux-x64-v7.1.tgz -C /usr/local && \
     rm cudnn-9.1-linux-x64-v7.1.tgz && \
     ldconfig

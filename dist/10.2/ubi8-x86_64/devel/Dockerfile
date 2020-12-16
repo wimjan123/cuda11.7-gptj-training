@@ -5,7 +5,7 @@ LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 
 ENV NCCL_VERSION 2.7.8
 
-RUN yum install -y \
+RUN /usr/bin/yum install -y \
     make \
     cuda-nvml-dev-$CUDA_PKG_VERSION \
     cuda-command-line-tools-$CUDA_PKG_VERSION \
@@ -16,7 +16,7 @@ RUN yum install -y \
     cuda-nvprof-$CUDA_PKG_VERSION \
     cuda-npp-dev-$CUDA_PKG_VERSION \
     libnccl-devel-2.7.8-1+cuda10.2 \
-    && yum clean all \
+    && /usr/bin/yum clean all \
     && rm -rf /var/cache/yum/*
 
 ENV LIBRARY_PATH /usr/local/cuda/lib64/stubs
