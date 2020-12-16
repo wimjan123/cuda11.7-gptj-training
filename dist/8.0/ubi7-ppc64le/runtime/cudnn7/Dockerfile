@@ -10,6 +10,6 @@ RUN CUDNN_DOWNLOAD_SUM=7bc1452c9ac5ab4fda03e3226c83202c6c85431e2a3a51dce67ac0da6
     curl -fsSL http://developer.download.nvidia.com/compute/redist/cudnn/v7.0.2/cudnn-8.0-linux-ppc64le-v7.tgz -O && \
     echo "$CUDNN_DOWNLOAD_SUM  cudnn-8.0-linux-ppc64le-v7.tgz" | sha256sum -c - && \
     gunzip cudnn-8.0-linux-ppc64le-v7.tgz && \
-    tar --no-same-owner -xzf cudnn-8.0-linux-ppc64le-v7.tgz -C /usr/local --wildcards 'cuda/targets/ppc64le-linux/lib/libcudnn.so.*' && \
-    rm cudnn-8.0-linux-ppc64le-v7.tgz && \
+    tar --no-same-owner -xf cudnn-8.0-linux-ppc64le-v7.tar -C /usr/local --wildcards 'cuda/targets/ppc64le-linux/lib/libcudnn.so.*' && \
+    rm cudnn-8.0-linux-ppc64le-v7.tar && \
     ldconfig

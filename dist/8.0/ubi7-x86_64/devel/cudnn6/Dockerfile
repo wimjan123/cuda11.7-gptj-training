@@ -10,6 +10,6 @@ RUN CUDNN_DOWNLOAD_SUM=9b09110af48c9a4d7b6344eb4b3e344daa84987ed6177d5c44319732f
     curl -fsSL http://developer.download.nvidia.com/compute/redist/cudnn/v6.0/cudnn-8.0-linux-x64-v6.0.tgz -O && \
     echo "$CUDNN_DOWNLOAD_SUM  cudnn-8.0-linux-x64-v6.0.tgz" | sha256sum -c - && \
     gunzip cudnn-8.0-linux-x64-v6.0.tgz && \
-    tar --no-same-owner -xzf cudnn-8.0-linux-x64-v6.0.tgz -C /usr/local && \
-    rm cudnn-8.0-linux-x64-v6.0.tgz && \
+    tar --no-same-owner -xf cudnn-8.0-linux-x64-v6.0.tar -C /usr/local && \
+    rm cudnn-8.0-linux-x64-v6.0.tar && \
     ldconfig

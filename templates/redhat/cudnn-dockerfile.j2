@@ -82,7 +82,8 @@ RUN CUDNN_DOWNLOAD_SUM={{ cuda.cudnn.sha256sum }} && \
     {% endif %}
     curl -fsSL http://developer.download.nvidia.com/compute/redist/cudnn/v{{ cudnn_url_version }}/cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-{{ arch }}-v{{ cudnn_url_version2 }}.tgz -O && \
     echo "$CUDNN_DOWNLOAD_SUM  cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-{{ arch }}-v{{ cudnn_url_version2 }}.tgz" | sha256sum -c - && \
-    tar --no-same-owner -xzf cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-{{ arch }}-v{{ cudnn_url_version2 }}.tgz -C /usr/local {% if cuda.cudnn.target == "runtime" -%}--wildcards '{{ archive_path }}' {% endif -%} && \
-    rm cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-{{ arch }}-v{{ cudnn_url_version2 }}.tgz && \
+    gunzip cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-{{ arch }}-v{{ cudnn_url_version2 }}.tgz && \
+    tar --no-same-owner -xf cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-{{ arch }}-v{{ cudnn_url_version2 }}.tar -C /usr/local {% if cuda.cudnn.target == "runtime" -%}--wildcards '{{ archive_path }}' {% endif -%} && \
+    rm cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-{{ arch }}-v{{ cudnn_url_version2 }}.tar && \
     ldconfig
 {% endif %}
