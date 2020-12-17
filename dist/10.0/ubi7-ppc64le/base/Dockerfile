@@ -13,11 +13,11 @@ ENV CUDA_VERSION 10.0.130
 ENV CUDA_PKG_VERSION 10-0-$CUDA_VERSION-1
 
 # For libraries in the cuda-compat-* package: https://docs.nvidia.com/cuda/eula/index.html#attachment-a
-RUN yum upgrade -y && yum install -y \
+RUN /usr/bin/yum upgrade -y && /usr/bin/yum install -y \
     cuda-cudart-$CUDA_PKG_VERSION \
     cuda-compat-10-0 \
     && ln -s cuda-10.0 /usr/local/cuda \
-    && yum clean all \
+    && /usr/bin/yum clean all \
     && rm -rf /var/cache/yum/*
 
 # nvidia-docker 1.0

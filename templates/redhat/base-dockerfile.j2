@@ -16,11 +16,11 @@ ENV CUDA_VERSION {{ cuda.version.release_label }}
 {% set cuda_cudart_component_version = cuda.version.major + "-" + cuda.version.minor + "-" + cuda.components.cudart.version -%}
 
 # For libraries in the cuda-compat-* package: https://docs.nvidia.com/cuda/eula/index.html#attachment-a
-RUN yum upgrade -y && yum install -y \
+RUN /usr/bin/yum upgrade -y && /usr/bin/yum install -y \
     cuda-cudart-{{ cuda_cudart_component_version }} \
     cuda-compat-{{ cuda.version.major }}-{{ cuda.version.minor }} \
     && ln -s cuda-{{ cuda.version.major }}.{{ cuda.version.minor }} /usr/local/cuda \
-    && yum clean all \
+    && /usr/bin/yum clean all \
     && rm -rf /var/cache/yum/*
 
 # nvidia-docker 1.0

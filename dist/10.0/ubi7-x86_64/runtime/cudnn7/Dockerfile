@@ -5,7 +5,7 @@ LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 ENV CUDNN_VERSION 7.6.5.32
 LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
 
-RUN yum install -y \
+RUN /usr/bin/yum install -y \
     libcudnn7-${CUDNN_VERSION}-1.cuda10.0 \
-    && yum clean all \
+    && /usr/bin/yum clean all \
     && rm -rf /var/cache/yum/*

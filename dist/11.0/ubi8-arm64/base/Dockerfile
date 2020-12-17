@@ -12,11 +12,11 @@ COPY nvidia-ml.repo /etc/yum.repos.d/nvidia-ml.repo
 ENV CUDA_VERSION 11.0.3
 
 # For libraries in the cuda-compat-* package: https://docs.nvidia.com/cuda/eula/index.html#attachment-a
-RUN yum upgrade -y && yum install -y \
+RUN /usr/bin/yum upgrade -y && /usr/bin/yum install -y \
     cuda-cudart-11-0-11.0.221-1 \
     cuda-compat-11-0 \
     && ln -s cuda-11.0 /usr/local/cuda \
-    && yum clean all \
+    && /usr/bin/yum clean all \
     && rm -rf /var/cache/yum/*
 
 # nvidia-docker 1.0

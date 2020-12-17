@@ -168,6 +168,11 @@ class ManagerTrigger(Manager):
 
     no_push = cli.Flag(["--no-push"], help="Don't push images to the registries")
 
+    rebuildb = cli.Flag(
+        ["--rebuild-builder"],
+        help="Force rebuild of the builder image used to build the cuda images.",
+    )
+
     branch = cli.SwitchAttr(
         "--branch",
         str,
@@ -443,6 +448,7 @@ class ManagerTrigger(Manager):
         no_test = os.getenv("NO_TEST") or self.no_test
         no_scan = os.getenv("NO_SCAN") or self.no_scan
         no_push = os.getenv("NO_PUSH") or self.no_push
+        rebuildb = os.getenv("REBUILD_BUILDER") or self.rebuildb
         token = os.getenv("CI_JOB_TOKEN")
         if not token:
             log.warning("CI_JOB_TOKEN is unset!")
@@ -459,6 +465,8 @@ class ManagerTrigger(Manager):
             payload[f"variables[NO_TEST]"] = "true"
         if no_push:
             payload[f"variables[NO_PUSH]"] = "true"
+        if rebuildb:
+            payload[f"variables[REBUILD_BUILDER]"] = "true"
         final_url = f"{url}/projects/{project_id}/trigger/pipeline"
         log.info("url %s", final_url)
         log.info("payload %s", payload)
