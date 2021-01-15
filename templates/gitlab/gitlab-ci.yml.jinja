@@ -225,7 +225,7 @@ prepare:
 
       # CVE-2020-14352 CVE-2020-15888: librepo, lua-libs packages WAIVED via https://nvbugswb.nvidia.com/NvBugs5/SWBug.aspx?bugid=3028123&cmtNo=35
       python3 contamer.py --debug-logs -ls --fail-on-non-os ${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX} \
-          --suppress-vulns CVE-2020-14352 CVE-2020-15888 | tee /tmp/output
+          --suppress-vulns CVE-2020-14352 CVE-2020-15888 CVE-2019-25013 | tee /tmp/output
       retval=$?
 
       echo "Contamer return value: ${retval}";

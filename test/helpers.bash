@@ -2,6 +2,10 @@
 
 load /opt/bats/assert/load.bash
 
+dbg() {
+  echo "$@" | sed -e 's/^/# /' >&3 ;
+}
+
 function cleanup() {
   rm -f Dockerfile
 }

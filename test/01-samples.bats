@@ -8,6 +8,7 @@ image="${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}"
 unsupported_git_tags=("8.0" "9.0" "9.1")
 major=$(echo $CUDA_VERSION | cut -f1 -d.)
 minor=$(echo $CUDA_VERSION | cut -f2 -d.)
+rev=$(echo $CUDA_VERSION | cut -f3 -d.)
 
 function setup() {
     check_runtime
@@ -19,7 +20,7 @@ function teardown() {
 
 function dq_ubuntu() {
     printf "%s\n" "RUN apt-get update && apt-get install -y make g++ git" >> Dockerfile
-    if [[ "${unsupported_git_tags[@]}" =~ "${CUDA_VERSION}" ]]; then
+    if [[ "${unsupported_git_tags[@]}" =~ "${major}.${minor}" ]]; then
         printf "%s\n" "RUN apt-get install -y cuda-samples-${major}-${minor}" >> Dockerfile
     fi
 }
@@ -34,7 +35,7 @@ function dq_rhel() {
         pkgcomp="gcc.${ARCH}"
     fi
     printf "%s\n" "RUN ${pkgmgr} install -y ${pkgcomp} git" >> Dockerfile
-    if [[ "${unsupported_git_tags[@]}" =~ "${CUDA_VERSION}" ]]; then
+    if [[ "${unsupported_git_tags[@]}" =~ "${major}.${minor}" ]]; then
         if [[ "${OS}" == "ubi7" ]]; then
             # Dependencies are broken for cuda 8.0 samples on ubi7
             printf "%s\n" "RUN rpm -Uvh --nodeps \$(repoquery --location cuda-samples-${major}-${minor})" >> Dockerfile
@@ -52,7 +53,7 @@ function dq_rhel() {
     printf "%s\n" "FROM ${image}" > Dockerfile
     [[ "${OS_NAME}" == "ubuntu" ]] && dq_ubuntu
     [[ "${OS_NAME}" == "centos" ]] || [[ "${OS_NAME}" == "ubi" ]] && dq_rhel
-    if [[ "${unsupported_git_tags[@]}" =~ "${CUDA_VERSION}" ]]; then
+    if [[ "${unsupported_git_tags[@]}" =~ "${major}.${minor}" ]]; then
         printf "%s\n" "WORKDIR /usr/local/cuda/samples/1_Utilities/deviceQuery" >> Dockerfile
         printf "%s\n" "RUN make " >> Dockerfile
         printf "%s\n" "CMD ./deviceQuery" >> Dockerfile
@@ -74,7 +75,7 @@ function dq_rhel() {
     printf "%s\n" "FROM $image" > Dockerfile
     [[ "${OS_NAME}" == "ubuntu" ]] && dq_ubuntu
     [[ "${OS_NAME}" == "centos" ]] || [[ "${OS_NAME}" == "ubi" ]] && dq_rhel
-    if [[ "${unsupported_git_tags[@]}" =~ "${CUDA_VERSION}" ]]; then
+    if [[ "${unsupported_git_tags[@]}" =~ "${major}.${minor}" ]]; then
         printf "%s\n" "WORKDIR /usr/local/cuda/samples/0_Simple/vectorAdd_nvrtc" >> Dockerfile
         printf "%s\n" "RUN make " >> Dockerfile
         printf "%s\n" "CMD ./vectorAdd_nvrtc" >> Dockerfile
@@ -87,6 +88,7 @@ function dq_rhel() {
         printf "%s\n" "CMD ./vectorAdd_nvrtc" >> Dockerfile
     fi
     docker_build -t "${image}-${BATS_TEST_NAME}" .
+    dbg "docker_run --rm --gpus 0 ${image}-${BATS_TEST_NAME}"
     docker_run --rm --gpus 0 ${image}-${BATS_TEST_NAME}
     docker rmi -f ${image}-${BATS_TEST_NAME}
     [ "$status" -eq 0 ]
@@ -96,7 +98,7 @@ function dq_rhel() {
     printf "%s\n" "FROM ${image}" > Dockerfile
     [[ "${OS_NAME}" == "ubuntu" ]] && dq_ubuntu
     [[ "${OS_NAME}" == "centos" ]] || [[ "${OS_NAME}" == "ubi" ]] && dq_rhel
-    if [[ "${unsupported_git_tags[@]}" =~ "${CUDA_VERSION}" ]]; then
+    if [[ "${unsupported_git_tags[@]}" =~ "${major}.${minor}" ]]; then
         printf "%s\n" "WORKDIR /usr/local/cuda/samples/0_Simple/matrixMulDrv" >> Dockerfile
         printf "%s\n" "RUN make " >> Dockerfile
         printf "%s\n" "CMD ./matrixMulDrv" >> Dockerfile
