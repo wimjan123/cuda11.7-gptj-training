@@ -7,6 +7,7 @@ LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 ENV NCCL_VERSION 2.8.3
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    libtinfo5 libncursesw5 \
     cuda-cudart-dev-11-2=11.2.72-1 \
     cuda-command-line-tools-11-2=11.2.0-1 \
     cuda-minimal-build-11-2=11.2.0-1 \

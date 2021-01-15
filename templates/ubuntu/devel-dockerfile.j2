@@ -21,6 +21,9 @@ ENV NCCL_VERSION {{ libnccl2_dev_component_version[:-2] }}
 {% endif -%}
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
+{% if cuda.os.version == "20.04" %}
+    libtinfo5 libncursesw5 \
+{% endif %}
     cuda-cudart-dev-{{ cuda_cudart_dev_component_version }} \
     cuda-command-line-tools-{{ std_version }} \
     cuda-minimal-build-{{ std_version }} \
