@@ -329,7 +329,7 @@ class ManagerTrigger(Manager):
         return ci_vars
 
     def get_cuda_version_from_trigger(self, trigger):
-        rgx = re.compile(r".*cuda([\d\.]+).*$")
+        rgx = re.compile(r".*cuda-?([\d\.]+).*$")
         match = rgx.match(trigger)
         if (match := rgx.match(trigger)) is not None:
             return match.group(1)
