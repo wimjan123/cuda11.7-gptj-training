@@ -4,9 +4,11 @@ FROM ${IMAGE_NAME}:{{ cuda.version.major }}.{{ cuda.version.minor }}-base-{{ cud
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 
 {% if "libnccl2" in cuda.components  %}
-{% set nccl_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.libnccl2.version %}
-{% set nccl_component_version_without_pkgrel = cuda.components.libnccl2.version[:-2] if "-" in cuda.components.libnccl2.version else cuda.components.libnccl2.version %}
-ENV NCCL_VERSION {{ nccl_component_version_without_pkgrel }}
+    {% set nccl_component_version = cuda.components.libnccl2.version %}
+    {% if "-" in nccl_component_version %}
+        {% set nccl_component_version = cuda.components.libnccl2.version[:-2] %}
+    {% endif %}
+ENV NCCL_VERSION {{ nccl_component_version }}
 
 {% endif -%}
 

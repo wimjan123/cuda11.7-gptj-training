@@ -3,7 +3,7 @@ FROM ${IMAGE_NAME}:9.0-runtime-ubi7
 
 LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 
-RUN /usr/bin/yum install -y \
+RUN yum install -y \
     make \
     cuda-nvml-dev-$CUDA_PKG_VERSION \
     cuda-command-line-tools-$CUDA_PKG_VERSION \
@@ -14,7 +14,7 @@ RUN /usr/bin/yum install -y \
     cuda-minimal-build-$CUDA_PKG_VERSION \
     cuda-nvprof-$CUDA_PKG_VERSION \
     cuda-npp-dev-$CUDA_PKG_VERSION \
-    && /usr/bin/yum clean all \
+    && yum clean all \
     && rm -rf /var/cache/yum/*
 
 ENV LIBRARY_PATH /usr/local/cuda/lib64/stubs

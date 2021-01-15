@@ -49,7 +49,6 @@ before_script:
   - 'echo "RELEASE_LABEL: $RELEASE_LABEL"' # used by kitmaker and cuda versions >= 11.2
   - 'echo "CUDNN_VERSION: $CUDNN_VERSION"'
   - 'echo "IMAGE_TAG_SUFFIX: $IMAGE_TAG_SUFFIX"'
-  - 'echo "LATEST: $LATEST"'
   - 'echo "NO_OS_SUFFIX: $NO_OS_SUFFIX"'
   # Gitlab is used to stage images
   - docker login -u "gitlab-ci-token" -p $CI_JOB_TOKEN gitlab-master.nvidia.com:5005
@@ -72,7 +71,7 @@ prepare:
   image: docker:stable
   stage: prepare
   variables:
-{% set gitlab_builder_image = cuda["11.0"]["default"]["ubuntu20.04"]["image_name"]["x86_64"] + "/gitlab-cuda-builder" %}
+{% set gitlab_builder_image = "gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder" %}
     IMAGE_NAME: "{{ gitlab_builder_image }}"
   script:
     - docker build -t {{ gitlab_builder_image }} --cache-from {{ gitlab_builder_image }} .
@@ -86,12 +85,15 @@ prepare:
   tags:
     - docker
 
+.tags_template_multiarch: &tags_definition_multiarch
+  tags:
+    - docker-multi-arch
+
 # Only used for CUDA 8.0, will be removed once CUDA 8 support is dropped
 .cuda_template_depricated: &cuda_definition_deprecated
   image: {{ gitlab_builder_image }}
   stage: cuda
   retry: 2
-  <<: *tags_definition
   script:
     - if [[ "${NO_OS_SUFFIX}" == "true" ]]; then
         export TAG_RUNTIME=" -t ${IMAGE_NAME}:${CUDA_VERSION}-runtime ";
@@ -121,17 +123,12 @@ prepare:
   image: {{ gitlab_builder_image }}
   stage: cuda
   retry: 2
-  <<: *tags_definition
   script:
     - if [[ "${NO_OS_SUFFIX}" == "true" ]]; then
         export TAG_BASE=" -t ${IMAGE_NAME}:${CUDA_VERSION}-base${IMAGE_TAG_SUFFIX} ";
         export TAG_RUNTIME=" -t ${IMAGE_NAME}:${CUDA_VERSION}-runtime${IMAGE_TAG_SUFFIX} ";
         export TAG_DEVEL=" -t ${IMAGE_NAME}:${CUDA_VERSION}-devel${IMAGE_TAG_SUFFIX} ";
         export CUDA_TAGS="${CUDA_VERSION}-base${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-runtime${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-devel${IMAGE_TAG_SUFFIX} ";
-      fi
-    - if [[ "${LATEST}" == "true" ]]; then
-        export TAG_LATEST=" -t ${IMAGE_NAME}:latest ";
-        export CUDA_TAGS="$CUDA_TAGS latest";
       fi
     - if [[ -z $DIST_BASE_PATH ]]; then
         export DIST_BASE_PATH="dist/${OS}/${CUDA_VERSION}/${ARCH}";
@@ -152,7 +149,6 @@ prepare:
           find kitpick/
       fi
     - 'echo "DIST_BASE_PATH: ${DIST_BASE_PATH}"'
-    - 'echo "TAG_LATEST: ${TAG_LATEST}"'
     - 'echo "TAG_BASE: ${TAG_BASE}"'
     - 'echo "TAG_RUNTIME: ${TAG_RUNTIME}"'
     - 'echo "TAG_DEVEL: ${TAG_DEVEL}"'
@@ -165,7 +161,7 @@ prepare:
                           --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/runtime"
                           --build-arg BUILDKIT_INLINE_CACHE=1
                           --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}
-    - docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_DEVEL} ${TAG_LATEST}
+    - docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_DEVEL}
                           --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel"
                           --build-arg BUILDKIT_INLINE_CACHE=1
                           --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
@@ -179,7 +175,6 @@ prepare:
   image: {{ gitlab_builder_image }}
   stage: cudnn
   retry: 2
-  <<: *tags_definition
   script:
     - if [[ -z $DIST_BASE_PATH ]]; then
         DIST_BASE_PATH="dist/${OS}/${CUDA_VERSION}/${ARCH}";
@@ -372,9 +367,6 @@ kitmaker_cleanup_failed:
   {% if image_tag_suffix %}
   IMAGE_TAG_SUFFIX: {{ image_tag_suffix }}
   {% endif %}
-  {% if cuda[cuda_version][pipeline][distro]["latest"][arch] %}
-  LATEST: "true"
-  {% endif %}
   {% if cuda[cuda_version][pipeline][distro]["no_os_suffix"][arch] %}
   NO_OS_SUFFIX: "true"
   {% endif %}
@@ -387,6 +379,11 @@ kitmaker_cleanup_failed:
   {% endif %}
 
 .{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only: &{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
+{% if arch == "x86_64" %}
+  <<: *tags_definition
+{% else %}
+  <<: *tags_definition_multiarch
+{% endif %}
   variables:
     <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_variables
   rules:

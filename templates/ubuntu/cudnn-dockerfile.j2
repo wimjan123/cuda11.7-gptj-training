@@ -1,9 +1,6 @@
 ARG IMAGE_NAME
-FROM ${IMAGE_NAME}:{{ cuda.version.major }}.{{ cuda.version.minor }}-{{ cuda.cudnn.target }}-{{ cuda.os.distro }}{{ cuda.os.version }}{{ cuda.image_tag_suffix }}
+FROM ${IMAGE_NAME}:{{ cuda.version.release_label }}-{{ cuda.cudnn.target }}-{{ cuda.os.distro }}{{ cuda.os.version }}{{ cuda.image_tag_suffix }}
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
-
-RUN echo "deb {{ cuda.repo_url }} /" > /etc/apt/sources.list.d/nvidia-ml.list
-
 
 {% set cudnn_version = cuda.cudnn.version %}
 {% if "-" in cuda.cudnn.version %}
