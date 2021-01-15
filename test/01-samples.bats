@@ -60,7 +60,7 @@ function dq_rhel() {
     else
         printf "%s\n" "RUN git clone https://github.com/NVIDIA/cuda-samples.git" >> Dockerfile
         printf "%s\n" "WORKDIR cuda-samples/Samples/deviceQuery/" >> Dockerfile
-        printf "%s\n" "RUN git checkout tags/v${CUDA_VERSION}" >> Dockerfile
+        printf "%s\n" "RUN git checkout tags/v${major}.${minor}" >> Dockerfile
         # SMS 3.5 for Tesla K40 and Geforce GT 710
         printf "%s\n" "RUN make TARGET_ARCH='${ARCH}' SMS='35' " >> Dockerfile
         printf "%s\n" "CMD ./deviceQuery" >> Dockerfile
@@ -82,7 +82,7 @@ function dq_rhel() {
     else
         printf "%s\n" "RUN git clone https://github.com/NVIDIA/cuda-samples.git" >> Dockerfile
         printf "%s\n" "WORKDIR cuda-samples/Samples/vectorAdd_nvrtc" >> Dockerfile
-        printf "%s\n" "RUN git checkout tags/v${CUDA_VERSION}" >> Dockerfile
+        printf "%s\n" "RUN git checkout tags/v${major}.${minor}" >> Dockerfile
         # SMS 3.5 for Tesla K40 and Geforce GT 710
         printf "%s\n" "RUN make TARGET_ARCH='${ARCH}' SMS='35'" >> Dockerfile
         printf "%s\n" "CMD ./vectorAdd_nvrtc" >> Dockerfile
@@ -105,7 +105,7 @@ function dq_rhel() {
     else
         printf "%s\n" "RUN git clone https://github.com/NVIDIA/cuda-samples.git" >> Dockerfile
         printf "%s\n" "WORKDIR cuda-samples/Samples/matrixMulDrv/" >> Dockerfile
-        printf "%s\n" "RUN git checkout tags/v${CUDA_VERSION}" >> Dockerfile
+        printf "%s\n" "RUN git checkout tags/v${major}.${minor}" >> Dockerfile
         # SMS 3.5 for Tesla K40 and Geforce GT 710
         printf "%s\n" "RUN make TARGET_ARCH='${ARCH}' SMS='35'" >> Dockerfile
         printf "%s\n" "CMD ./matrixMulDrv" >> Dockerfile
