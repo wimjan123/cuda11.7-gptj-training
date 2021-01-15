@@ -11,6 +11,7 @@ function cleanup() {
 }
 
 function check_runtime() {
+    dbg "$(docker info | grep Runtimes)"
     docker info | grep 'Runtimes:' | grep -q 'nvidia'
 }
 
