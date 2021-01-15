@@ -103,11 +103,11 @@ prepare:
       fi
     - docker buildx create --use --platform linux/${ARCH} --driver-opt image=moby/buildkit:v0.8.1 --name cuda-${ARCH}
     - docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}" ${TAG_RUNTIME} "${DIST_BASE_PATH}/runtime"
-                          --build-arg BUILDKIT_INLINE_CACHE=1
+                          --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain
                           --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}
     - docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}" ${TAG_DEVEL} "${DIST_BASE_PATH}/devel"
                           --build-arg "IMAGE_NAME=${IMAGE_NAME}"
-                          --build-arg BUILDKIT_INLINE_CACHE=1
+                          --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain
                           --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}
     - 'echo "CUDA_TAGS=\"${CUDA_TAGS} ${CUDA_VERSION}-runtime-${OS} ${CUDA_VERSION}-devel-${OS}\"" >> tags.env'
     - cat tags.env
@@ -151,15 +151,15 @@ prepare:
     # --driver-opt flag is needed to workaround https://github.com/docker/buildx/issues/386
     - docker buildx create --use --platform linux/${ARCH} --driver-opt image=moby/buildkit:v0.8.1 --name cuda-${ARCH}
     - docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_BASE} "${DIST_BASE_PATH}/base"
-                          --build-arg BUILDKIT_INLINE_CACHE=1
+                          --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain
                           --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}
     - docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_RUNTIME}
                           --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/runtime"
-                          --build-arg BUILDKIT_INLINE_CACHE=1
+                          --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain
                           --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}
     - docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_DEVEL}
                           --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel"
-                          --build-arg BUILDKIT_INLINE_CACHE=1
+                          --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain
                           --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
     - 'echo "CUDA_TAGS=\"${CUDA_TAGS} ${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}\"" >> tags.env'
     - cat tags.env
@@ -186,11 +186,11 @@ prepare:
     - docker buildx create --use --platform linux/${ARCH} --driver-opt image=moby/buildkit:v0.8.1 --name cuda-${ARCH}
     - docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_RUNTIME}
                   --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/runtime/${CUDNN_VERSION}"
-                  --build-arg BUILDKIT_INLINE_CACHE=1
+                  --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain
                   --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}
     - docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_DEVEL}
                   --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel/${CUDNN_VERSION}"
-                  --build-arg BUILDKIT_INLINE_CACHE=1
+                  --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain
                   --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
     # this is not a great way to pass information between stages, but it is currently the only way
     - 'echo "CUDA_TAGS=${CUDA_TAGS}" > ${CUDNN_VERSION}finaltags.env'
