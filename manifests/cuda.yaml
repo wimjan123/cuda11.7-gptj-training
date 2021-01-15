@@ -88,7 +88,7 @@ cuda_v11.2.0:
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64
       ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu2004/x86_64
       no_os_suffix: True
-      requires: "cuda>=11.2"
+      <<: *cuda11_2_0_requires
       components:
         <<: *cuda11_2_0_components
     arm64:
@@ -96,7 +96,7 @@ cuda_v11.2.0:
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/sbsa
       ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu2004/sbsa
       no_os_suffix: True
-      <<: *cuda11_2_0_requires
+      requires: "cuda>=11.2"
       components:
         <<: *cuda11_2_0_components
   ubuntu18.04:
