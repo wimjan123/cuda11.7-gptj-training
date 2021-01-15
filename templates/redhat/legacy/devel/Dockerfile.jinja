@@ -41,8 +41,12 @@ LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
   {% set nvprof_component_version = cuda.version.major + "-" + cuda.version.minor + "-" + cuda.components.nvprof.version -%}
 {% endif %}
 {% if "libnccl2" in cuda.components %}
-    {% set libnccl2_component_version = cuda.components.libnccl2.version + "+cuda" + cuda.version.major + "." + cuda.version.minor %}
-ENV NCCL_VERSION {{ cuda.components.libnccl2.version[:-2] }}
+    {% set nccl_component_version = cuda.components.libnccl2.version %}
+    {% if "-" in nccl_component_version %}
+        {% set nccl_component_version = cuda.components.libnccl2.version[:-2] %}
+    {% endif %}
+    {% set nccl_component_version_with_cuda = cuda.components.libnccl2.version + "+cuda" + cuda.version.major + "." + cuda.version.minor %}
+ENV NCCL_VERSION {{ nccl_component_version }}
 
 {% endif -%}
 
@@ -52,9 +56,9 @@ ENV NCCL_VERSION {{ cuda.components.libnccl2.version[:-2] }}
 
 {% if cuda.version.major_minor == "10.0" or cuda.version.major_minor == "10.1" %}
 # setopt flag prevents yum from auto upgrading. See https://gitlab.com/nvidia/container-images/cuda/-/issues/88
-RUN /usr/bin/yum install --setopt=obsoletes=0 -y \
+RUN yum install --setopt=obsoletes=0 -y \
 {% else %}
-RUN /usr/bin/yum install -y \
+RUN yum install -y \
 {% endif %}
     make \
     cuda-nvml-dev{{ dev_to_devel }}-{{ nvml_dev_component_version or cuda_pkg_version }} \
@@ -91,15 +95,15 @@ RUN /usr/bin/yum install -y \
     {% else %}
     libnpp-devel-{{ libnpp_dev_component_version or cuda_pkg_version }} \
     {% endif %}
-    {% if libnccl2_component_version and "libnccl2" in cuda.components and "source" not in cuda.components.libnccl2 %}
-    libnccl-devel-{{ libnccl2_component_version }} \
+    {% if nccl_component_version_with_cuda and "libnccl2" in cuda.components and "source" not in cuda.components.libnccl2 %}
+    libnccl-devel-{{ nccl_component_version_with_cuda }} \
     {% endif %}
 {% endif %}
-    && /usr/bin/yum clean all \
+    && yum clean all \
     && rm -rf /var/cache/yum/*
 
 {% if cuda.version.major_minor in ["10.0", "10.1"] and cuda.os.distro != "ubi" %}
-RUN /usr/bin/yum install -y yum-plugin-versionlock && /usr/bin/yum versionlock libcublas10
+RUN yum install -y yum-plugin-versionlock && yum versionlock libcublas10
 
 {% endif -%}
 
@@ -108,7 +112,7 @@ RUN /usr/bin/yum install -y yum-plugin-versionlock && /usr/bin/yum versionlock l
     {% if cuda.arch == "arm64" %} {% set arch = "aarch64" %} {% endif %}
     {% set basename =  "nccl_" + cuda.components.libnccl2.version + "-1+cuda" + cuda.version.major + "." + cuda.version.minor + "_" + arch + ".txz" %}
     {% if cuda.arch == "arm64" %} {% set arch = "aarch64" %} {% endif %}
-RUN /usr/bin/yum install -y xz && NCCL_DOWNLOAD_SUM={{ cuda.components.libnccl2.sha256sum }} && \
+RUN yum install -y xz && NCCL_DOWNLOAD_SUM={{ cuda.components.libnccl2.sha256sum }} && \
     curl -fsSL {{ cuda.components.libnccl2.source }} -O && \
     echo "$NCCL_DOWNLOAD_SUM  {{ basename }}" | sha256sum -c - && \
     unxz {{ basename }} && \

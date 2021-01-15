@@ -682,10 +682,6 @@ class ManagerContainerPush(Manager):
                 continue
             log.info("Processing image: %s:%s", self.image_name, tag)
             for repo in self.repos:
-                if tag == "latest" and "nvcr.io" in repo:
-                    # No latest tags on NGC
-                    log.debug("Not pushing latest tag to NGC")
-                    continue
                 log.info("COPYING to: %s:%s", repo, tag)
                 if self.dry_run:
                     log.debug("dry-run; not copying")
@@ -749,6 +745,7 @@ class ManagerGenerate(Manager):
     output_manifest_path = None  # pathlib object. The path to save the shipit manifest.
     output_path = {}  # The product of parsing the input templates
     key = ""
+    cuda_version_is_release_label = False
 
     template_env = Environment(
         extensions=["jinja2.ext.do"], trim_blocks=True, lstrip_blocks=True
@@ -953,25 +950,31 @@ class ManagerGenerate(Manager):
         if not self.image_tag_suffix:
             self.image_tag_suffix = ""
 
-        if not self.release_label:
-            build_version = self.get_data(
-                conf,
-                self.key,
-                f"{self.distro}{self.distro_version}",
-                self.arch,
-                "components",
-                "build_version",
-            )
+        # Only set in version < 11.0
+        build_version = self.get_data(
+            conf,
+            self.key,
+            f"{self.distro}{self.distro_version}",
+            self.arch,
+            "components",
+            "build_version",
+            can_skip=True,
+        )
+        legacy_release_label = None
+        if build_version:
             legacy_release_label = f"{self.cuda_version}.{build_version}"
+        log.debug(f"build_version: {build_version}")
 
         # The templating context. This data structure is used to fill the templates.
         self.cuda = {
             "use_ml_repo": False,
             "version": {
-                "release_label": self.release_label or legacy_release_label,
+                "release_label": self.cuda_version
+                if self.cuda_version_is_release_label
+                else (self.release_label or legacy_release_label),
                 "major": major,
                 "minor": minor,
-                "major_minor": self.cuda_version,
+                "major_minor": f"{major}.{minor}",
             },
             "os": {"distro": self.distro, "version": self.distro_version},
             "arch": self.arch,
@@ -1040,16 +1043,17 @@ class ManagerGenerate(Manager):
             self.cuda["target"] = img
 
             globber = f"*"
-            temp_path = pathlib.Path(self.cuda["template_path"], img)
-            cudnn_base_path = pathlib.Path(self.cuda["template_path"])
-            input_template = f"{temp_path}/Dockerfile.jinja"
-
-            if version.parse(self.cuda_version or self.release_label) >= version.parse(
-                "11.2"
-            ):
+            if "legacy" in self.cuda["template_path"]:
+                temp_path = pathlib.Path(self.cuda["template_path"], img)
+                cudnn_template_path = pathlib.Path(
+                    self.cuda["template_path"], f"cudnn/Dockerfile.jinja"
+                )
+                input_template = f"{temp_path}/Dockerfile.jinja"
+            else:
+                temp_path = pathlib.Path(self.cuda["template_path"])
+                input_template = pathlib.Path(temp_path, f"{img}-dockerfile.j2")
+                cudnn_template_path = pathlib.Path(temp_path, "cudnn-dockerfile.j2")
                 globber = f"{img}-*"
-                temp_path = self.cuda["template_path"]
-                input_template = f"{temp_path}/{img}-dockerfile.j2"
 
             log.debug(
                 "template_path: %s, output_path: %s", temp_path, self.output_path,
@@ -1073,9 +1077,7 @@ class ManagerGenerate(Manager):
 
             # cudnn image
             if "base" not in img:
-                self.generate_cudnn_scripts(
-                    img, f"{cudnn_base_path}/cudnn/Dockerfile.jinja"
-                )
+                self.generate_cudnn_scripts(img, cudnn_template_path)
 
     # FIXME: Probably a much nicer way to do this with GLOM...
     # FIXME: Turn off black auto format for this function...
@@ -1370,9 +1372,13 @@ class ManagerGenerate(Manager):
         for ci_job, _ in self.parent.ci.items():
             if (match := rgx.match(ci_job)) is None:
                 continue
+            #  print(match.groups())
+            #  continue
             self.distro = match.group("distro")
             self.distro_version = match.group("distro_version")
             self.cuda_version = match.group("cuda_version")
+            if self.cuda_version.count(".") > 1:
+                self.cuda_version_is_release_label = True
             self.pipeline_name = match.group("pipeline_name")
             self.arch = match.group("arch")
 
@@ -1386,17 +1392,22 @@ class ManagerGenerate(Manager):
                 self.key = f"cuda_v{self.cuda_version}_{self.pipeline_name}"
 
             self.dist_base_path = pathlib.Path(
-                self.parent.get_data(self.parent.manifest, self.key, "dist_base_path",)
+                self.parent.get_data(self.parent.manifest, self.key, "dist_base_path")
             )
 
             log.debug("dist_base_path: %s" % (self.dist_base_path))
             log.debug(
-                "Generating distro: '%s' distro_version: '%s' cuda_version: '%s' arch: '%s'"
-                % (self.distro, self.distro_version, self.cuda_version, self.arch)
+                "Generating distro: '%s' distro_version: '%s' cuda_version: '%s' release_label: '%s' arch: '%s'"
+                % (
+                    self.distro,
+                    self.distro_version,
+                    self.cuda_version,
+                    self.release_label,
+                    self.arch,
+                )
             )
-
-            log.debug(self.release_label)
             self.targeted()
+            self.cuda_version_is_release_label = False
 
         if not self.dist_base_path:
             log.error("dist_base_path not set!")

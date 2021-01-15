@@ -1,5 +1,5 @@
 ARG IMAGE_NAME
-FROM ${IMAGE_NAME}:{{ cuda.version.major }}.{{ cuda.version.minor }}-{{ cuda.cudnn.target }}-{{ cuda.os.distro }}{{ cuda.os.version }}{{ cuda.image_tag_suffix }}
+FROM ${IMAGE_NAME}:{{ cuda.version.release_label }}-{{ cuda.cudnn.target }}-{{ cuda.os.distro }}{{ cuda.os.version }}{{ cuda.image_tag_suffix }}
 LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 
 {% set cudnn_version = cuda.cudnn.version %}
@@ -39,9 +39,9 @@ RUN CUDNN_DOWNLOAD_SUM={{ cuda.cudnn.dev.sha256sum }} && \
     ldconfig
   {% endif %}
 {% elif "sha256sum" not in cuda.cudnn %}
-RUN /usr/bin/yum install -y \
+RUN yum install -y \
     libcudnn{{ cuda.cudnn.version[0] }}{{ iz_dev }}-${CUDNN_VERSION}-1.cuda{{ cuda.version.major }}.{{ cuda.version.minor }} \
-    && /usr/bin/yum clean all \
+    && yum clean all \
     && rm -rf /var/cache/yum/*
 {% else %}
   {% set arch = cuda.arch | replace("86_", "") %}

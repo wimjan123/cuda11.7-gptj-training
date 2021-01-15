@@ -3,7 +3,7 @@ FROM ${IMAGE_NAME}:8.0-runtime-centos7
 
 LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 
-RUN /usr/bin/yum install -y \
+RUN yum install -y \
     make \
     cuda-nvml-dev-$CUDA_PKG_VERSION \
     cuda-command-line-tools-$CUDA_PKG_VERSION \
@@ -20,7 +20,7 @@ cuda-core-$CUDA_PKG_VERSION \
     cuda-npp-dev-$CUDA_PKG_VERSION \
     cuda-cudart-dev-$CUDA_PKG_VERSION \
     cuda-driver-dev-$CUDA_PKG_VERSION \
-    && /usr/bin/yum clean all \
+    && yum clean all \
     && rm -rf /var/cache/yum/*
 
 ENV LIBRARY_PATH /usr/local/cuda/lib64/stubs

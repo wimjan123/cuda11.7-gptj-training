@@ -3,7 +3,7 @@ FROM ${IMAGE_NAME}:10.2-runtime-ubuntu18.04
 
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 
-ENV NCCL_VERSION 2.7.8
+ENV NCCL_VERSION 2.8.3
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-nvml-dev-$CUDA_PKG_VERSION \
@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-libraries-dev-$CUDA_PKG_VERSION \
     cuda-minimal-build-$CUDA_PKG_VERSION \
     libcublas-dev=10.2.2.89-1 \
-    libnccl-dev=2.7.8-1+cuda10.2 \
+    libnccl-dev=2.8.3-1+cuda10.2 \
     && apt-mark hold libnccl-dev \
     && rm -rf /var/lib/apt/lists/*
 

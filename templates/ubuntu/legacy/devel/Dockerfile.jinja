@@ -13,9 +13,8 @@ LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
     {% set libcublas_dev_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.libcublas_dev.version %}
 {% endif %}
 {% if "libnccl2_dev" in cuda.components and cuda.components.libnccl2_dev %}
-    {# {% set libnccl2_dev_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.libnccl2_dev.version %} #}
     {% if cuda.version.major | int >= 10 %}
-        {% set libnccl2_dev_component_version = "%s+cuda%s.%s" | format(cuda.components.libnccl2_dev.version, cuda.version.major, cuda.version.minor) %}
+        {% set nccl_dev_component_version_with_cuda = "%s+cuda%s.%s" | format(cuda.components.libnccl2_dev.version, cuda.version.major, cuda.version.minor) %}
     {% endif %}
 {% endif %}
 {% if "libraries_dev" in cuda.components %}
@@ -37,7 +36,11 @@ LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
     {% set nvprof_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.nvprof.version %}
 {% endif %}
 {% if "libnccl2_dev" in cuda.components %}
-ENV NCCL_VERSION {{ cuda.components.libnccl2_dev.version[:-2] }}
+    {% set nccl_dev_component_version = cuda.components.libnccl2_dev.version %}
+    {% if "-" in nccl_dev_component_version %}
+        {% set nccl_dev_component_version = cuda.components.libnccl2_dev.version[:-2] %}
+    {% endif %}
+ENV NCCL_VERSION {{ nccl_dev_component_version }}
 
 {% endif -%}
 
@@ -94,13 +97,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libcublas-dev{{ cublas_dev_vers }} \
     {% endif %}
     {# libnccl2_dev can be unset if libnccl2.source is being used #}
-    {% if cuda.components.libnccl2_dev %}
-    libnccl-dev={{ libnccl2_dev_component_version }} \
+    {% if nccl_dev_component_version_with_cuda %}
+    libnccl-dev={{ nccl_dev_component_version_with_cuda }} \
     {% endif %}
 {% else %}
     {# libnccl2_dev can be unset if libnccl2.source is being used #}
     {% if cuda.components.libnccl2_dev and not "source" in cuda.components.libnccl2 %}
-    libnccl-dev={{ libnccl2_dev_component_version }} \
+    libnccl-dev={{ nccl_dev_component_version_with_cuda }} \
     {% endif %}
     libcublas-dev-{{ libcublas_dev_component_version if libcublas_dev_component_version and cuda.version.major | int >= 10 else "10.2.{}.{}-1".format(cuda.version.minor, cuda.version.build) }} \
     libcusparse-{{ libcusparse_component_version if libcusparse_component_version and cuda.version.major | int >= 10 else "10.2.{}.{}-1".format(cuda.version.minor, cuda.version.build) }} \
