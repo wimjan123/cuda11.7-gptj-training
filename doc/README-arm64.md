@@ -64,7 +64,7 @@ Visit [OpenSource @ Nvidia](https://developer.download.nvidia.com/compute/cuda/o
 
 - [`11.2.0-base`, `11.2.0-base-ubuntu18.04` (*11.2.0/ubuntu18.04-arm64/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.0/ubuntu18.04-arm64/base/Dockerfile)
 - [`11.2.0-runtime`, `11.2.0-runtime-ubuntu18.04` (*11.2.0/ubuntu18.04-arm64/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.0/ubuntu18.04-arm64/runtime/Dockerfile)
-- [`latest`, `11.2.0-devel`, `11.2.0-devel-ubuntu18.04` (*11.2.0/ubuntu18.04-arm64/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.0/ubuntu18.04-arm64/devel/Dockerfile)
+- [`11.2.0-devel`, `11.2.0-devel-ubuntu18.04` (*11.2.0/ubuntu18.04-arm64/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.0/ubuntu18.04-arm64/devel/Dockerfile)
 
 ### Centos 8
 
