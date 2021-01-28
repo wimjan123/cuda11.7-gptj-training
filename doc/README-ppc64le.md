@@ -23,6 +23,21 @@ To view the license for the cuDNN Toolkit included in this image, click [*here*]
 
 For more information on CUDA, including the release notes, programming model, APIs and developer tools, visit the [CUDA documentation site](https://docs.nvidia.com/cuda).
 
+## Announcement
+
+The "latest" tag for CUDA, CUDAGL, and OPENGL images has been deprecated on NGC and Docker Hub.
+
+With the removal of the latest tag, the following use case will result in the "manifest unknown"
+error:
+
+```
+$ docker pull nvidia/cuda
+Error response from daemon: manifest for nvidia/cuda:latest not found: manifest unknown: manifest
+unknown
+```
+
+This is not a bug.
+
 ## Overview of Images
 
 Three flavors of images are provided:
