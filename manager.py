@@ -704,21 +704,23 @@ class ManagerContainerPush(Manager):
                         )
                     ):
                         log.info("Copy was successful")
+                        self.copy_failed = False
                         break
                     else:
-                        if attempt < HTTP_RETRY_ATTEMPTS:
-                            log.warning(
-                                "Copy Attempt failed! ({} of {})".format(
-                                    attempt + 1, HTTP_RETRY_ATTEMPTS
-                                )
-                            )
-                            log.warning(
-                                "Sleeping {} seconds".format(HTTP_RETRY_WAIT_SECS)
-                            )
-                            time.sleep(HTTP_RETRY_WAIT_SECS)
-                        else:
-                            log.warning("Copy failed!")
-                            self.copy_failed = True
+                        log.warning(
+                            "Copy Attempt failed! ({} of {})".format(
+                                attempt + 1, HTTP_RETRY_ATTEMPTS
+                             )
+                        )
+                        log.warning(
+                             "Sleeping {} seconds".format(HTTP_RETRY_WAIT_SECS)
+                        )
+                        time.sleep(HTTP_RETRY_WAIT_SECS)
+                        self.copy_failed = True
+                if self.copy_failed:
+                    log.warning("Copy failed!")
+                    log.error("Errors were encountered copying images!")
+                    sys.exit(1)
 
     def main(self):
         log.debug("dry-run: %s", self.dry_run)
@@ -730,9 +732,6 @@ class ManagerContainerPush(Manager):
         )
         self.setup_repos()
         self.push_images()
-        if self.copy_failed:
-            log.error("Errors were encountered copying images!")
-            sys.exit(1)
         log.info("Done")
 
 
