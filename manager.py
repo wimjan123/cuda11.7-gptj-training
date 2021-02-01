@@ -1269,6 +1269,10 @@ class ManagerGenerate(Manager):
 
             pkg_no_prefix = pkg[len("cuda_") :] if pkg.startswith("cuda_") else pkg
 
+            # rename "devel" to "dev" to keep things consistant with ubuntu
+            if "_devel" in pkg_no_prefix:
+                pkg_no_prefix = pkg_no_prefix.replace("_devel", "_dev")
+
             log.debug(
                 f"component: {pkg_no_prefix} version: {version} pkg_rel: {pkg_rel}"
             )
@@ -1333,6 +1337,7 @@ class ManagerGenerate(Manager):
         }
         prepos = self._load_rc_push_repos_manifest_yaml()["push_repos"]
         self.parent.manifest.update({"push_repos": prepos})
+        log.info(f"Writing shipit manifest: {self.output_manifest_path}")
         self.write_shipit_manifest(self.parent.manifest)
 
     def write_shipit_manifest(self, manifest):
