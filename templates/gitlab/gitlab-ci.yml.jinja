@@ -300,10 +300,13 @@ trigger:
 kitmaker_base:
   <<: *cuda_base_definition
   <<: *kitmaker_only
+  # Need to build container images on a multi-arch capable machine
+  <<: *tags_definition_multiarch
 
 kitmaker_deploy:
   <<: *deploy_definition
   <<: *kitmaker_only
+  <<: *tags_definition
   needs:
     - job: kitmaker_base
       artifacts: true

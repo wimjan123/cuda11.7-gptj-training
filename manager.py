@@ -704,21 +704,23 @@ class ManagerContainerPush(Manager):
                         )
                     ):
                         log.info("Copy was successful")
+                        self.copy_failed = False
                         break
                     else:
-                        if attempt < HTTP_RETRY_ATTEMPTS:
-                            log.warning(
-                                "Copy Attempt failed! ({} of {})".format(
-                                    attempt + 1, HTTP_RETRY_ATTEMPTS
-                                )
-                            )
-                            log.warning(
-                                "Sleeping {} seconds".format(HTTP_RETRY_WAIT_SECS)
-                            )
-                            time.sleep(HTTP_RETRY_WAIT_SECS)
-                        else:
-                            log.warning("Copy failed!")
-                            self.copy_failed = True
+                        log.warning(
+                            "Copy Attempt failed! ({} of {})".format(
+                                attempt + 1, HTTP_RETRY_ATTEMPTS
+                             )
+                        )
+                        log.warning(
+                             "Sleeping {} seconds".format(HTTP_RETRY_WAIT_SECS)
+                        )
+                        time.sleep(HTTP_RETRY_WAIT_SECS)
+                        self.copy_failed = True
+                if self.copy_failed:
+                    log.warning("Copy failed!")
+                    log.error("Errors were encountered copying images!")
+                    sys.exit(1)
 
     def main(self):
         log.debug("dry-run: %s", self.dry_run)
@@ -730,9 +732,6 @@ class ManagerContainerPush(Manager):
         )
         self.setup_repos()
         self.push_images()
-        if self.copy_failed:
-            log.error("Errors were encountered copying images!")
-            sys.exit(1)
         log.info("Done")
 
 
@@ -1270,6 +1269,10 @@ class ManagerGenerate(Manager):
 
             pkg_no_prefix = pkg[len("cuda_") :] if pkg.startswith("cuda_") else pkg
 
+            # rename "devel" to "dev" to keep things consistant with ubuntu
+            if "_devel" in pkg_no_prefix:
+                pkg_no_prefix = pkg_no_prefix.replace("_devel", "_dev")
+
             log.debug(
                 f"component: {pkg_no_prefix} version: {version} pkg_rel: {pkg_rel}"
             )
@@ -1334,6 +1337,7 @@ class ManagerGenerate(Manager):
         }
         prepos = self._load_rc_push_repos_manifest_yaml()["push_repos"]
         self.parent.manifest.update({"push_repos": prepos})
+        log.info(f"Writing shipit manifest: {self.output_manifest_path}")
         self.write_shipit_manifest(self.parent.manifest)
 
     def write_shipit_manifest(self, manifest):
