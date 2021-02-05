@@ -9,8 +9,11 @@ function setup() {
     check_runtime
 }
 
-@test "check_LD_LIBRARY_PATH" {
+@test "check_NVIDIA_REQUIRES_CUDA" {
     # The devel images for x86_64 should always contain "brand=tesla"
+    if [ ${ARCH} != "x86_64" ]; then
+       skip "Only needed on x86_64."
+    fi
     docker_run --rm --gpus 0 ${image} bash -c "printenv | grep -q 'brand=tesla'"
     [ "$status" -eq 0 ]
 }
