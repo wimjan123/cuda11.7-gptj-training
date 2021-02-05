@@ -69,9 +69,8 @@ push_repos:
     version: 2.8.3-1
   libnccl2_dev:
     version: 2.8.3-1
-  # No cudnn for 11.2 yet
-  # cudnn8:
-  #   version: 8.0.5.39-1
+  cudnn8:
+    version: 8.1.0.77-1
 
 
 cuda_v11.2.0:
@@ -113,15 +112,6 @@ cuda_v11.2.0:
       <<: *cuda11_2_0_requires
       components:
         <<: *cuda11_2_0_components
-    # ppc64le:
-    #   image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le
-    #   repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/ppc64el
-    #   ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/ppc64el
-    #   no_os_suffix: True
-    #   requires: "cuda>=11.2"
-    #   components:
-    #     <<: *cuda11_2_0_components
-    #     libnccl2:
     arm64:
       image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-arm64
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/sbsa
@@ -132,6 +122,7 @@ cuda_v11.2.0:
         <<: *cuda11_2_0_components
         libnccl2:
         libnccl2_dev:
+        cudnn8:
   ubuntu16.04:
     template_path: templates/ubuntu
     base_image: ubuntu:16.04
@@ -168,8 +159,6 @@ cuda_v11.2.0:
       requires: "cuda>=11.2"
       components:
         <<: *cuda11_2_0_components
-        # No cudnn8 for rhel8-ppc64le
-        cudnn8:
     arm64:
       image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-arm64
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8/sbsa
@@ -212,8 +201,6 @@ cuda_v11.2.0:
       requires: "cuda>=11.2"
       components:
         <<: *cuda11_2_0_components
-        # No cudnn8 for rhel8-ppc64le
-        cudnn8:
     arm64:
       image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-arm64
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8/sbsa
@@ -279,7 +266,7 @@ cuda_v11.2.0:
   libnccl2_dev:
     version: 2.8.3-1
   cudnn8:
-    version: 8.0.5.39-1
+    version: 8.5.0.39-1
 
 
 cuda_v11.1.1:
@@ -370,8 +357,8 @@ cuda_v11.1.1:
       requires: "cuda>=11.1"
       components:
         <<: *cuda11_1_1_components
-        # No cudnn8 for rhel8-ppc64le
         cudnn8:
+          version: 8.0.4.30-1
     arm64:
       image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-arm64
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8/sbsa
@@ -414,8 +401,8 @@ cuda_v11.1.1:
       requires: "cuda>=11.1"
       components:
         <<: *cuda11_1_1_components
-        # No cudnn8 for rhel8-ppc64le
         cudnn8:
+          version: 8.0.4.30-1
     arm64:
       image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-arm64
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8/sbsa
@@ -481,7 +468,7 @@ cuda_v11.1.1:
   libnccl2_dev:
     version: 2.8.3-1
   cudnn8:
-    version: 8.0.5.39-1
+    version: 8.5.0.39-1
 
 
 cuda_v11.0.3:
@@ -567,8 +554,6 @@ cuda_v11.0.3:
       requires: "cuda>=11.0"
       components:
         <<: *cuda11_0_3_components
-        # No cudnn8 for rhel8-ppc64le
-        cudnn8:
     arm64:
       image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-arm64
       repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8/sbsa
@@ -653,7 +638,7 @@ cuda_v11.0.3:
   libnccl2_dev:
     version: 2.8.3-1
   cudnn8:
-    version: 8.0.5.39-1
+    version: 8.1.0.77-1
   cudnn7:
     version: 7.6.5.32-1
 
@@ -728,7 +713,6 @@ cuda_v10.2:
       <<: *cuda10_2_requires
       components:
         <<: *cuda10_2_components
-        # TODO: version is different for rhel7
         cudnn7:
           version: 7.6.5.33-1
     ppc64le:
@@ -738,6 +722,8 @@ cuda_v10.2:
       requires: "cuda>=10.2"
       components:
         <<: *cuda10_2_components
+        cudnn8:
+          version: 8.0.4.30-1
   ubi8:
     template_path: templates/redhat/legacy
     base_image: registry.access.redhat.com/ubi8/ubi:latest
@@ -780,6 +766,8 @@ cuda_v10.2:
       requires: "cuda>=10.2"
       components:
         <<: *cuda10_2_components
+        cudnn8:
+          version: 8.0.4.30-1
 
 
 .requires_v10.1: &cuda10_1_requires
