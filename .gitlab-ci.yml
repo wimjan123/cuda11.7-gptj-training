@@ -49,8 +49,10 @@ before_script:
   - 'echo "NO_OS_SUFFIX: $NO_OS_SUFFIX"'
   # Gitlab is used to stage images
   - docker login -u "gitlab-ci-token" -p $CI_JOB_TOKEN gitlab-master.nvidia.com:5005
-  # Login to NGC to pull images
-  - docker login -u '$oauthtoken' -p $NVCR_TOKEN nvcr.io
+  # Login to NGC to pull images (uses protected variables, only possible from master branch)
+  - if [[ $CI_COMMIT_BRANCH == "master" ]]; then
+        docker login -u '$oauthtoken' -p $NVCR_TOKEN nvcr.io;
+    fi
 
 stages:
   - prepare
@@ -369,6 +371,20 @@ ubuntu20.04-v11.2.0-x86_64:
   <<: *cuda_base_definition
   <<: *ubuntu20_04_11_2_0_x86_64_only
 
+ubuntu20.04-v11.2.0-cudnn8-x86_64:
+  <<: *cudnn_definition
+  <<: *ubuntu20_04_11_2_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu20_04_11_2_0_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubuntu20.04-v11.2.0-x86_64
+      artifacts: true
+
 ubuntu20.04-v11.2.0-test-x86_64:
   needs: ["ubuntu20.04-v11.2.0-x86_64"]
   <<: *ubuntu20_04_11_2_0_x86_64_only
@@ -417,6 +433,7 @@ ubuntu20.04-v11.2.0-deploy-x86_64:
       artifacts: true
     - job: ubuntu20.04-v11.2.0-test-x86_64
     - job: ubuntu20.04-v11.2.0-scan-x86_64
+    - job: ubuntu20.04-v11.2.0-cudnn8-x86_64
 
 # workaround for gitlab ci rules when NO_TEST and NO_SCAN are used...
 ubuntu20.04-v11.2.0-deploy-x86_64-no-test-no-scan:
@@ -427,6 +444,7 @@ ubuntu20.04-v11.2.0-deploy-x86_64-no-test-no-scan:
   needs:
     - job: ubuntu20.04-v11.2.0-x86_64
       artifacts: true
+    - job: ubuntu20.04-v11.2.0-cudnn8-x86_64
 
 # workaround for gitlab ci rules when NO_TEST is used...
 ubuntu20.04-v11.2.0-deploy-x86_64-no-test:
@@ -440,6 +458,7 @@ ubuntu20.04-v11.2.0-deploy-x86_64-no-test:
     - job: ubuntu20.04-v11.2.0-x86_64
       artifacts: true
     - job: ubuntu20.04-v11.2.0-scan-no-test-x86_64
+    - job: ubuntu20.04-v11.2.0-cudnn8-x86_64
 
 # workaround for gitlab ci rules when NO_SCAN is used...
 ubuntu20.04-v11.2.0-deploy-x86_64-no-scan:
@@ -453,6 +472,7 @@ ubuntu20.04-v11.2.0-deploy-x86_64-no-scan:
     - job: ubuntu20.04-v11.2.0-x86_64
       artifacts: true
     - job: ubuntu20.04-v11.2.0-test-x86_64
+    - job: ubuntu20.04-v11.2.0-cudnn8-x86_64
 
 .ubuntu20_04_11_2_0_arm64_variables: &ubuntu20_04_11_2_0_arm64_variables
   ARCH: "arm64"
@@ -476,6 +496,20 @@ ubuntu20.04-v11.2.0-deploy-x86_64-no-scan:
 ubuntu20.04-v11.2.0-arm64:
   <<: *cuda_base_definition
   <<: *ubuntu20_04_11_2_0_arm64_only
+
+ubuntu20.04-v11.2.0-cudnn8-arm64:
+  <<: *cudnn_definition
+  <<: *ubuntu20_04_11_2_0_arm64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu20_04_11_2_0_arm64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubuntu20.04-v11.2.0-arm64
+      artifacts: true
 
 ubuntu20.04-v11.2.0-test-arm64:
   needs: ["ubuntu20.04-v11.2.0-arm64"]
@@ -525,6 +559,7 @@ ubuntu20.04-v11.2.0-deploy-arm64:
       artifacts: true
     - job: ubuntu20.04-v11.2.0-test-arm64
     - job: ubuntu20.04-v11.2.0-scan-arm64
+    - job: ubuntu20.04-v11.2.0-cudnn8-arm64
 
 # workaround for gitlab ci rules when NO_TEST and NO_SCAN are used...
 ubuntu20.04-v11.2.0-deploy-arm64-no-test-no-scan:
@@ -535,6 +570,7 @@ ubuntu20.04-v11.2.0-deploy-arm64-no-test-no-scan:
   needs:
     - job: ubuntu20.04-v11.2.0-arm64
       artifacts: true
+    - job: ubuntu20.04-v11.2.0-cudnn8-arm64
 
 # workaround for gitlab ci rules when NO_TEST is used...
 ubuntu20.04-v11.2.0-deploy-arm64-no-test:
@@ -548,6 +584,7 @@ ubuntu20.04-v11.2.0-deploy-arm64-no-test:
     - job: ubuntu20.04-v11.2.0-arm64
       artifacts: true
     - job: ubuntu20.04-v11.2.0-scan-no-test-arm64
+    - job: ubuntu20.04-v11.2.0-cudnn8-arm64
 
 # workaround for gitlab ci rules when NO_SCAN is used...
 ubuntu20.04-v11.2.0-deploy-arm64-no-scan:
@@ -561,6 +598,7 @@ ubuntu20.04-v11.2.0-deploy-arm64-no-scan:
     - job: ubuntu20.04-v11.2.0-arm64
       artifacts: true
     - job: ubuntu20.04-v11.2.0-test-arm64
+    - job: ubuntu20.04-v11.2.0-cudnn8-arm64
 
 .ubuntu18_04_11_2_0_x86_64_variables: &ubuntu18_04_11_2_0_x86_64_variables
   ARCH: "x86_64"
@@ -583,6 +621,20 @@ ubuntu20.04-v11.2.0-deploy-arm64-no-scan:
 ubuntu18.04-v11.2.0-x86_64:
   <<: *cuda_base_definition
   <<: *ubuntu18_04_11_2_0_x86_64_only
+
+ubuntu18.04-v11.2.0-cudnn8-x86_64:
+  <<: *cudnn_definition
+  <<: *ubuntu18_04_11_2_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu18_04_11_2_0_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubuntu18.04-v11.2.0-x86_64
+      artifacts: true
 
 ubuntu18.04-v11.2.0-test-x86_64:
   needs: ["ubuntu18.04-v11.2.0-x86_64"]
@@ -632,6 +684,7 @@ ubuntu18.04-v11.2.0-deploy-x86_64:
       artifacts: true
     - job: ubuntu18.04-v11.2.0-test-x86_64
     - job: ubuntu18.04-v11.2.0-scan-x86_64
+    - job: ubuntu18.04-v11.2.0-cudnn8-x86_64
 
 # workaround for gitlab ci rules when NO_TEST and NO_SCAN are used...
 ubuntu18.04-v11.2.0-deploy-x86_64-no-test-no-scan:
@@ -642,6 +695,7 @@ ubuntu18.04-v11.2.0-deploy-x86_64-no-test-no-scan:
   needs:
     - job: ubuntu18.04-v11.2.0-x86_64
       artifacts: true
+    - job: ubuntu18.04-v11.2.0-cudnn8-x86_64
 
 # workaround for gitlab ci rules when NO_TEST is used...
 ubuntu18.04-v11.2.0-deploy-x86_64-no-test:
@@ -655,6 +709,7 @@ ubuntu18.04-v11.2.0-deploy-x86_64-no-test:
     - job: ubuntu18.04-v11.2.0-x86_64
       artifacts: true
     - job: ubuntu18.04-v11.2.0-scan-no-test-x86_64
+    - job: ubuntu18.04-v11.2.0-cudnn8-x86_64
 
 # workaround for gitlab ci rules when NO_SCAN is used...
 ubuntu18.04-v11.2.0-deploy-x86_64-no-scan:
@@ -668,6 +723,7 @@ ubuntu18.04-v11.2.0-deploy-x86_64-no-scan:
     - job: ubuntu18.04-v11.2.0-x86_64
       artifacts: true
     - job: ubuntu18.04-v11.2.0-test-x86_64
+    - job: ubuntu18.04-v11.2.0-cudnn8-x86_64
 
 .ubuntu18_04_11_2_0_arm64_variables: &ubuntu18_04_11_2_0_arm64_variables
   ARCH: "arm64"
@@ -799,6 +855,20 @@ ubuntu16.04-v11.2.0-x86_64:
   <<: *cuda_base_definition
   <<: *ubuntu16_04_11_2_0_x86_64_only
 
+ubuntu16.04-v11.2.0-cudnn8-x86_64:
+  <<: *cudnn_definition
+  <<: *ubuntu16_04_11_2_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu16_04_11_2_0_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubuntu16.04-v11.2.0-x86_64
+      artifacts: true
+
 ubuntu16.04-v11.2.0-test-x86_64:
   needs: ["ubuntu16.04-v11.2.0-x86_64"]
   <<: *ubuntu16_04_11_2_0_x86_64_only
@@ -847,6 +917,7 @@ ubuntu16.04-v11.2.0-deploy-x86_64:
       artifacts: true
     - job: ubuntu16.04-v11.2.0-test-x86_64
     - job: ubuntu16.04-v11.2.0-scan-x86_64
+    - job: ubuntu16.04-v11.2.0-cudnn8-x86_64
 
 # workaround for gitlab ci rules when NO_TEST and NO_SCAN are used...
 ubuntu16.04-v11.2.0-deploy-x86_64-no-test-no-scan:
@@ -857,6 +928,7 @@ ubuntu16.04-v11.2.0-deploy-x86_64-no-test-no-scan:
   needs:
     - job: ubuntu16.04-v11.2.0-x86_64
       artifacts: true
+    - job: ubuntu16.04-v11.2.0-cudnn8-x86_64
 
 # workaround for gitlab ci rules when NO_TEST is used...
 ubuntu16.04-v11.2.0-deploy-x86_64-no-test:
@@ -870,6 +942,7 @@ ubuntu16.04-v11.2.0-deploy-x86_64-no-test:
     - job: ubuntu16.04-v11.2.0-x86_64
       artifacts: true
     - job: ubuntu16.04-v11.2.0-scan-no-test-x86_64
+    - job: ubuntu16.04-v11.2.0-cudnn8-x86_64
 
 # workaround for gitlab ci rules when NO_SCAN is used...
 ubuntu16.04-v11.2.0-deploy-x86_64-no-scan:
@@ -883,6 +956,7 @@ ubuntu16.04-v11.2.0-deploy-x86_64-no-scan:
     - job: ubuntu16.04-v11.2.0-x86_64
       artifacts: true
     - job: ubuntu16.04-v11.2.0-test-x86_64
+    - job: ubuntu16.04-v11.2.0-cudnn8-x86_64
 
 .centos8_11_2_0_x86_64_variables: &centos8_11_2_0_x86_64_variables
   ARCH: "x86_64"
@@ -905,6 +979,20 @@ ubuntu16.04-v11.2.0-deploy-x86_64-no-scan:
 centos8-v11.2.0-x86_64:
   <<: *cuda_base_definition
   <<: *centos8_11_2_0_x86_64_only
+
+centos8-v11.2.0-cudnn8-x86_64:
+  <<: *cudnn_definition
+  <<: *centos8_11_2_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos8_11_2_0_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: centos8-v11.2.0-x86_64
+      artifacts: true
 
 centos8-v11.2.0-test-x86_64:
   needs: ["centos8-v11.2.0-x86_64"]
@@ -954,6 +1042,7 @@ centos8-v11.2.0-deploy-x86_64:
       artifacts: true
     - job: centos8-v11.2.0-test-x86_64
     - job: centos8-v11.2.0-scan-x86_64
+    - job: centos8-v11.2.0-cudnn8-x86_64
 
 # workaround for gitlab ci rules when NO_TEST and NO_SCAN are used...
 centos8-v11.2.0-deploy-x86_64-no-test-no-scan:
@@ -964,6 +1053,7 @@ centos8-v11.2.0-deploy-x86_64-no-test-no-scan:
   needs:
     - job: centos8-v11.2.0-x86_64
       artifacts: true
+    - job: centos8-v11.2.0-cudnn8-x86_64
 
 # workaround for gitlab ci rules when NO_TEST is used...
 centos8-v11.2.0-deploy-x86_64-no-test:
@@ -977,6 +1067,7 @@ centos8-v11.2.0-deploy-x86_64-no-test:
     - job: centos8-v11.2.0-x86_64
       artifacts: true
     - job: centos8-v11.2.0-scan-no-test-x86_64
+    - job: centos8-v11.2.0-cudnn8-x86_64
 
 # workaround for gitlab ci rules when NO_SCAN is used...
 centos8-v11.2.0-deploy-x86_64-no-scan:
@@ -990,6 +1081,7 @@ centos8-v11.2.0-deploy-x86_64-no-scan:
     - job: centos8-v11.2.0-x86_64
       artifacts: true
     - job: centos8-v11.2.0-test-x86_64
+    - job: centos8-v11.2.0-cudnn8-x86_64
 
 .centos8_11_2_0_ppc64le_variables: &centos8_11_2_0_ppc64le_variables
   ARCH: "ppc64le"
@@ -1012,6 +1104,20 @@ centos8-v11.2.0-deploy-x86_64-no-scan:
 centos8-v11.2.0-ppc64le:
   <<: *cuda_base_definition
   <<: *centos8_11_2_0_ppc64le_only
+
+centos8-v11.2.0-cudnn8-ppc64le:
+  <<: *cudnn_definition
+  <<: *centos8_11_2_0_ppc64le_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos8_11_2_0_ppc64le_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: centos8-v11.2.0-ppc64le
+      artifacts: true
 
 centos8-v11.2.0-test-ppc64le:
   needs: ["centos8-v11.2.0-ppc64le"]
@@ -1061,6 +1167,7 @@ centos8-v11.2.0-deploy-ppc64le:
       artifacts: true
     - job: centos8-v11.2.0-test-ppc64le
     - job: centos8-v11.2.0-scan-ppc64le
+    - job: centos8-v11.2.0-cudnn8-ppc64le
 
 # workaround for gitlab ci rules when NO_TEST and NO_SCAN are used...
 centos8-v11.2.0-deploy-ppc64le-no-test-no-scan:
@@ -1071,6 +1178,7 @@ centos8-v11.2.0-deploy-ppc64le-no-test-no-scan:
   needs:
     - job: centos8-v11.2.0-ppc64le
       artifacts: true
+    - job: centos8-v11.2.0-cudnn8-ppc64le
 
 # workaround for gitlab ci rules when NO_TEST is used...
 centos8-v11.2.0-deploy-ppc64le-no-test:
@@ -1084,6 +1192,7 @@ centos8-v11.2.0-deploy-ppc64le-no-test:
     - job: centos8-v11.2.0-ppc64le
       artifacts: true
     - job: centos8-v11.2.0-scan-no-test-ppc64le
+    - job: centos8-v11.2.0-cudnn8-ppc64le
 
 # workaround for gitlab ci rules when NO_SCAN is used...
 centos8-v11.2.0-deploy-ppc64le-no-scan:
@@ -1097,6 +1206,7 @@ centos8-v11.2.0-deploy-ppc64le-no-scan:
     - job: centos8-v11.2.0-ppc64le
       artifacts: true
     - job: centos8-v11.2.0-test-ppc64le
+    - job: centos8-v11.2.0-cudnn8-ppc64le
 
 .centos8_11_2_0_arm64_variables: &centos8_11_2_0_arm64_variables
   ARCH: "arm64"
@@ -1119,6 +1229,20 @@ centos8-v11.2.0-deploy-ppc64le-no-scan:
 centos8-v11.2.0-arm64:
   <<: *cuda_base_definition
   <<: *centos8_11_2_0_arm64_only
+
+centos8-v11.2.0-cudnn8-arm64:
+  <<: *cudnn_definition
+  <<: *centos8_11_2_0_arm64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos8_11_2_0_arm64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: centos8-v11.2.0-arm64
+      artifacts: true
 
 centos8-v11.2.0-test-arm64:
   needs: ["centos8-v11.2.0-arm64"]
@@ -1168,6 +1292,7 @@ centos8-v11.2.0-deploy-arm64:
       artifacts: true
     - job: centos8-v11.2.0-test-arm64
     - job: centos8-v11.2.0-scan-arm64
+    - job: centos8-v11.2.0-cudnn8-arm64
 
 # workaround for gitlab ci rules when NO_TEST and NO_SCAN are used...
 centos8-v11.2.0-deploy-arm64-no-test-no-scan:
@@ -1178,6 +1303,7 @@ centos8-v11.2.0-deploy-arm64-no-test-no-scan:
   needs:
     - job: centos8-v11.2.0-arm64
       artifacts: true
+    - job: centos8-v11.2.0-cudnn8-arm64
 
 # workaround for gitlab ci rules when NO_TEST is used...
 centos8-v11.2.0-deploy-arm64-no-test:
@@ -1191,6 +1317,7 @@ centos8-v11.2.0-deploy-arm64-no-test:
     - job: centos8-v11.2.0-arm64
       artifacts: true
     - job: centos8-v11.2.0-scan-no-test-arm64
+    - job: centos8-v11.2.0-cudnn8-arm64
 
 # workaround for gitlab ci rules when NO_SCAN is used...
 centos8-v11.2.0-deploy-arm64-no-scan:
@@ -1204,6 +1331,7 @@ centos8-v11.2.0-deploy-arm64-no-scan:
     - job: centos8-v11.2.0-arm64
       artifacts: true
     - job: centos8-v11.2.0-test-arm64
+    - job: centos8-v11.2.0-cudnn8-arm64
 
 .centos7_11_2_0_x86_64_variables: &centos7_11_2_0_x86_64_variables
   ARCH: "x86_64"
@@ -1226,6 +1354,20 @@ centos8-v11.2.0-deploy-arm64-no-scan:
 centos7-v11.2.0-x86_64:
   <<: *cuda_base_definition
   <<: *centos7_11_2_0_x86_64_only
+
+centos7-v11.2.0-cudnn8-x86_64:
+  <<: *cudnn_definition
+  <<: *centos7_11_2_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos7_11_2_0_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: centos7-v11.2.0-x86_64
+      artifacts: true
 
 centos7-v11.2.0-test-x86_64:
   needs: ["centos7-v11.2.0-x86_64"]
@@ -1275,6 +1417,7 @@ centos7-v11.2.0-deploy-x86_64:
       artifacts: true
     - job: centos7-v11.2.0-test-x86_64
     - job: centos7-v11.2.0-scan-x86_64
+    - job: centos7-v11.2.0-cudnn8-x86_64
 
 # workaround for gitlab ci rules when NO_TEST and NO_SCAN are used...
 centos7-v11.2.0-deploy-x86_64-no-test-no-scan:
@@ -1285,6 +1428,7 @@ centos7-v11.2.0-deploy-x86_64-no-test-no-scan:
   needs:
     - job: centos7-v11.2.0-x86_64
       artifacts: true
+    - job: centos7-v11.2.0-cudnn8-x86_64
 
 # workaround for gitlab ci rules when NO_TEST is used...
 centos7-v11.2.0-deploy-x86_64-no-test:
@@ -1298,6 +1442,7 @@ centos7-v11.2.0-deploy-x86_64-no-test:
     - job: centos7-v11.2.0-x86_64
       artifacts: true
     - job: centos7-v11.2.0-scan-no-test-x86_64
+    - job: centos7-v11.2.0-cudnn8-x86_64
 
 # workaround for gitlab ci rules when NO_SCAN is used...
 centos7-v11.2.0-deploy-x86_64-no-scan:
@@ -1311,6 +1456,7 @@ centos7-v11.2.0-deploy-x86_64-no-scan:
     - job: centos7-v11.2.0-x86_64
       artifacts: true
     - job: centos7-v11.2.0-test-x86_64
+    - job: centos7-v11.2.0-cudnn8-x86_64
 
 .ubi8_11_2_0_x86_64_variables: &ubi8_11_2_0_x86_64_variables
   ARCH: "x86_64"
@@ -1333,6 +1479,20 @@ centos7-v11.2.0-deploy-x86_64-no-scan:
 ubi8-v11.2.0-x86_64:
   <<: *cuda_base_definition
   <<: *ubi8_11_2_0_x86_64_only
+
+ubi8-v11.2.0-cudnn8-x86_64:
+  <<: *cudnn_definition
+  <<: *ubi8_11_2_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi8_11_2_0_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubi8-v11.2.0-x86_64
+      artifacts: true
 
 ubi8-v11.2.0-test-x86_64:
   needs: ["ubi8-v11.2.0-x86_64"]
@@ -1382,6 +1542,7 @@ ubi8-v11.2.0-deploy-x86_64:
       artifacts: true
     - job: ubi8-v11.2.0-test-x86_64
     - job: ubi8-v11.2.0-scan-x86_64
+    - job: ubi8-v11.2.0-cudnn8-x86_64
 
 # workaround for gitlab ci rules when NO_TEST and NO_SCAN are used...
 ubi8-v11.2.0-deploy-x86_64-no-test-no-scan:
@@ -1392,6 +1553,7 @@ ubi8-v11.2.0-deploy-x86_64-no-test-no-scan:
   needs:
     - job: ubi8-v11.2.0-x86_64
       artifacts: true
+    - job: ubi8-v11.2.0-cudnn8-x86_64
 
 # workaround for gitlab ci rules when NO_TEST is used...
 ubi8-v11.2.0-deploy-x86_64-no-test:
@@ -1405,6 +1567,7 @@ ubi8-v11.2.0-deploy-x86_64-no-test:
     - job: ubi8-v11.2.0-x86_64
       artifacts: true
     - job: ubi8-v11.2.0-scan-no-test-x86_64
+    - job: ubi8-v11.2.0-cudnn8-x86_64
 
 # workaround for gitlab ci rules when NO_SCAN is used...
 ubi8-v11.2.0-deploy-x86_64-no-scan:
@@ -1418,6 +1581,7 @@ ubi8-v11.2.0-deploy-x86_64-no-scan:
     - job: ubi8-v11.2.0-x86_64
       artifacts: true
     - job: ubi8-v11.2.0-test-x86_64
+    - job: ubi8-v11.2.0-cudnn8-x86_64
 
 .ubi8_11_2_0_ppc64le_variables: &ubi8_11_2_0_ppc64le_variables
   ARCH: "ppc64le"
@@ -1440,6 +1604,20 @@ ubi8-v11.2.0-deploy-x86_64-no-scan:
 ubi8-v11.2.0-ppc64le:
   <<: *cuda_base_definition
   <<: *ubi8_11_2_0_ppc64le_only
+
+ubi8-v11.2.0-cudnn8-ppc64le:
+  <<: *cudnn_definition
+  <<: *ubi8_11_2_0_ppc64le_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi8_11_2_0_ppc64le_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubi8-v11.2.0-ppc64le
+      artifacts: true
 
 ubi8-v11.2.0-test-ppc64le:
   needs: ["ubi8-v11.2.0-ppc64le"]
@@ -1489,6 +1667,7 @@ ubi8-v11.2.0-deploy-ppc64le:
       artifacts: true
     - job: ubi8-v11.2.0-test-ppc64le
     - job: ubi8-v11.2.0-scan-ppc64le
+    - job: ubi8-v11.2.0-cudnn8-ppc64le
 
 # workaround for gitlab ci rules when NO_TEST and NO_SCAN are used...
 ubi8-v11.2.0-deploy-ppc64le-no-test-no-scan:
@@ -1499,6 +1678,7 @@ ubi8-v11.2.0-deploy-ppc64le-no-test-no-scan:
   needs:
     - job: ubi8-v11.2.0-ppc64le
       artifacts: true
+    - job: ubi8-v11.2.0-cudnn8-ppc64le
 
 # workaround for gitlab ci rules when NO_TEST is used...
 ubi8-v11.2.0-deploy-ppc64le-no-test:
@@ -1512,6 +1692,7 @@ ubi8-v11.2.0-deploy-ppc64le-no-test:
     - job: ubi8-v11.2.0-ppc64le
       artifacts: true
     - job: ubi8-v11.2.0-scan-no-test-ppc64le
+    - job: ubi8-v11.2.0-cudnn8-ppc64le
 
 # workaround for gitlab ci rules when NO_SCAN is used...
 ubi8-v11.2.0-deploy-ppc64le-no-scan:
@@ -1525,6 +1706,7 @@ ubi8-v11.2.0-deploy-ppc64le-no-scan:
     - job: ubi8-v11.2.0-ppc64le
       artifacts: true
     - job: ubi8-v11.2.0-test-ppc64le
+    - job: ubi8-v11.2.0-cudnn8-ppc64le
 
 .ubi8_11_2_0_arm64_variables: &ubi8_11_2_0_arm64_variables
   ARCH: "arm64"
@@ -1547,6 +1729,20 @@ ubi8-v11.2.0-deploy-ppc64le-no-scan:
 ubi8-v11.2.0-arm64:
   <<: *cuda_base_definition
   <<: *ubi8_11_2_0_arm64_only
+
+ubi8-v11.2.0-cudnn8-arm64:
+  <<: *cudnn_definition
+  <<: *ubi8_11_2_0_arm64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi8_11_2_0_arm64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubi8-v11.2.0-arm64
+      artifacts: true
 
 ubi8-v11.2.0-test-arm64:
   needs: ["ubi8-v11.2.0-arm64"]
@@ -1596,6 +1792,7 @@ ubi8-v11.2.0-deploy-arm64:
       artifacts: true
     - job: ubi8-v11.2.0-test-arm64
     - job: ubi8-v11.2.0-scan-arm64
+    - job: ubi8-v11.2.0-cudnn8-arm64
 
 # workaround for gitlab ci rules when NO_TEST and NO_SCAN are used...
 ubi8-v11.2.0-deploy-arm64-no-test-no-scan:
@@ -1606,6 +1803,7 @@ ubi8-v11.2.0-deploy-arm64-no-test-no-scan:
   needs:
     - job: ubi8-v11.2.0-arm64
       artifacts: true
+    - job: ubi8-v11.2.0-cudnn8-arm64
 
 # workaround for gitlab ci rules when NO_TEST is used...
 ubi8-v11.2.0-deploy-arm64-no-test:
@@ -1619,6 +1817,7 @@ ubi8-v11.2.0-deploy-arm64-no-test:
     - job: ubi8-v11.2.0-arm64
       artifacts: true
     - job: ubi8-v11.2.0-scan-no-test-arm64
+    - job: ubi8-v11.2.0-cudnn8-arm64
 
 # workaround for gitlab ci rules when NO_SCAN is used...
 ubi8-v11.2.0-deploy-arm64-no-scan:
@@ -1632,6 +1831,7 @@ ubi8-v11.2.0-deploy-arm64-no-scan:
     - job: ubi8-v11.2.0-arm64
       artifacts: true
     - job: ubi8-v11.2.0-test-arm64
+    - job: ubi8-v11.2.0-cudnn8-arm64
 
 .ubi7_11_2_0_x86_64_variables: &ubi7_11_2_0_x86_64_variables
   ARCH: "x86_64"
@@ -1654,6 +1854,20 @@ ubi8-v11.2.0-deploy-arm64-no-scan:
 ubi7-v11.2.0-x86_64:
   <<: *cuda_base_definition
   <<: *ubi7_11_2_0_x86_64_only
+
+ubi7-v11.2.0-cudnn8-x86_64:
+  <<: *cudnn_definition
+  <<: *ubi7_11_2_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi7_11_2_0_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubi7-v11.2.0-x86_64
+      artifacts: true
 
 ubi7-v11.2.0-test-x86_64:
   needs: ["ubi7-v11.2.0-x86_64"]
@@ -1703,6 +1917,7 @@ ubi7-v11.2.0-deploy-x86_64:
       artifacts: true
     - job: ubi7-v11.2.0-test-x86_64
     - job: ubi7-v11.2.0-scan-x86_64
+    - job: ubi7-v11.2.0-cudnn8-x86_64
 
 # workaround for gitlab ci rules when NO_TEST and NO_SCAN are used...
 ubi7-v11.2.0-deploy-x86_64-no-test-no-scan:
@@ -1713,6 +1928,7 @@ ubi7-v11.2.0-deploy-x86_64-no-test-no-scan:
   needs:
     - job: ubi7-v11.2.0-x86_64
       artifacts: true
+    - job: ubi7-v11.2.0-cudnn8-x86_64
 
 # workaround for gitlab ci rules when NO_TEST is used...
 ubi7-v11.2.0-deploy-x86_64-no-test:
@@ -1726,6 +1942,7 @@ ubi7-v11.2.0-deploy-x86_64-no-test:
     - job: ubi7-v11.2.0-x86_64
       artifacts: true
     - job: ubi7-v11.2.0-scan-no-test-x86_64
+    - job: ubi7-v11.2.0-cudnn8-x86_64
 
 # workaround for gitlab ci rules when NO_SCAN is used...
 ubi7-v11.2.0-deploy-x86_64-no-scan:
@@ -1739,6 +1956,7 @@ ubi7-v11.2.0-deploy-x86_64-no-scan:
     - job: ubi7-v11.2.0-x86_64
       artifacts: true
     - job: ubi7-v11.2.0-test-x86_64
+    - job: ubi7-v11.2.0-cudnn8-x86_64
 
 .ubuntu20_04_11_1_1_x86_64_variables: &ubuntu20_04_11_1_1_x86_64_variables
   ARCH: "x86_64"
@@ -2515,6 +2733,20 @@ centos8-v11.1.1-ppc64le:
   <<: *cuda_base_definition
   <<: *centos8_11_1_1_ppc64le_only
 
+centos8-v11.1.1-cudnn8-ppc64le:
+  <<: *cudnn_definition
+  <<: *centos8_11_1_1_ppc64le_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos8_11_1_1_ppc64le_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: centos8-v11.1.1-ppc64le
+      artifacts: true
+
 centos8-v11.1.1-test-ppc64le:
   needs: ["centos8-v11.1.1-ppc64le"]
   <<: *centos8_11_1_1_ppc64le_only
@@ -2563,6 +2795,7 @@ centos8-v11.1.1-deploy-ppc64le:
       artifacts: true
     - job: centos8-v11.1.1-test-ppc64le
     - job: centos8-v11.1.1-scan-ppc64le
+    - job: centos8-v11.1.1-cudnn8-ppc64le
 
 # workaround for gitlab ci rules when NO_TEST and NO_SCAN are used...
 centos8-v11.1.1-deploy-ppc64le-no-test-no-scan:
@@ -2573,6 +2806,7 @@ centos8-v11.1.1-deploy-ppc64le-no-test-no-scan:
   needs:
     - job: centos8-v11.1.1-ppc64le
       artifacts: true
+    - job: centos8-v11.1.1-cudnn8-ppc64le
 
 # workaround for gitlab ci rules when NO_TEST is used...
 centos8-v11.1.1-deploy-ppc64le-no-test:
@@ -2586,6 +2820,7 @@ centos8-v11.1.1-deploy-ppc64le-no-test:
     - job: centos8-v11.1.1-ppc64le
       artifacts: true
     - job: centos8-v11.1.1-scan-no-test-ppc64le
+    - job: centos8-v11.1.1-cudnn8-ppc64le
 
 # workaround for gitlab ci rules when NO_SCAN is used...
 centos8-v11.1.1-deploy-ppc64le-no-scan:
@@ -2599,6 +2834,7 @@ centos8-v11.1.1-deploy-ppc64le-no-scan:
     - job: centos8-v11.1.1-ppc64le
       artifacts: true
     - job: centos8-v11.1.1-test-ppc64le
+    - job: centos8-v11.1.1-cudnn8-ppc64le
 
 .centos8_11_1_1_arm64_variables: &centos8_11_1_1_arm64_variables
   ARCH: "arm64"
@@ -2997,6 +3233,20 @@ ubi8-v11.1.1-ppc64le:
   <<: *cuda_base_definition
   <<: *ubi8_11_1_1_ppc64le_only
 
+ubi8-v11.1.1-cudnn8-ppc64le:
+  <<: *cudnn_definition
+  <<: *ubi8_11_1_1_ppc64le_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi8_11_1_1_ppc64le_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubi8-v11.1.1-ppc64le
+      artifacts: true
+
 ubi8-v11.1.1-test-ppc64le:
   needs: ["ubi8-v11.1.1-ppc64le"]
   <<: *ubi8_11_1_1_ppc64le_only
@@ -3045,6 +3295,7 @@ ubi8-v11.1.1-deploy-ppc64le:
       artifacts: true
     - job: ubi8-v11.1.1-test-ppc64le
     - job: ubi8-v11.1.1-scan-ppc64le
+    - job: ubi8-v11.1.1-cudnn8-ppc64le
 
 # workaround for gitlab ci rules when NO_TEST and NO_SCAN are used...
 ubi8-v11.1.1-deploy-ppc64le-no-test-no-scan:
@@ -3055,6 +3306,7 @@ ubi8-v11.1.1-deploy-ppc64le-no-test-no-scan:
   needs:
     - job: ubi8-v11.1.1-ppc64le
       artifacts: true
+    - job: ubi8-v11.1.1-cudnn8-ppc64le
 
 # workaround for gitlab ci rules when NO_TEST is used...
 ubi8-v11.1.1-deploy-ppc64le-no-test:
@@ -3068,6 +3320,7 @@ ubi8-v11.1.1-deploy-ppc64le-no-test:
     - job: ubi8-v11.1.1-ppc64le
       artifacts: true
     - job: ubi8-v11.1.1-scan-no-test-ppc64le
+    - job: ubi8-v11.1.1-cudnn8-ppc64le
 
 # workaround for gitlab ci rules when NO_SCAN is used...
 ubi8-v11.1.1-deploy-ppc64le-no-scan:
@@ -3081,6 +3334,7 @@ ubi8-v11.1.1-deploy-ppc64le-no-scan:
     - job: ubi8-v11.1.1-ppc64le
       artifacts: true
     - job: ubi8-v11.1.1-test-ppc64le
+    - job: ubi8-v11.1.1-cudnn8-ppc64le
 
 .ubi8_11_1_1_arm64_variables: &ubi8_11_1_1_arm64_variables
   ARCH: "arm64"
@@ -4086,6 +4340,20 @@ centos8-v11.0.3-ppc64le:
   <<: *cuda_base_definition
   <<: *centos8_11_0_3_ppc64le_only
 
+centos8-v11.0.3-cudnn8-ppc64le:
+  <<: *cudnn_definition
+  <<: *centos8_11_0_3_ppc64le_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos8_11_0_3_ppc64le_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: centos8-v11.0.3-ppc64le
+      artifacts: true
+
 centos8-v11.0.3-test-ppc64le:
   needs: ["centos8-v11.0.3-ppc64le"]
   <<: *centos8_11_0_3_ppc64le_only
@@ -4134,6 +4402,7 @@ centos8-v11.0.3-deploy-ppc64le:
       artifacts: true
     - job: centos8-v11.0.3-test-ppc64le
     - job: centos8-v11.0.3-scan-ppc64le
+    - job: centos8-v11.0.3-cudnn8-ppc64le
 
 # workaround for gitlab ci rules when NO_TEST and NO_SCAN are used...
 centos8-v11.0.3-deploy-ppc64le-no-test-no-scan:
@@ -4144,6 +4413,7 @@ centos8-v11.0.3-deploy-ppc64le-no-test-no-scan:
   needs:
     - job: centos8-v11.0.3-ppc64le
       artifacts: true
+    - job: centos8-v11.0.3-cudnn8-ppc64le
 
 # workaround for gitlab ci rules when NO_TEST is used...
 centos8-v11.0.3-deploy-ppc64le-no-test:
@@ -4157,6 +4427,7 @@ centos8-v11.0.3-deploy-ppc64le-no-test:
     - job: centos8-v11.0.3-ppc64le
       artifacts: true
     - job: centos8-v11.0.3-scan-no-test-ppc64le
+    - job: centos8-v11.0.3-cudnn8-ppc64le
 
 # workaround for gitlab ci rules when NO_SCAN is used...
 centos8-v11.0.3-deploy-ppc64le-no-scan:
@@ -4170,6 +4441,7 @@ centos8-v11.0.3-deploy-ppc64le-no-scan:
     - job: centos8-v11.0.3-ppc64le
       artifacts: true
     - job: centos8-v11.0.3-test-ppc64le
+    - job: centos8-v11.0.3-cudnn8-ppc64le
 
 .centos8_11_0_3_arm64_variables: &centos8_11_0_3_arm64_variables
   ARCH: "arm64"
