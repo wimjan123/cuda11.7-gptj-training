@@ -22,6 +22,8 @@ import io
 import select
 import time
 import json
+import subprocess
+import collections
 from packaging import version
 
 import jinja2
@@ -45,6 +47,39 @@ HTTP_RETRY_WAIT_SECS = 30
 SUPPORTED_DISTRO_LIST = ["ubuntu", "ubi", "centos"]
 
 
+def skopeocmd(args, printOutput=True, returnOut=False):
+    """Run the skopeo command with specified arguments.
+
+    args        -- A tuple of arguments.
+    printOutput -- If True, the output of the command will be send to the logger.
+    returnOut   -- Return a tuple of the stdout, stderr, and return code. Default: returns true if the command
+                 succeeded.
+    """
+    skop = local["/usr/bin/skopeo"]
+    out = ""
+    err = ""
+    p = skop.popen(
+        args=args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+    for line in io.TextIOWrapper(p.stdout, encoding="utf-8"):
+        # do something with line
+        out += line
+        if printOutput:
+            log.info(line)
+    for line in io.TextIOWrapper(p.stderr, encoding="utf-8"):
+        err += line
+        if printOutput:
+            log.error(line)
+    p.communicate()
+    if returnOut:
+        Output = collections.namedtuple("output", "returncode stdout stderr")
+        return Output(p.returncode, out, err)
+    if p.returncode != 0:
+        #  log.error("See log output...")
+        return False
+    return True
+
+
 class Manager(cli.Application):
     """CUDA CI Manager"""
 
@@ -55,11 +90,7 @@ class Manager(cli.Application):
     ci = None
 
     manifest_path = cli.SwitchAttr(
-        "--manifest",
-        str,
-        excludes=["--shipit-uuid"],
-        help="Select a manifest to use.",
-        default="manifest.yaml",
+        "--manifest", str, excludes=["--shipit-uuid"], help="Select a manifest to use.",
     )
 
     shipit_uuid = cli.SwitchAttr(
@@ -126,7 +157,7 @@ class Manager(cli.Application):
     def main(self):
         self._load_app_config()
         if not self.nested_command:  # will be ``None`` if no sub-command follows
-            log.error("No subcommand given!")
+            log.fatal("No subcommand given!")
             print()
             self.help()
             return 1
@@ -139,7 +170,7 @@ class Manager(cli.Application):
             return 1
         elif not any(halp in self.nested_command[1] for halp in ["-h", "--help"]):
             log.info("cuda ci manager start")
-            if not self.shipit_uuid:
+            if not self.shipit_uuid and self.manifest_path:
                 self._load_manifest_yaml()
 
 
@@ -656,23 +687,6 @@ class ManagerContainerPush(Manager):
             )
             sys.exit(1)
 
-    # Args is a tuple
-    def skopeocmd(self, args):
-        skop = local["/usr/bin/skopeo"]
-        (pipe_r, pipe_w) = os.pipe()
-        p = skop.popen(args=args, shell=False, stdout=pipe_w, stderr=pipe_w)
-        while p.poll() is None:
-            # Loop long as the selct mechanism indicates there
-            # is data to be read from the buffer
-            while len(select.select([pipe_r], [], [], 0)[0]) == 1:
-                log.debug(os.read(pipe_r, 8192).decode("utf-8").strip())
-        os.close(pipe_r)
-        os.close(pipe_w)
-        if p.returncode != 0:
-            log.error("See log output...")
-            return False
-        return True
-
     def push_images(self):
         with open(self.tag_manifest) as f:
             tags = f.readlines()
@@ -687,7 +701,7 @@ class ManagerContainerPush(Manager):
                     log.debug("dry-run; not copying")
                     continue
                 for attempt in range(HTTP_RETRY_ATTEMPTS):
-                    if self.skopeocmd(
+                    if skopeocmd(
                         (
                             "copy",
                             "--src-creds",
@@ -710,11 +724,9 @@ class ManagerContainerPush(Manager):
                         log.warning(
                             "Copy Attempt failed! ({} of {})".format(
                                 attempt + 1, HTTP_RETRY_ATTEMPTS
-                             )
+                            )
                         )
-                        log.warning(
-                             "Sleeping {} seconds".format(HTTP_RETRY_WAIT_SECS)
-                        )
+                        log.warning("Sleeping {} seconds".format(HTTP_RETRY_WAIT_SECS))
                         time.sleep(HTTP_RETRY_WAIT_SECS)
                         self.copy_failed = True
                 if self.copy_failed:
@@ -1472,6 +1484,126 @@ class ManagerGenerate(Manager):
                 else:
                     self.targeted()
         log.info("Done")
+
+
+@Manager.subcommand("staging-images")
+class ManagerStaging(Manager):
+    DESCRIPTION = "Staging image management"
+
+    repos = [
+        "gitlab-master.nvidia.com:5005/cuda-installer/cuda",
+        "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-arm64",
+        "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le",
+        "gitlab-master.nvidia.com:5005/cuda-installer/cuda/l4t-cuda",
+        "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda",
+        "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda-arm64",
+        "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda-ppc64le",
+    ]
+
+    delete_all = cli.Flag(["--delete-all"], help="Delete all of the staging images.")
+
+    repo = cli.SwitchAttr(
+        "--repo",
+        cli.Set(*repos, case_sensitive=False),
+        excludes=["--delete-all"],
+        group="Targeted",
+        help="Delete only from a specific repo.",
+    )
+
+    #  distro = cli.SwitchAttr(
+    #      "--os-name",
+    #      str,
+    #      group="Targeted",
+    #      excludes=["--delete-all"],
+    #      help="The distro to use.",
+    #      default=None,
+    #  )
+
+    #  distro_version = cli.SwitchAttr(
+    #      "--os-version",
+    #      str,
+    #      group="Targeted",
+    #      excludes=["--delete-all"],
+    #      help="The distro version",
+    #      default=None,
+    #  )
+
+    #  cuda_version = cli.SwitchAttr(
+    #      "--cuda-version",
+    #      str,
+    #      excludes=["--delete-all"],
+    #      group="Targeted",
+    #      help="[DEPRECATED for newer cuda versions!] The cuda version to use. Example: '11.2'",
+    #      default=None,
+    #  )
+
+    #  release_label = cli.SwitchAttr(
+    #      "--release-label",
+    #      str,
+    #      excludes=["--delete-all"],
+    #      group="Targeted",
+    #      help="The cuda version to use. Example: '11.2.0'",
+    #      default=None,
+    #  )
+
+    #  arch = cli.SwitchAttr(
+    #      "--arch",
+    #      cli.Set("x86_64", "ppc64le", "arm64", case_sensitive=False),
+    #      excludes=["--delete-all"],
+    #      group="Targeted",
+    #      help="Generate container scripts for a particular architecture.",
+    #  )
+
+    def get_repo_tags(self, repo):
+        return skopeocmd(
+            ("list-tags", f"docker://{repo}"), printOutput=False, returnOut=True
+        )
+
+    def delete_all_tags(self):
+        for repo in self.repos:
+            self.delete_all_tags_repo(repo)
+
+    def delete_all_tags_repo(self, repo):
+        out = self.get_repo_tags(repo)
+        if out.returncode > 0:
+            log.fatal("Could not use skopeo to gat a list of images!")
+            sys.exit(1)
+        tags = json.loads(out.stdout)["Tags"]
+        for tag in tags:
+            # FIXME: use python retry module decorator
+            for attempt in range(HTTP_RETRY_ATTEMPTS):
+                log.debug(f"deleting {repo}:{tag}")
+                out2 = skopeocmd(
+                    ("delete", f"docker://{repo}:{tag}"),
+                    printOutput=False,
+                    returnOut=True,
+                )
+                if out2.returncode > 0:
+                    log.info(f"deleted {repo}:{tag}")
+                    break
+                else:
+                    if attempt < HTTP_RETRY_ATTEMPTS:
+                        log.warning(
+                            "skopeo delete attempt failed! ({} of {})".format(
+                                attempt + 1, HTTP_RETRY_ATTEMPTS
+                            )
+                        )
+                        log.warning("Sleeping {} seconds".format(HTTP_RETRY_WAIT_SECS))
+                        time.sleep(HTTP_RETRY_WAIT_SECS)
+                    else:
+                        log.warning("could not delete the tag!")
+            sys.exit(1)
+
+    def main(self):
+        if self.delete_all:
+            self.delete_all_tags()
+        elif self.repo:
+            self.delete_all_tags_repo(self.repo)
+        else:
+            log.fatal("No flags defined!")
+            print()
+            self.help()
+            return 1
 
 
 if __name__ == "__main__":
