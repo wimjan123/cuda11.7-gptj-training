@@ -4,7 +4,6 @@
 {% set cuda_nvml_dev_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.nvml_dev.version %}
 {% set libcublas_dev_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.libcublas_dev.version %}
 {% set libcublas_dev_pkg_name = "libcublas-dev-" + cuda.version.major + "-" + cuda.version.minor %}
-{% set libcusparse_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.libcusparse.version %}
 {% set libcusparse_dev_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.libcusparse_dev.version -%}
 {% set libnpp_dev_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.libnpp_dev.version %}
 
@@ -34,7 +33,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libnccl-dev={{ libnccl2_dev_component_version_with_cuda }} \
     {% endif %}
     libcublas-dev-{{ libcublas_dev_component_version }} \
-    libcusparse-{{ libcusparse_component_version }} \
     libcusparse-dev-{{ libcusparse_dev_component_version }} \
     && rm -rf /var/lib/apt/lists/*
 

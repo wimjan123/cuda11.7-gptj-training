@@ -4,7 +4,7 @@ FROM ${IMAGE_NAME}:11.1.1-runtime-ubuntu20.04
 
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 
-ENV NCCL_VERSION 2.8.3
+ENV NCCL_VERSION 2.8.4
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libtinfo5 libncursesw5 \
@@ -14,9 +14,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-libraries-dev-11-1=11.1.1-1 \
     cuda-nvml-dev-11-1=11.1.74-1 \
     libnpp-dev-11-1=11.1.2.301-1 \
-    libnccl-dev=2.8.3-1+cuda11.1 \
+    libnccl-dev=2.8.4-1+cuda11.1 \
     libcublas-dev-11-1=11.3.0.106-1 \
-    libcusparse-11-1=11.3.0.10-1 \
     libcusparse-dev-11-1=11.3.0.10-1 \
     && rm -rf /var/lib/apt/lists/*
 

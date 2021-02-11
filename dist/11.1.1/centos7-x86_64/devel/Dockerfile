@@ -3,7 +3,7 @@ FROM ${IMAGE_NAME}:11.1.1-runtime-centos7
 
 LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 
-ENV NCCL_VERSION 2.8.3
+ENV NCCL_VERSION 2.8.4
 
 RUN yum install -y \
     make \
@@ -15,7 +15,7 @@ RUN yum install -y \
     cuda-nvml-devel-11-1-11.1.74-1 \
     libcublas-devel-11-1-11.3.0.106-1 \
     libnpp-devel-11-1-11.1.2.301-1 \
-    libnccl-devel-2.8.3-1+cuda11.1 \
+    libnccl-devel-2.8.4-1+cuda11.1 \
     && yum clean all \
     && rm -rf /var/cache/yum/*
 

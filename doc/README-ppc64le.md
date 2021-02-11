@@ -65,25 +65,25 @@ Supported tags are updated to the latest CUDA and cuDNN versions. These tags are
 
 For a full list of supported tags, click [*here*](https://gitlab.com/nvidia/container-images/cuda/blob/master/doc/supported-tags.md).
 
-## LATEST CUDA 11.2.0
+## LATEST CUDA 11.2 Update 1
 
 Visit [OpenSource @ Nvidia](https://developer.download.nvidia.com/compute/cuda/opensource/image/) for the GPL sources of the packages contained in the CUDA base image layers.
 
 ### Centos 8
 
-- [`11.2.0-base-centos8` (*11.2.0/centos8-ppc64le/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.0/centos8-ppc64le/base/Dockerfile)
-- [`11.2.0-runtime-centos8` (*11.2.0/centos8-ppc64le/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.0/centos8-ppc64le/runtime/Dockerfile)
-- [`11.2.0-cudnn8-runtime-centos8` (*11.2.0/centos8-ppc64le/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.0/centos8-ppc64le/runtime/cudnn8/Dockerfile)
-- [`11.2.0-devel-centos8` (*11.2.0/centos8-ppc64le/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.0/centos8-ppc64le/devel/Dockerfile)
-- [`11.2.0-cudnn8-devel-centos8` (*11.2.0/centos8-ppc64le/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.0/centos8-ppc64le/devel/cudnn8/Dockerfile)
+- [`11.2.1-base-centos8` (*11.2.1/centos8-ppc64le/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.1/centos8-ppc64le/base/Dockerfile)
+- [`11.2.1-runtime-centos8` (*11.2.1/centos8-ppc64le/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.1/centos8-ppc64le/runtime/Dockerfile)
+- [`11.2.1-cudnn8-runtime-centos8` (*11.2.1/centos8-ppc64le/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.1/centos8-ppc64le/runtime/cudnn8/Dockerfile)
+- [`11.2.1-devel-centos8` (*11.2.1/centos8-ppc64le/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.1/centos8-ppc64le/devel/Dockerfile)
+- [`11.2.1-cudnn8-devel-centos8` (*11.2.1/centos8-ppc64le/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.1/centos8-ppc64le/devel/cudnn8/Dockerfile)
 
 ### UBI 8
 
-- [`11.2.0-base-ubi8` (*11.2.0/ubi8-ppc64le/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.0/ubi8-ppc64le/base/Dockerfile)
-- [`11.2.0-runtime-ubi8` (*11.2.0/ubi8-ppc64le/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.0/ubi8-ppc64le/runtime/Dockerfile)
-- [`11.2.0-cudnn8-runtime-ubi8` (*11.2.0/ubi8-ppc64le/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.0/ubi8-ppc64le/runtime/cudnn8/Dockerfile)
-- [`11.2.0-devel-ubi8` (*11.2.0/ubi8-ppc64le/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.0/ubi8-ppc64le/devel/Dockerfile)
-- [`11.2.0-cudnn8-devel-ubi8` (*11.2.0/ubi8-ppc64le/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.0/ubi8-ppc64le/devel/cudnn8/Dockerfile)
+- [`11.2.1-base-ubi8` (*11.2.1/ubi8-ppc64le/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.1/ubi8-ppc64le/base/Dockerfile)
+- [`11.2.1-runtime-ubi8` (*11.2.1/ubi8-ppc64le/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.1/ubi8-ppc64le/runtime/Dockerfile)
+- [`11.2.1-cudnn8-runtime-ubi8` (*11.2.1/ubi8-ppc64le/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.1/ubi8-ppc64le/runtime/cudnn8/Dockerfile)
+- [`11.2.1-devel-ubi8` (*11.2.1/ubi8-ppc64le/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.1/ubi8-ppc64le/devel/Dockerfile)
+- [`11.2.1-cudnn8-devel-ubi8` (*11.2.1/ubi8-ppc64le/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.1/ubi8-ppc64le/devel/cudnn8/Dockerfile)
 
 ### Unsupported tags
 

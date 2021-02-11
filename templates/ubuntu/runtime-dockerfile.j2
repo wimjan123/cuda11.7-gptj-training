@@ -9,6 +9,7 @@ LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 {% set libnpp_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.libnpp.version %}
 {% set libcublas_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.libcublas.version %}
 {% set libcublas_pkg_name = "libcublas-" + cuda.version.major + "-" + cuda.version.minor -%}
+{% set libcusparse_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.libcusparse.version %}
 
 {% if "libnccl2" in cuda.components and cuda.components.libnccl2 %}
     {% set libnccl2_component_version = cuda.components.libnccl2.version %}
@@ -21,6 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libnpp-{{ libnpp_component_version }} \
     cuda-nvtx-{{ cuda_nvtx_component_version }} \
     libcublas-{{ libcublas_component_version }} \
+    libcusparse-{{ libcusparse_component_version }} \
     {% if "libnccl2" in cuda.components and (cuda.components.libnccl2 and "source" not in cuda.components.libnccl2) %}
     libnccl2=$NCCL_VERSION-1+cuda{{ cuda.version.major }}.{{ cuda.version.minor }} \
     {% endif %}

@@ -4,7 +4,7 @@ FROM ${IMAGE_NAME}:11.2.0-runtime-ubuntu16.04
 
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 
-ENV NCCL_VERSION 2.8.3
+ENV NCCL_VERSION 2.8.4
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-cudart-dev-11-2=11.2.72-1 \
@@ -14,7 +14,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-nvml-dev-11-2=11.2.67-1 \
     libnpp-dev-11-2=11.2.1.68-1 \
     libcublas-dev-11-2=11.3.1.68-1 \
-    libcusparse-11-2=11.3.1.68-1 \
     libcusparse-dev-11-2=11.3.1.68-1 \
     && rm -rf /var/lib/apt/lists/*
 
