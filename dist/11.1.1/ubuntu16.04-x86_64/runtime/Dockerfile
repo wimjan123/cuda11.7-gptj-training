@@ -3,6 +3,7 @@ FROM ${IMAGE_NAME}:11.1.1-base-ubuntu16.04
 
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 
+
 ENV NCCL_VERSION 2.7.8
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -10,6 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libnpp-11-1=11.1.2.301-1 \
     cuda-nvtx-11-1=11.1.74-1 \
     libcublas-11-1=11.3.0.106-1 \
+    libcusparse-11-1=11.3.0.10-1 \
     libnccl2=$NCCL_VERSION-1+cuda11.1 \
     && rm -rf /var/lib/apt/lists/*
 

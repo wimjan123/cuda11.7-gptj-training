@@ -2,7 +2,7 @@ ARG IMAGE_NAME
 FROM ${IMAGE_NAME}:11.1.1-runtime-ubi8
 LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 
-ENV CUDNN_VERSION 8.5.0.39
+ENV CUDNN_VERSION 8.0.5.39
 LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
 
 RUN yum install -y \

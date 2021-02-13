@@ -348,6 +348,1616 @@ kitmaker_cleanup_failed:
     - job: kitmaker_deploy
       artifacts: true
 
+.ubuntu20_04_11_2_1_x86_64_variables: &ubuntu20_04_11_2_1_x86_64_variables
+  ARCH: "x86_64"
+  DIST_BASE_PATH: "dist/11.2.1"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  NO_OS_SUFFIX: "true"
+  OS: "ubuntu20.04"
+  OS_NAME: "ubuntu"
+  OS_VERSION: "20.04"
+  CUDA_VERSION: "11.2.1"
+
+.ubuntu20_04_11_2_1_x86_64_only: &ubuntu20_04_11_2_1_x86_64_only
+  <<: *tags_definition
+  variables:
+    <<: *ubuntu20_04_11_2_1_x86_64_variables
+  rules:
+    - if: '$ubuntu20_04_11_2_1_x86_64 == "true"'
+    - if: '$all == "true"'
+
+ubuntu20.04-v11.2.1-x86_64:
+  <<: *cuda_base_definition
+  <<: *ubuntu20_04_11_2_1_x86_64_only
+
+ubuntu20.04-v11.2.1-cudnn8-x86_64:
+  <<: *cudnn_definition
+  <<: *ubuntu20_04_11_2_1_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu20_04_11_2_1_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubuntu20.04-v11.2.1-x86_64
+      artifacts: true
+
+ubuntu20.04-v11.2.1-test-x86_64:
+  needs: ["ubuntu20.04-v11.2.1-x86_64"]
+  <<: *ubuntu20_04_11_2_1_x86_64_only
+  <<: *test_definition
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu20_04_11_2_1_x86_64 == "true"'
+    - if: '$all == "true"'
+
+ubuntu20.04-v11.2.1-scan-x86_64:
+  <<: *scan_definition
+  <<: *ubuntu20_04_11_2_1_x86_64_only
+  needs:
+    - job: ubuntu20.04-v11.2.1-x86_64
+    - job: ubuntu20.04-v11.2.1-test-x86_64
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu20_04_11_2_1_x86_64 == "true"'
+    - if: '$all == "true"'
+
+ubuntu20.04-v11.2.1-scan-no-test-x86_64:
+  <<: *scan_definition
+  <<: *ubuntu20_04_11_2_1_x86_64_only
+  # Override rules from only definition
+  needs:
+    - job: ubuntu20.04-v11.2.1-x86_64
+  rules:
+    - if: '$NO_SCAN == "true"'
+      when: never
+    - if: '$ubuntu20_04_11_2_1_x86_64 == "true" && $NO_TEST == "true"'
+
+ubuntu20.04-v11.2.1-deploy-x86_64:
+  <<: *deploy_definition
+  <<: *ubuntu20_04_11_2_1_x86_64_only
+  # Override rules from only definition
+  rules:
+    - if: '$NO_TEST == "true" || $NO_SCAN == "true"'
+      when: never
+    - if: '$ubuntu20_04_11_2_1_x86_64 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubuntu20.04-v11.2.1-x86_64
+      artifacts: true
+    - job: ubuntu20.04-v11.2.1-test-x86_64
+    - job: ubuntu20.04-v11.2.1-scan-x86_64
+    - job: ubuntu20.04-v11.2.1-cudnn8-x86_64
+
+# workaround for gitlab ci rules when NO_TEST and NO_SCAN are used...
+ubuntu20.04-v11.2.1-deploy-x86_64-no-test-no-scan:
+  <<: *deploy_definition
+  <<: *ubuntu20_04_11_2_1_x86_64_only
+  rules:
+    - if: '$ubuntu20_04_11_2_1_x86_64 == "true" && $NO_TEST == "true" && $NO_SCAN == "true"'
+  needs:
+    - job: ubuntu20.04-v11.2.1-x86_64
+      artifacts: true
+    - job: ubuntu20.04-v11.2.1-cudnn8-x86_64
+
+# workaround for gitlab ci rules when NO_TEST is used...
+ubuntu20.04-v11.2.1-deploy-x86_64-no-test:
+  <<: *deploy_definition
+  <<: *ubuntu20_04_11_2_1_x86_64_only
+  rules:
+    - if: '$NO_SCAN == "true"'
+      when: never
+    - if: '$ubuntu20_04_11_2_1_x86_64 == "true" && $NO_TEST == "true"'
+  needs:
+    - job: ubuntu20.04-v11.2.1-x86_64
+      artifacts: true
+    - job: ubuntu20.04-v11.2.1-scan-no-test-x86_64
+    - job: ubuntu20.04-v11.2.1-cudnn8-x86_64
+
+# workaround for gitlab ci rules when NO_SCAN is used...
+ubuntu20.04-v11.2.1-deploy-x86_64-no-scan:
+  <<: *deploy_definition
+  <<: *ubuntu20_04_11_2_1_x86_64_only
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu20_04_11_2_1_x86_64 == "true" && $NO_SCAN == "true"'
+  needs:
+    - job: ubuntu20.04-v11.2.1-x86_64
+      artifacts: true
+    - job: ubuntu20.04-v11.2.1-test-x86_64
+    - job: ubuntu20.04-v11.2.1-cudnn8-x86_64
+
+.ubuntu20_04_11_2_1_arm64_variables: &ubuntu20_04_11_2_1_arm64_variables
+  ARCH: "arm64"
+  DIST_BASE_PATH: "dist/11.2.1"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-arm64"
+  MANIFEST: "manifests/cuda.yaml"
+  NO_OS_SUFFIX: "true"
+  OS: "ubuntu20.04"
+  OS_NAME: "ubuntu"
+  OS_VERSION: "20.04"
+  CUDA_VERSION: "11.2.1"
+
+.ubuntu20_04_11_2_1_arm64_only: &ubuntu20_04_11_2_1_arm64_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *ubuntu20_04_11_2_1_arm64_variables
+  rules:
+    - if: '$ubuntu20_04_11_2_1_arm64 == "true"'
+    - if: '$all == "true"'
+
+ubuntu20.04-v11.2.1-arm64:
+  <<: *cuda_base_definition
+  <<: *ubuntu20_04_11_2_1_arm64_only
+
+ubuntu20.04-v11.2.1-cudnn8-arm64:
+  <<: *cudnn_definition
+  <<: *ubuntu20_04_11_2_1_arm64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu20_04_11_2_1_arm64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubuntu20.04-v11.2.1-arm64
+      artifacts: true
+
+ubuntu20.04-v11.2.1-test-arm64:
+  needs: ["ubuntu20.04-v11.2.1-arm64"]
+  <<: *ubuntu20_04_11_2_1_arm64_only
+  <<: *test_definition
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu20_04_11_2_1_arm64 == "true"'
+    - if: '$all == "true"'
+
+ubuntu20.04-v11.2.1-scan-arm64:
+  <<: *scan_definition
+  <<: *ubuntu20_04_11_2_1_arm64_only
+  needs:
+    - job: ubuntu20.04-v11.2.1-arm64
+    - job: ubuntu20.04-v11.2.1-test-arm64
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu20_04_11_2_1_arm64 == "true"'
+    - if: '$all == "true"'
+
+ubuntu20.04-v11.2.1-scan-no-test-arm64:
+  <<: *scan_definition
+  <<: *ubuntu20_04_11_2_1_arm64_only
+  # Override rules from only definition
+  needs:
+    - job: ubuntu20.04-v11.2.1-arm64
+  rules:
+    - if: '$NO_SCAN == "true"'
+      when: never
+    - if: '$ubuntu20_04_11_2_1_arm64 == "true" && $NO_TEST == "true"'
+
+ubuntu20.04-v11.2.1-deploy-arm64:
+  <<: *deploy_definition
+  <<: *ubuntu20_04_11_2_1_arm64_only
+  # Override rules from only definition
+  rules:
+    - if: '$NO_TEST == "true" || $NO_SCAN == "true"'
+      when: never
+    - if: '$ubuntu20_04_11_2_1_arm64 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubuntu20.04-v11.2.1-arm64
+      artifacts: true
+    - job: ubuntu20.04-v11.2.1-test-arm64
+    - job: ubuntu20.04-v11.2.1-scan-arm64
+    - job: ubuntu20.04-v11.2.1-cudnn8-arm64
+
+# workaround for gitlab ci rules when NO_TEST and NO_SCAN are used...
+ubuntu20.04-v11.2.1-deploy-arm64-no-test-no-scan:
+  <<: *deploy_definition
+  <<: *ubuntu20_04_11_2_1_arm64_only
+  rules:
+    - if: '$ubuntu20_04_11_2_1_arm64 == "true" && $NO_TEST == "true" && $NO_SCAN == "true"'
+  needs:
+    - job: ubuntu20.04-v11.2.1-arm64
+      artifacts: true
+    - job: ubuntu20.04-v11.2.1-cudnn8-arm64
+
+# workaround for gitlab ci rules when NO_TEST is used...
+ubuntu20.04-v11.2.1-deploy-arm64-no-test:
+  <<: *deploy_definition
+  <<: *ubuntu20_04_11_2_1_arm64_only
+  rules:
+    - if: '$NO_SCAN == "true"'
+      when: never
+    - if: '$ubuntu20_04_11_2_1_arm64 == "true" && $NO_TEST == "true"'
+  needs:
+    - job: ubuntu20.04-v11.2.1-arm64
+      artifacts: true
+    - job: ubuntu20.04-v11.2.1-scan-no-test-arm64
+    - job: ubuntu20.04-v11.2.1-cudnn8-arm64
+
+# workaround for gitlab ci rules when NO_SCAN is used...
+ubuntu20.04-v11.2.1-deploy-arm64-no-scan:
+  <<: *deploy_definition
+  <<: *ubuntu20_04_11_2_1_arm64_only
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu20_04_11_2_1_arm64 == "true" && $NO_SCAN == "true"'
+  needs:
+    - job: ubuntu20.04-v11.2.1-arm64
+      artifacts: true
+    - job: ubuntu20.04-v11.2.1-test-arm64
+    - job: ubuntu20.04-v11.2.1-cudnn8-arm64
+
+.ubuntu18_04_11_2_1_x86_64_variables: &ubuntu18_04_11_2_1_x86_64_variables
+  ARCH: "x86_64"
+  DIST_BASE_PATH: "dist/11.2.1"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  OS: "ubuntu18.04"
+  OS_NAME: "ubuntu"
+  OS_VERSION: "18.04"
+  CUDA_VERSION: "11.2.1"
+
+.ubuntu18_04_11_2_1_x86_64_only: &ubuntu18_04_11_2_1_x86_64_only
+  <<: *tags_definition
+  variables:
+    <<: *ubuntu18_04_11_2_1_x86_64_variables
+  rules:
+    - if: '$ubuntu18_04_11_2_1_x86_64 == "true"'
+    - if: '$all == "true"'
+
+ubuntu18.04-v11.2.1-x86_64:
+  <<: *cuda_base_definition
+  <<: *ubuntu18_04_11_2_1_x86_64_only
+
+ubuntu18.04-v11.2.1-cudnn8-x86_64:
+  <<: *cudnn_definition
+  <<: *ubuntu18_04_11_2_1_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu18_04_11_2_1_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubuntu18.04-v11.2.1-x86_64
+      artifacts: true
+
+ubuntu18.04-v11.2.1-test-x86_64:
+  needs: ["ubuntu18.04-v11.2.1-x86_64"]
+  <<: *ubuntu18_04_11_2_1_x86_64_only
+  <<: *test_definition
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu18_04_11_2_1_x86_64 == "true"'
+    - if: '$all == "true"'
+
+ubuntu18.04-v11.2.1-scan-x86_64:
+  <<: *scan_definition
+  <<: *ubuntu18_04_11_2_1_x86_64_only
+  needs:
+    - job: ubuntu18.04-v11.2.1-x86_64
+    - job: ubuntu18.04-v11.2.1-test-x86_64
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu18_04_11_2_1_x86_64 == "true"'
+    - if: '$all == "true"'
+
+ubuntu18.04-v11.2.1-scan-no-test-x86_64:
+  <<: *scan_definition
+  <<: *ubuntu18_04_11_2_1_x86_64_only
+  # Override rules from only definition
+  needs:
+    - job: ubuntu18.04-v11.2.1-x86_64
+  rules:
+    - if: '$NO_SCAN == "true"'
+      when: never
+    - if: '$ubuntu18_04_11_2_1_x86_64 == "true" && $NO_TEST == "true"'
+
+ubuntu18.04-v11.2.1-deploy-x86_64:
+  <<: *deploy_definition
+  <<: *ubuntu18_04_11_2_1_x86_64_only
+  # Override rules from only definition
+  rules:
+    - if: '$NO_TEST == "true" || $NO_SCAN == "true"'
+      when: never
+    - if: '$ubuntu18_04_11_2_1_x86_64 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubuntu18.04-v11.2.1-x86_64
+      artifacts: true
+    - job: ubuntu18.04-v11.2.1-test-x86_64
+    - job: ubuntu18.04-v11.2.1-scan-x86_64
+    - job: ubuntu18.04-v11.2.1-cudnn8-x86_64
+
+# workaround for gitlab ci rules when NO_TEST and NO_SCAN are used...
+ubuntu18.04-v11.2.1-deploy-x86_64-no-test-no-scan:
+  <<: *deploy_definition
+  <<: *ubuntu18_04_11_2_1_x86_64_only
+  rules:
+    - if: '$ubuntu18_04_11_2_1_x86_64 == "true" && $NO_TEST == "true" && $NO_SCAN == "true"'
+  needs:
+    - job: ubuntu18.04-v11.2.1-x86_64
+      artifacts: true
+    - job: ubuntu18.04-v11.2.1-cudnn8-x86_64
+
+# workaround for gitlab ci rules when NO_TEST is used...
+ubuntu18.04-v11.2.1-deploy-x86_64-no-test:
+  <<: *deploy_definition
+  <<: *ubuntu18_04_11_2_1_x86_64_only
+  rules:
+    - if: '$NO_SCAN == "true"'
+      when: never
+    - if: '$ubuntu18_04_11_2_1_x86_64 == "true" && $NO_TEST == "true"'
+  needs:
+    - job: ubuntu18.04-v11.2.1-x86_64
+      artifacts: true
+    - job: ubuntu18.04-v11.2.1-scan-no-test-x86_64
+    - job: ubuntu18.04-v11.2.1-cudnn8-x86_64
+
+# workaround for gitlab ci rules when NO_SCAN is used...
+ubuntu18.04-v11.2.1-deploy-x86_64-no-scan:
+  <<: *deploy_definition
+  <<: *ubuntu18_04_11_2_1_x86_64_only
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu18_04_11_2_1_x86_64 == "true" && $NO_SCAN == "true"'
+  needs:
+    - job: ubuntu18.04-v11.2.1-x86_64
+      artifacts: true
+    - job: ubuntu18.04-v11.2.1-test-x86_64
+    - job: ubuntu18.04-v11.2.1-cudnn8-x86_64
+
+.ubuntu18_04_11_2_1_arm64_variables: &ubuntu18_04_11_2_1_arm64_variables
+  ARCH: "arm64"
+  DIST_BASE_PATH: "dist/11.2.1"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-arm64"
+  MANIFEST: "manifests/cuda.yaml"
+  NO_OS_SUFFIX: "true"
+  OS: "ubuntu18.04"
+  OS_NAME: "ubuntu"
+  OS_VERSION: "18.04"
+  CUDA_VERSION: "11.2.1"
+
+.ubuntu18_04_11_2_1_arm64_only: &ubuntu18_04_11_2_1_arm64_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *ubuntu18_04_11_2_1_arm64_variables
+  rules:
+    - if: '$ubuntu18_04_11_2_1_arm64 == "true"'
+    - if: '$all == "true"'
+
+ubuntu18.04-v11.2.1-arm64:
+  <<: *cuda_base_definition
+  <<: *ubuntu18_04_11_2_1_arm64_only
+
+ubuntu18.04-v11.2.1-test-arm64:
+  needs: ["ubuntu18.04-v11.2.1-arm64"]
+  <<: *ubuntu18_04_11_2_1_arm64_only
+  <<: *test_definition
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu18_04_11_2_1_arm64 == "true"'
+    - if: '$all == "true"'
+
+ubuntu18.04-v11.2.1-scan-arm64:
+  <<: *scan_definition
+  <<: *ubuntu18_04_11_2_1_arm64_only
+  needs:
+    - job: ubuntu18.04-v11.2.1-arm64
+    - job: ubuntu18.04-v11.2.1-test-arm64
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu18_04_11_2_1_arm64 == "true"'
+    - if: '$all == "true"'
+
+ubuntu18.04-v11.2.1-scan-no-test-arm64:
+  <<: *scan_definition
+  <<: *ubuntu18_04_11_2_1_arm64_only
+  # Override rules from only definition
+  needs:
+    - job: ubuntu18.04-v11.2.1-arm64
+  rules:
+    - if: '$NO_SCAN == "true"'
+      when: never
+    - if: '$ubuntu18_04_11_2_1_arm64 == "true" && $NO_TEST == "true"'
+
+ubuntu18.04-v11.2.1-deploy-arm64:
+  <<: *deploy_definition
+  <<: *ubuntu18_04_11_2_1_arm64_only
+  # Override rules from only definition
+  rules:
+    - if: '$NO_TEST == "true" || $NO_SCAN == "true"'
+      when: never
+    - if: '$ubuntu18_04_11_2_1_arm64 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubuntu18.04-v11.2.1-arm64
+      artifacts: true
+    - job: ubuntu18.04-v11.2.1-test-arm64
+    - job: ubuntu18.04-v11.2.1-scan-arm64
+
+# workaround for gitlab ci rules when NO_TEST and NO_SCAN are used...
+ubuntu18.04-v11.2.1-deploy-arm64-no-test-no-scan:
+  <<: *deploy_definition
+  <<: *ubuntu18_04_11_2_1_arm64_only
+  rules:
+    - if: '$ubuntu18_04_11_2_1_arm64 == "true" && $NO_TEST == "true" && $NO_SCAN == "true"'
+  needs:
+    - job: ubuntu18.04-v11.2.1-arm64
+      artifacts: true
+
+# workaround for gitlab ci rules when NO_TEST is used...
+ubuntu18.04-v11.2.1-deploy-arm64-no-test:
+  <<: *deploy_definition
+  <<: *ubuntu18_04_11_2_1_arm64_only
+  rules:
+    - if: '$NO_SCAN == "true"'
+      when: never
+    - if: '$ubuntu18_04_11_2_1_arm64 == "true" && $NO_TEST == "true"'
+  needs:
+    - job: ubuntu18.04-v11.2.1-arm64
+      artifacts: true
+    - job: ubuntu18.04-v11.2.1-scan-no-test-arm64
+
+# workaround for gitlab ci rules when NO_SCAN is used...
+ubuntu18.04-v11.2.1-deploy-arm64-no-scan:
+  <<: *deploy_definition
+  <<: *ubuntu18_04_11_2_1_arm64_only
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu18_04_11_2_1_arm64 == "true" && $NO_SCAN == "true"'
+  needs:
+    - job: ubuntu18.04-v11.2.1-arm64
+      artifacts: true
+    - job: ubuntu18.04-v11.2.1-test-arm64
+
+.ubuntu16_04_11_2_1_x86_64_variables: &ubuntu16_04_11_2_1_x86_64_variables
+  ARCH: "x86_64"
+  DIST_BASE_PATH: "dist/11.2.1"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  OS: "ubuntu16.04"
+  OS_NAME: "ubuntu"
+  OS_VERSION: "16.04"
+  CUDA_VERSION: "11.2.1"
+
+.ubuntu16_04_11_2_1_x86_64_only: &ubuntu16_04_11_2_1_x86_64_only
+  <<: *tags_definition
+  variables:
+    <<: *ubuntu16_04_11_2_1_x86_64_variables
+  rules:
+    - if: '$ubuntu16_04_11_2_1_x86_64 == "true"'
+    - if: '$all == "true"'
+
+ubuntu16.04-v11.2.1-x86_64:
+  <<: *cuda_base_definition
+  <<: *ubuntu16_04_11_2_1_x86_64_only
+
+ubuntu16.04-v11.2.1-cudnn8-x86_64:
+  <<: *cudnn_definition
+  <<: *ubuntu16_04_11_2_1_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu16_04_11_2_1_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubuntu16.04-v11.2.1-x86_64
+      artifacts: true
+
+ubuntu16.04-v11.2.1-test-x86_64:
+  needs: ["ubuntu16.04-v11.2.1-x86_64"]
+  <<: *ubuntu16_04_11_2_1_x86_64_only
+  <<: *test_definition
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu16_04_11_2_1_x86_64 == "true"'
+    - if: '$all == "true"'
+
+ubuntu16.04-v11.2.1-scan-x86_64:
+  <<: *scan_definition
+  <<: *ubuntu16_04_11_2_1_x86_64_only
+  needs:
+    - job: ubuntu16.04-v11.2.1-x86_64
+    - job: ubuntu16.04-v11.2.1-test-x86_64
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu16_04_11_2_1_x86_64 == "true"'
+    - if: '$all == "true"'
+
+ubuntu16.04-v11.2.1-scan-no-test-x86_64:
+  <<: *scan_definition
+  <<: *ubuntu16_04_11_2_1_x86_64_only
+  # Override rules from only definition
+  needs:
+    - job: ubuntu16.04-v11.2.1-x86_64
+  rules:
+    - if: '$NO_SCAN == "true"'
+      when: never
+    - if: '$ubuntu16_04_11_2_1_x86_64 == "true" && $NO_TEST == "true"'
+
+ubuntu16.04-v11.2.1-deploy-x86_64:
+  <<: *deploy_definition
+  <<: *ubuntu16_04_11_2_1_x86_64_only
+  # Override rules from only definition
+  rules:
+    - if: '$NO_TEST == "true" || $NO_SCAN == "true"'
+      when: never
+    - if: '$ubuntu16_04_11_2_1_x86_64 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubuntu16.04-v11.2.1-x86_64
+      artifacts: true
+    - job: ubuntu16.04-v11.2.1-test-x86_64
+    - job: ubuntu16.04-v11.2.1-scan-x86_64
+    - job: ubuntu16.04-v11.2.1-cudnn8-x86_64
+
+# workaround for gitlab ci rules when NO_TEST and NO_SCAN are used...
+ubuntu16.04-v11.2.1-deploy-x86_64-no-test-no-scan:
+  <<: *deploy_definition
+  <<: *ubuntu16_04_11_2_1_x86_64_only
+  rules:
+    - if: '$ubuntu16_04_11_2_1_x86_64 == "true" && $NO_TEST == "true" && $NO_SCAN == "true"'
+  needs:
+    - job: ubuntu16.04-v11.2.1-x86_64
+      artifacts: true
+    - job: ubuntu16.04-v11.2.1-cudnn8-x86_64
+
+# workaround for gitlab ci rules when NO_TEST is used...
+ubuntu16.04-v11.2.1-deploy-x86_64-no-test:
+  <<: *deploy_definition
+  <<: *ubuntu16_04_11_2_1_x86_64_only
+  rules:
+    - if: '$NO_SCAN == "true"'
+      when: never
+    - if: '$ubuntu16_04_11_2_1_x86_64 == "true" && $NO_TEST == "true"'
+  needs:
+    - job: ubuntu16.04-v11.2.1-x86_64
+      artifacts: true
+    - job: ubuntu16.04-v11.2.1-scan-no-test-x86_64
+    - job: ubuntu16.04-v11.2.1-cudnn8-x86_64
+
+# workaround for gitlab ci rules when NO_SCAN is used...
+ubuntu16.04-v11.2.1-deploy-x86_64-no-scan:
+  <<: *deploy_definition
+  <<: *ubuntu16_04_11_2_1_x86_64_only
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu16_04_11_2_1_x86_64 == "true" && $NO_SCAN == "true"'
+  needs:
+    - job: ubuntu16.04-v11.2.1-x86_64
+      artifacts: true
+    - job: ubuntu16.04-v11.2.1-test-x86_64
+    - job: ubuntu16.04-v11.2.1-cudnn8-x86_64
+
+.centos8_11_2_1_x86_64_variables: &centos8_11_2_1_x86_64_variables
+  ARCH: "x86_64"
+  DIST_BASE_PATH: "dist/11.2.1"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  OS: "centos8"
+  OS_NAME: "centos"
+  OS_VERSION: "8"
+  CUDA_VERSION: "11.2.1"
+
+.centos8_11_2_1_x86_64_only: &centos8_11_2_1_x86_64_only
+  <<: *tags_definition
+  variables:
+    <<: *centos8_11_2_1_x86_64_variables
+  rules:
+    - if: '$centos8_11_2_1_x86_64 == "true"'
+    - if: '$all == "true"'
+
+centos8-v11.2.1-x86_64:
+  <<: *cuda_base_definition
+  <<: *centos8_11_2_1_x86_64_only
+
+centos8-v11.2.1-cudnn8-x86_64:
+  <<: *cudnn_definition
+  <<: *centos8_11_2_1_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos8_11_2_1_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: centos8-v11.2.1-x86_64
+      artifacts: true
+
+centos8-v11.2.1-test-x86_64:
+  needs: ["centos8-v11.2.1-x86_64"]
+  <<: *centos8_11_2_1_x86_64_only
+  <<: *test_definition
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$centos8_11_2_1_x86_64 == "true"'
+    - if: '$all == "true"'
+
+centos8-v11.2.1-scan-x86_64:
+  <<: *scan_definition
+  <<: *centos8_11_2_1_x86_64_only
+  needs:
+    - job: centos8-v11.2.1-x86_64
+    - job: centos8-v11.2.1-test-x86_64
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$centos8_11_2_1_x86_64 == "true"'
+    - if: '$all == "true"'
+
+centos8-v11.2.1-scan-no-test-x86_64:
+  <<: *scan_definition
+  <<: *centos8_11_2_1_x86_64_only
+  # Override rules from only definition
+  needs:
+    - job: centos8-v11.2.1-x86_64
+  rules:
+    - if: '$NO_SCAN == "true"'
+      when: never
+    - if: '$centos8_11_2_1_x86_64 == "true" && $NO_TEST == "true"'
+
+centos8-v11.2.1-deploy-x86_64:
+  <<: *deploy_definition
+  <<: *centos8_11_2_1_x86_64_only
+  # Override rules from only definition
+  rules:
+    - if: '$NO_TEST == "true" || $NO_SCAN == "true"'
+      when: never
+    - if: '$centos8_11_2_1_x86_64 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: centos8-v11.2.1-x86_64
+      artifacts: true
+    - job: centos8-v11.2.1-test-x86_64
+    - job: centos8-v11.2.1-scan-x86_64
+    - job: centos8-v11.2.1-cudnn8-x86_64
+
+# workaround for gitlab ci rules when NO_TEST and NO_SCAN are used...
+centos8-v11.2.1-deploy-x86_64-no-test-no-scan:
+  <<: *deploy_definition
+  <<: *centos8_11_2_1_x86_64_only
+  rules:
+    - if: '$centos8_11_2_1_x86_64 == "true" && $NO_TEST == "true" && $NO_SCAN == "true"'
+  needs:
+    - job: centos8-v11.2.1-x86_64
+      artifacts: true
+    - job: centos8-v11.2.1-cudnn8-x86_64
+
+# workaround for gitlab ci rules when NO_TEST is used...
+centos8-v11.2.1-deploy-x86_64-no-test:
+  <<: *deploy_definition
+  <<: *centos8_11_2_1_x86_64_only
+  rules:
+    - if: '$NO_SCAN == "true"'
+      when: never
+    - if: '$centos8_11_2_1_x86_64 == "true" && $NO_TEST == "true"'
+  needs:
+    - job: centos8-v11.2.1-x86_64
+      artifacts: true
+    - job: centos8-v11.2.1-scan-no-test-x86_64
+    - job: centos8-v11.2.1-cudnn8-x86_64
+
+# workaround for gitlab ci rules when NO_SCAN is used...
+centos8-v11.2.1-deploy-x86_64-no-scan:
+  <<: *deploy_definition
+  <<: *centos8_11_2_1_x86_64_only
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$centos8_11_2_1_x86_64 == "true" && $NO_SCAN == "true"'
+  needs:
+    - job: centos8-v11.2.1-x86_64
+      artifacts: true
+    - job: centos8-v11.2.1-test-x86_64
+    - job: centos8-v11.2.1-cudnn8-x86_64
+
+.centos8_11_2_1_ppc64le_variables: &centos8_11_2_1_ppc64le_variables
+  ARCH: "ppc64le"
+  DIST_BASE_PATH: "dist/11.2.1"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le"
+  MANIFEST: "manifests/cuda.yaml"
+  OS: "centos8"
+  OS_NAME: "centos"
+  OS_VERSION: "8"
+  CUDA_VERSION: "11.2.1"
+
+.centos8_11_2_1_ppc64le_only: &centos8_11_2_1_ppc64le_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *centos8_11_2_1_ppc64le_variables
+  rules:
+    - if: '$centos8_11_2_1_ppc64le == "true"'
+    - if: '$all == "true"'
+
+centos8-v11.2.1-ppc64le:
+  <<: *cuda_base_definition
+  <<: *centos8_11_2_1_ppc64le_only
+
+centos8-v11.2.1-cudnn8-ppc64le:
+  <<: *cudnn_definition
+  <<: *centos8_11_2_1_ppc64le_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos8_11_2_1_ppc64le_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: centos8-v11.2.1-ppc64le
+      artifacts: true
+
+centos8-v11.2.1-test-ppc64le:
+  needs: ["centos8-v11.2.1-ppc64le"]
+  <<: *centos8_11_2_1_ppc64le_only
+  <<: *test_definition
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$centos8_11_2_1_ppc64le == "true"'
+    - if: '$all == "true"'
+
+centos8-v11.2.1-scan-ppc64le:
+  <<: *scan_definition
+  <<: *centos8_11_2_1_ppc64le_only
+  needs:
+    - job: centos8-v11.2.1-ppc64le
+    - job: centos8-v11.2.1-test-ppc64le
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$centos8_11_2_1_ppc64le == "true"'
+    - if: '$all == "true"'
+
+centos8-v11.2.1-scan-no-test-ppc64le:
+  <<: *scan_definition
+  <<: *centos8_11_2_1_ppc64le_only
+  # Override rules from only definition
+  needs:
+    - job: centos8-v11.2.1-ppc64le
+  rules:
+    - if: '$NO_SCAN == "true"'
+      when: never
+    - if: '$centos8_11_2_1_ppc64le == "true" && $NO_TEST == "true"'
+
+centos8-v11.2.1-deploy-ppc64le:
+  <<: *deploy_definition
+  <<: *centos8_11_2_1_ppc64le_only
+  # Override rules from only definition
+  rules:
+    - if: '$NO_TEST == "true" || $NO_SCAN == "true"'
+      when: never
+    - if: '$centos8_11_2_1_ppc64le == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: centos8-v11.2.1-ppc64le
+      artifacts: true
+    - job: centos8-v11.2.1-test-ppc64le
+    - job: centos8-v11.2.1-scan-ppc64le
+    - job: centos8-v11.2.1-cudnn8-ppc64le
+
+# workaround for gitlab ci rules when NO_TEST and NO_SCAN are used...
+centos8-v11.2.1-deploy-ppc64le-no-test-no-scan:
+  <<: *deploy_definition
+  <<: *centos8_11_2_1_ppc64le_only
+  rules:
+    - if: '$centos8_11_2_1_ppc64le == "true" && $NO_TEST == "true" && $NO_SCAN == "true"'
+  needs:
+    - job: centos8-v11.2.1-ppc64le
+      artifacts: true
+    - job: centos8-v11.2.1-cudnn8-ppc64le
+
+# workaround for gitlab ci rules when NO_TEST is used...
+centos8-v11.2.1-deploy-ppc64le-no-test:
+  <<: *deploy_definition
+  <<: *centos8_11_2_1_ppc64le_only
+  rules:
+    - if: '$NO_SCAN == "true"'
+      when: never
+    - if: '$centos8_11_2_1_ppc64le == "true" && $NO_TEST == "true"'
+  needs:
+    - job: centos8-v11.2.1-ppc64le
+      artifacts: true
+    - job: centos8-v11.2.1-scan-no-test-ppc64le
+    - job: centos8-v11.2.1-cudnn8-ppc64le
+
+# workaround for gitlab ci rules when NO_SCAN is used...
+centos8-v11.2.1-deploy-ppc64le-no-scan:
+  <<: *deploy_definition
+  <<: *centos8_11_2_1_ppc64le_only
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$centos8_11_2_1_ppc64le == "true" && $NO_SCAN == "true"'
+  needs:
+    - job: centos8-v11.2.1-ppc64le
+      artifacts: true
+    - job: centos8-v11.2.1-test-ppc64le
+    - job: centos8-v11.2.1-cudnn8-ppc64le
+
+.centos8_11_2_1_arm64_variables: &centos8_11_2_1_arm64_variables
+  ARCH: "arm64"
+  DIST_BASE_PATH: "dist/11.2.1"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-arm64"
+  MANIFEST: "manifests/cuda.yaml"
+  OS: "centos8"
+  OS_NAME: "centos"
+  OS_VERSION: "8"
+  CUDA_VERSION: "11.2.1"
+
+.centos8_11_2_1_arm64_only: &centos8_11_2_1_arm64_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *centos8_11_2_1_arm64_variables
+  rules:
+    - if: '$centos8_11_2_1_arm64 == "true"'
+    - if: '$all == "true"'
+
+centos8-v11.2.1-arm64:
+  <<: *cuda_base_definition
+  <<: *centos8_11_2_1_arm64_only
+
+centos8-v11.2.1-cudnn8-arm64:
+  <<: *cudnn_definition
+  <<: *centos8_11_2_1_arm64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos8_11_2_1_arm64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: centos8-v11.2.1-arm64
+      artifacts: true
+
+centos8-v11.2.1-test-arm64:
+  needs: ["centos8-v11.2.1-arm64"]
+  <<: *centos8_11_2_1_arm64_only
+  <<: *test_definition
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$centos8_11_2_1_arm64 == "true"'
+    - if: '$all == "true"'
+
+centos8-v11.2.1-scan-arm64:
+  <<: *scan_definition
+  <<: *centos8_11_2_1_arm64_only
+  needs:
+    - job: centos8-v11.2.1-arm64
+    - job: centos8-v11.2.1-test-arm64
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$centos8_11_2_1_arm64 == "true"'
+    - if: '$all == "true"'
+
+centos8-v11.2.1-scan-no-test-arm64:
+  <<: *scan_definition
+  <<: *centos8_11_2_1_arm64_only
+  # Override rules from only definition
+  needs:
+    - job: centos8-v11.2.1-arm64
+  rules:
+    - if: '$NO_SCAN == "true"'
+      when: never
+    - if: '$centos8_11_2_1_arm64 == "true" && $NO_TEST == "true"'
+
+centos8-v11.2.1-deploy-arm64:
+  <<: *deploy_definition
+  <<: *centos8_11_2_1_arm64_only
+  # Override rules from only definition
+  rules:
+    - if: '$NO_TEST == "true" || $NO_SCAN == "true"'
+      when: never
+    - if: '$centos8_11_2_1_arm64 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: centos8-v11.2.1-arm64
+      artifacts: true
+    - job: centos8-v11.2.1-test-arm64
+    - job: centos8-v11.2.1-scan-arm64
+    - job: centos8-v11.2.1-cudnn8-arm64
+
+# workaround for gitlab ci rules when NO_TEST and NO_SCAN are used...
+centos8-v11.2.1-deploy-arm64-no-test-no-scan:
+  <<: *deploy_definition
+  <<: *centos8_11_2_1_arm64_only
+  rules:
+    - if: '$centos8_11_2_1_arm64 == "true" && $NO_TEST == "true" && $NO_SCAN == "true"'
+  needs:
+    - job: centos8-v11.2.1-arm64
+      artifacts: true
+    - job: centos8-v11.2.1-cudnn8-arm64
+
+# workaround for gitlab ci rules when NO_TEST is used...
+centos8-v11.2.1-deploy-arm64-no-test:
+  <<: *deploy_definition
+  <<: *centos8_11_2_1_arm64_only
+  rules:
+    - if: '$NO_SCAN == "true"'
+      when: never
+    - if: '$centos8_11_2_1_arm64 == "true" && $NO_TEST == "true"'
+  needs:
+    - job: centos8-v11.2.1-arm64
+      artifacts: true
+    - job: centos8-v11.2.1-scan-no-test-arm64
+    - job: centos8-v11.2.1-cudnn8-arm64
+
+# workaround for gitlab ci rules when NO_SCAN is used...
+centos8-v11.2.1-deploy-arm64-no-scan:
+  <<: *deploy_definition
+  <<: *centos8_11_2_1_arm64_only
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$centos8_11_2_1_arm64 == "true" && $NO_SCAN == "true"'
+  needs:
+    - job: centos8-v11.2.1-arm64
+      artifacts: true
+    - job: centos8-v11.2.1-test-arm64
+    - job: centos8-v11.2.1-cudnn8-arm64
+
+.centos7_11_2_1_x86_64_variables: &centos7_11_2_1_x86_64_variables
+  ARCH: "x86_64"
+  DIST_BASE_PATH: "dist/11.2.1"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  OS: "centos7"
+  OS_NAME: "centos"
+  OS_VERSION: "7"
+  CUDA_VERSION: "11.2.1"
+
+.centos7_11_2_1_x86_64_only: &centos7_11_2_1_x86_64_only
+  <<: *tags_definition
+  variables:
+    <<: *centos7_11_2_1_x86_64_variables
+  rules:
+    - if: '$centos7_11_2_1_x86_64 == "true"'
+    - if: '$all == "true"'
+
+centos7-v11.2.1-x86_64:
+  <<: *cuda_base_definition
+  <<: *centos7_11_2_1_x86_64_only
+
+centos7-v11.2.1-cudnn8-x86_64:
+  <<: *cudnn_definition
+  <<: *centos7_11_2_1_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos7_11_2_1_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: centos7-v11.2.1-x86_64
+      artifacts: true
+
+centos7-v11.2.1-test-x86_64:
+  needs: ["centos7-v11.2.1-x86_64"]
+  <<: *centos7_11_2_1_x86_64_only
+  <<: *test_definition
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$centos7_11_2_1_x86_64 == "true"'
+    - if: '$all == "true"'
+
+centos7-v11.2.1-scan-x86_64:
+  <<: *scan_definition
+  <<: *centos7_11_2_1_x86_64_only
+  needs:
+    - job: centos7-v11.2.1-x86_64
+    - job: centos7-v11.2.1-test-x86_64
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$centos7_11_2_1_x86_64 == "true"'
+    - if: '$all == "true"'
+
+centos7-v11.2.1-scan-no-test-x86_64:
+  <<: *scan_definition
+  <<: *centos7_11_2_1_x86_64_only
+  # Override rules from only definition
+  needs:
+    - job: centos7-v11.2.1-x86_64
+  rules:
+    - if: '$NO_SCAN == "true"'
+      when: never
+    - if: '$centos7_11_2_1_x86_64 == "true" && $NO_TEST == "true"'
+
+centos7-v11.2.1-deploy-x86_64:
+  <<: *deploy_definition
+  <<: *centos7_11_2_1_x86_64_only
+  # Override rules from only definition
+  rules:
+    - if: '$NO_TEST == "true" || $NO_SCAN == "true"'
+      when: never
+    - if: '$centos7_11_2_1_x86_64 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: centos7-v11.2.1-x86_64
+      artifacts: true
+    - job: centos7-v11.2.1-test-x86_64
+    - job: centos7-v11.2.1-scan-x86_64
+    - job: centos7-v11.2.1-cudnn8-x86_64
+
+# workaround for gitlab ci rules when NO_TEST and NO_SCAN are used...
+centos7-v11.2.1-deploy-x86_64-no-test-no-scan:
+  <<: *deploy_definition
+  <<: *centos7_11_2_1_x86_64_only
+  rules:
+    - if: '$centos7_11_2_1_x86_64 == "true" && $NO_TEST == "true" && $NO_SCAN == "true"'
+  needs:
+    - job: centos7-v11.2.1-x86_64
+      artifacts: true
+    - job: centos7-v11.2.1-cudnn8-x86_64
+
+# workaround for gitlab ci rules when NO_TEST is used...
+centos7-v11.2.1-deploy-x86_64-no-test:
+  <<: *deploy_definition
+  <<: *centos7_11_2_1_x86_64_only
+  rules:
+    - if: '$NO_SCAN == "true"'
+      when: never
+    - if: '$centos7_11_2_1_x86_64 == "true" && $NO_TEST == "true"'
+  needs:
+    - job: centos7-v11.2.1-x86_64
+      artifacts: true
+    - job: centos7-v11.2.1-scan-no-test-x86_64
+    - job: centos7-v11.2.1-cudnn8-x86_64
+
+# workaround for gitlab ci rules when NO_SCAN is used...
+centos7-v11.2.1-deploy-x86_64-no-scan:
+  <<: *deploy_definition
+  <<: *centos7_11_2_1_x86_64_only
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$centos7_11_2_1_x86_64 == "true" && $NO_SCAN == "true"'
+  needs:
+    - job: centos7-v11.2.1-x86_64
+      artifacts: true
+    - job: centos7-v11.2.1-test-x86_64
+    - job: centos7-v11.2.1-cudnn8-x86_64
+
+.ubi8_11_2_1_x86_64_variables: &ubi8_11_2_1_x86_64_variables
+  ARCH: "x86_64"
+  DIST_BASE_PATH: "dist/11.2.1"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  OS: "ubi8"
+  OS_NAME: "ubi"
+  OS_VERSION: "8"
+  CUDA_VERSION: "11.2.1"
+
+.ubi8_11_2_1_x86_64_only: &ubi8_11_2_1_x86_64_only
+  <<: *tags_definition
+  variables:
+    <<: *ubi8_11_2_1_x86_64_variables
+  rules:
+    - if: '$ubi8_11_2_1_x86_64 == "true"'
+    - if: '$all == "true"'
+
+ubi8-v11.2.1-x86_64:
+  <<: *cuda_base_definition
+  <<: *ubi8_11_2_1_x86_64_only
+
+ubi8-v11.2.1-cudnn8-x86_64:
+  <<: *cudnn_definition
+  <<: *ubi8_11_2_1_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi8_11_2_1_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubi8-v11.2.1-x86_64
+      artifacts: true
+
+ubi8-v11.2.1-test-x86_64:
+  needs: ["ubi8-v11.2.1-x86_64"]
+  <<: *ubi8_11_2_1_x86_64_only
+  <<: *test_definition
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubi8_11_2_1_x86_64 == "true"'
+    - if: '$all == "true"'
+
+ubi8-v11.2.1-scan-x86_64:
+  <<: *scan_definition
+  <<: *ubi8_11_2_1_x86_64_only
+  needs:
+    - job: ubi8-v11.2.1-x86_64
+    - job: ubi8-v11.2.1-test-x86_64
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubi8_11_2_1_x86_64 == "true"'
+    - if: '$all == "true"'
+
+ubi8-v11.2.1-scan-no-test-x86_64:
+  <<: *scan_definition
+  <<: *ubi8_11_2_1_x86_64_only
+  # Override rules from only definition
+  needs:
+    - job: ubi8-v11.2.1-x86_64
+  rules:
+    - if: '$NO_SCAN == "true"'
+      when: never
+    - if: '$ubi8_11_2_1_x86_64 == "true" && $NO_TEST == "true"'
+
+ubi8-v11.2.1-deploy-x86_64:
+  <<: *deploy_definition
+  <<: *ubi8_11_2_1_x86_64_only
+  # Override rules from only definition
+  rules:
+    - if: '$NO_TEST == "true" || $NO_SCAN == "true"'
+      when: never
+    - if: '$ubi8_11_2_1_x86_64 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubi8-v11.2.1-x86_64
+      artifacts: true
+    - job: ubi8-v11.2.1-test-x86_64
+    - job: ubi8-v11.2.1-scan-x86_64
+    - job: ubi8-v11.2.1-cudnn8-x86_64
+
+# workaround for gitlab ci rules when NO_TEST and NO_SCAN are used...
+ubi8-v11.2.1-deploy-x86_64-no-test-no-scan:
+  <<: *deploy_definition
+  <<: *ubi8_11_2_1_x86_64_only
+  rules:
+    - if: '$ubi8_11_2_1_x86_64 == "true" && $NO_TEST == "true" && $NO_SCAN == "true"'
+  needs:
+    - job: ubi8-v11.2.1-x86_64
+      artifacts: true
+    - job: ubi8-v11.2.1-cudnn8-x86_64
+
+# workaround for gitlab ci rules when NO_TEST is used...
+ubi8-v11.2.1-deploy-x86_64-no-test:
+  <<: *deploy_definition
+  <<: *ubi8_11_2_1_x86_64_only
+  rules:
+    - if: '$NO_SCAN == "true"'
+      when: never
+    - if: '$ubi8_11_2_1_x86_64 == "true" && $NO_TEST == "true"'
+  needs:
+    - job: ubi8-v11.2.1-x86_64
+      artifacts: true
+    - job: ubi8-v11.2.1-scan-no-test-x86_64
+    - job: ubi8-v11.2.1-cudnn8-x86_64
+
+# workaround for gitlab ci rules when NO_SCAN is used...
+ubi8-v11.2.1-deploy-x86_64-no-scan:
+  <<: *deploy_definition
+  <<: *ubi8_11_2_1_x86_64_only
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubi8_11_2_1_x86_64 == "true" && $NO_SCAN == "true"'
+  needs:
+    - job: ubi8-v11.2.1-x86_64
+      artifacts: true
+    - job: ubi8-v11.2.1-test-x86_64
+    - job: ubi8-v11.2.1-cudnn8-x86_64
+
+.ubi8_11_2_1_ppc64le_variables: &ubi8_11_2_1_ppc64le_variables
+  ARCH: "ppc64le"
+  DIST_BASE_PATH: "dist/11.2.1"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-ppc64le"
+  MANIFEST: "manifests/cuda.yaml"
+  OS: "ubi8"
+  OS_NAME: "ubi"
+  OS_VERSION: "8"
+  CUDA_VERSION: "11.2.1"
+
+.ubi8_11_2_1_ppc64le_only: &ubi8_11_2_1_ppc64le_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *ubi8_11_2_1_ppc64le_variables
+  rules:
+    - if: '$ubi8_11_2_1_ppc64le == "true"'
+    - if: '$all == "true"'
+
+ubi8-v11.2.1-ppc64le:
+  <<: *cuda_base_definition
+  <<: *ubi8_11_2_1_ppc64le_only
+
+ubi8-v11.2.1-cudnn8-ppc64le:
+  <<: *cudnn_definition
+  <<: *ubi8_11_2_1_ppc64le_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi8_11_2_1_ppc64le_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubi8-v11.2.1-ppc64le
+      artifacts: true
+
+ubi8-v11.2.1-test-ppc64le:
+  needs: ["ubi8-v11.2.1-ppc64le"]
+  <<: *ubi8_11_2_1_ppc64le_only
+  <<: *test_definition
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubi8_11_2_1_ppc64le == "true"'
+    - if: '$all == "true"'
+
+ubi8-v11.2.1-scan-ppc64le:
+  <<: *scan_definition
+  <<: *ubi8_11_2_1_ppc64le_only
+  needs:
+    - job: ubi8-v11.2.1-ppc64le
+    - job: ubi8-v11.2.1-test-ppc64le
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubi8_11_2_1_ppc64le == "true"'
+    - if: '$all == "true"'
+
+ubi8-v11.2.1-scan-no-test-ppc64le:
+  <<: *scan_definition
+  <<: *ubi8_11_2_1_ppc64le_only
+  # Override rules from only definition
+  needs:
+    - job: ubi8-v11.2.1-ppc64le
+  rules:
+    - if: '$NO_SCAN == "true"'
+      when: never
+    - if: '$ubi8_11_2_1_ppc64le == "true" && $NO_TEST == "true"'
+
+ubi8-v11.2.1-deploy-ppc64le:
+  <<: *deploy_definition
+  <<: *ubi8_11_2_1_ppc64le_only
+  # Override rules from only definition
+  rules:
+    - if: '$NO_TEST == "true" || $NO_SCAN == "true"'
+      when: never
+    - if: '$ubi8_11_2_1_ppc64le == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubi8-v11.2.1-ppc64le
+      artifacts: true
+    - job: ubi8-v11.2.1-test-ppc64le
+    - job: ubi8-v11.2.1-scan-ppc64le
+    - job: ubi8-v11.2.1-cudnn8-ppc64le
+
+# workaround for gitlab ci rules when NO_TEST and NO_SCAN are used...
+ubi8-v11.2.1-deploy-ppc64le-no-test-no-scan:
+  <<: *deploy_definition
+  <<: *ubi8_11_2_1_ppc64le_only
+  rules:
+    - if: '$ubi8_11_2_1_ppc64le == "true" && $NO_TEST == "true" && $NO_SCAN == "true"'
+  needs:
+    - job: ubi8-v11.2.1-ppc64le
+      artifacts: true
+    - job: ubi8-v11.2.1-cudnn8-ppc64le
+
+# workaround for gitlab ci rules when NO_TEST is used...
+ubi8-v11.2.1-deploy-ppc64le-no-test:
+  <<: *deploy_definition
+  <<: *ubi8_11_2_1_ppc64le_only
+  rules:
+    - if: '$NO_SCAN == "true"'
+      when: never
+    - if: '$ubi8_11_2_1_ppc64le == "true" && $NO_TEST == "true"'
+  needs:
+    - job: ubi8-v11.2.1-ppc64le
+      artifacts: true
+    - job: ubi8-v11.2.1-scan-no-test-ppc64le
+    - job: ubi8-v11.2.1-cudnn8-ppc64le
+
+# workaround for gitlab ci rules when NO_SCAN is used...
+ubi8-v11.2.1-deploy-ppc64le-no-scan:
+  <<: *deploy_definition
+  <<: *ubi8_11_2_1_ppc64le_only
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubi8_11_2_1_ppc64le == "true" && $NO_SCAN == "true"'
+  needs:
+    - job: ubi8-v11.2.1-ppc64le
+      artifacts: true
+    - job: ubi8-v11.2.1-test-ppc64le
+    - job: ubi8-v11.2.1-cudnn8-ppc64le
+
+.ubi8_11_2_1_arm64_variables: &ubi8_11_2_1_arm64_variables
+  ARCH: "arm64"
+  DIST_BASE_PATH: "dist/11.2.1"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/cuda-arm64"
+  MANIFEST: "manifests/cuda.yaml"
+  OS: "ubi8"
+  OS_NAME: "ubi"
+  OS_VERSION: "8"
+  CUDA_VERSION: "11.2.1"
+
+.ubi8_11_2_1_arm64_only: &ubi8_11_2_1_arm64_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *ubi8_11_2_1_arm64_variables
+  rules:
+    - if: '$ubi8_11_2_1_arm64 == "true"'
+    - if: '$all == "true"'
+
+ubi8-v11.2.1-arm64:
+  <<: *cuda_base_definition
+  <<: *ubi8_11_2_1_arm64_only
+
+ubi8-v11.2.1-cudnn8-arm64:
+  <<: *cudnn_definition
+  <<: *ubi8_11_2_1_arm64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi8_11_2_1_arm64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubi8-v11.2.1-arm64
+      artifacts: true
+
+ubi8-v11.2.1-test-arm64:
+  needs: ["ubi8-v11.2.1-arm64"]
+  <<: *ubi8_11_2_1_arm64_only
+  <<: *test_definition
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubi8_11_2_1_arm64 == "true"'
+    - if: '$all == "true"'
+
+ubi8-v11.2.1-scan-arm64:
+  <<: *scan_definition
+  <<: *ubi8_11_2_1_arm64_only
+  needs:
+    - job: ubi8-v11.2.1-arm64
+    - job: ubi8-v11.2.1-test-arm64
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubi8_11_2_1_arm64 == "true"'
+    - if: '$all == "true"'
+
+ubi8-v11.2.1-scan-no-test-arm64:
+  <<: *scan_definition
+  <<: *ubi8_11_2_1_arm64_only
+  # Override rules from only definition
+  needs:
+    - job: ubi8-v11.2.1-arm64
+  rules:
+    - if: '$NO_SCAN == "true"'
+      when: never
+    - if: '$ubi8_11_2_1_arm64 == "true" && $NO_TEST == "true"'
+
+ubi8-v11.2.1-deploy-arm64:
+  <<: *deploy_definition
+  <<: *ubi8_11_2_1_arm64_only
+  # Override rules from only definition
+  rules:
+    - if: '$NO_TEST == "true" || $NO_SCAN == "true"'
+      when: never
+    - if: '$ubi8_11_2_1_arm64 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubi8-v11.2.1-arm64
+      artifacts: true
+    - job: ubi8-v11.2.1-test-arm64
+    - job: ubi8-v11.2.1-scan-arm64
+    - job: ubi8-v11.2.1-cudnn8-arm64
+
+# workaround for gitlab ci rules when NO_TEST and NO_SCAN are used...
+ubi8-v11.2.1-deploy-arm64-no-test-no-scan:
+  <<: *deploy_definition
+  <<: *ubi8_11_2_1_arm64_only
+  rules:
+    - if: '$ubi8_11_2_1_arm64 == "true" && $NO_TEST == "true" && $NO_SCAN == "true"'
+  needs:
+    - job: ubi8-v11.2.1-arm64
+      artifacts: true
+    - job: ubi8-v11.2.1-cudnn8-arm64
+
+# workaround for gitlab ci rules when NO_TEST is used...
+ubi8-v11.2.1-deploy-arm64-no-test:
+  <<: *deploy_definition
+  <<: *ubi8_11_2_1_arm64_only
+  rules:
+    - if: '$NO_SCAN == "true"'
+      when: never
+    - if: '$ubi8_11_2_1_arm64 == "true" && $NO_TEST == "true"'
+  needs:
+    - job: ubi8-v11.2.1-arm64
+      artifacts: true
+    - job: ubi8-v11.2.1-scan-no-test-arm64
+    - job: ubi8-v11.2.1-cudnn8-arm64
+
+# workaround for gitlab ci rules when NO_SCAN is used...
+ubi8-v11.2.1-deploy-arm64-no-scan:
+  <<: *deploy_definition
+  <<: *ubi8_11_2_1_arm64_only
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubi8_11_2_1_arm64 == "true" && $NO_SCAN == "true"'
+  needs:
+    - job: ubi8-v11.2.1-arm64
+      artifacts: true
+    - job: ubi8-v11.2.1-test-arm64
+    - job: ubi8-v11.2.1-cudnn8-arm64
+
+.ubi7_11_2_1_x86_64_variables: &ubi7_11_2_1_x86_64_variables
+  ARCH: "x86_64"
+  DIST_BASE_PATH: "dist/11.2.1"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  OS: "ubi7"
+  OS_NAME: "ubi"
+  OS_VERSION: "7"
+  CUDA_VERSION: "11.2.1"
+
+.ubi7_11_2_1_x86_64_only: &ubi7_11_2_1_x86_64_only
+  <<: *tags_definition
+  variables:
+    <<: *ubi7_11_2_1_x86_64_variables
+  rules:
+    - if: '$ubi7_11_2_1_x86_64 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v11.2.1-x86_64:
+  <<: *cuda_base_definition
+  <<: *ubi7_11_2_1_x86_64_only
+
+ubi7-v11.2.1-cudnn8-x86_64:
+  <<: *cudnn_definition
+  <<: *ubi7_11_2_1_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi7_11_2_1_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubi7-v11.2.1-x86_64
+      artifacts: true
+
+ubi7-v11.2.1-test-x86_64:
+  needs: ["ubi7-v11.2.1-x86_64"]
+  <<: *ubi7_11_2_1_x86_64_only
+  <<: *test_definition
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_11_2_1_x86_64 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v11.2.1-scan-x86_64:
+  <<: *scan_definition
+  <<: *ubi7_11_2_1_x86_64_only
+  needs:
+    - job: ubi7-v11.2.1-x86_64
+    - job: ubi7-v11.2.1-test-x86_64
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_11_2_1_x86_64 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v11.2.1-scan-no-test-x86_64:
+  <<: *scan_definition
+  <<: *ubi7_11_2_1_x86_64_only
+  # Override rules from only definition
+  needs:
+    - job: ubi7-v11.2.1-x86_64
+  rules:
+    - if: '$NO_SCAN == "true"'
+      when: never
+    - if: '$ubi7_11_2_1_x86_64 == "true" && $NO_TEST == "true"'
+
+ubi7-v11.2.1-deploy-x86_64:
+  <<: *deploy_definition
+  <<: *ubi7_11_2_1_x86_64_only
+  # Override rules from only definition
+  rules:
+    - if: '$NO_TEST == "true" || $NO_SCAN == "true"'
+      when: never
+    - if: '$ubi7_11_2_1_x86_64 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubi7-v11.2.1-x86_64
+      artifacts: true
+    - job: ubi7-v11.2.1-test-x86_64
+    - job: ubi7-v11.2.1-scan-x86_64
+    - job: ubi7-v11.2.1-cudnn8-x86_64
+
+# workaround for gitlab ci rules when NO_TEST and NO_SCAN are used...
+ubi7-v11.2.1-deploy-x86_64-no-test-no-scan:
+  <<: *deploy_definition
+  <<: *ubi7_11_2_1_x86_64_only
+  rules:
+    - if: '$ubi7_11_2_1_x86_64 == "true" && $NO_TEST == "true" && $NO_SCAN == "true"'
+  needs:
+    - job: ubi7-v11.2.1-x86_64
+      artifacts: true
+    - job: ubi7-v11.2.1-cudnn8-x86_64
+
+# workaround for gitlab ci rules when NO_TEST is used...
+ubi7-v11.2.1-deploy-x86_64-no-test:
+  <<: *deploy_definition
+  <<: *ubi7_11_2_1_x86_64_only
+  rules:
+    - if: '$NO_SCAN == "true"'
+      when: never
+    - if: '$ubi7_11_2_1_x86_64 == "true" && $NO_TEST == "true"'
+  needs:
+    - job: ubi7-v11.2.1-x86_64
+      artifacts: true
+    - job: ubi7-v11.2.1-scan-no-test-x86_64
+    - job: ubi7-v11.2.1-cudnn8-x86_64
+
+# workaround for gitlab ci rules when NO_SCAN is used...
+ubi7-v11.2.1-deploy-x86_64-no-scan:
+  <<: *deploy_definition
+  <<: *ubi7_11_2_1_x86_64_only
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_11_2_1_x86_64 == "true" && $NO_SCAN == "true"'
+  needs:
+    - job: ubi7-v11.2.1-x86_64
+      artifacts: true
+    - job: ubi7-v11.2.1-test-x86_64
+    - job: ubi7-v11.2.1-cudnn8-x86_64
+
 .ubuntu20_04_11_2_0_x86_64_variables: &ubuntu20_04_11_2_0_x86_64_variables
   ARCH: "x86_64"
   DIST_BASE_PATH: "dist/11.2.0"

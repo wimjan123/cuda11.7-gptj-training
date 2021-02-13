@@ -15,7 +15,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libnpp-dev-11-1=11.1.2.301-1 \
     libnccl-dev=2.7.8-1+cuda11.1 \
     libcublas-dev-11-1=11.3.0.106-1 \
-    libcusparse-11-1=11.3.0.10-1 \
     libcusparse-dev-11-1=11.3.0.10-1 \
     && rm -rf /var/lib/apt/lists/*
 
