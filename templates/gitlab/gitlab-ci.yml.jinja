@@ -299,59 +299,36 @@ trigger:
     - if: '$TRIGGER == "true" && $KITMAKER == "true"'
       when: on_success
 
+.kitmaker_cleanup_after_script: &kitmaker_cleanup_after_script
+  # GITLAB ISSUE "on_success and on_failure" for after_script" https://gitlab.com/gitlab-org/gitlab-runner/-/issues/3116
+  after_script:
+    - |
+      echo "CI JOB STATUS: '$CI_JOB_STATUS'"
+      if [[ $CI_JOB_STATUS == "success" ]]; then
+        cat TAG_MANIFEST
+        export a_image_name=$(awk '/./{line=$0} END{print line}' TAG_MANIFEST) # get the artifactory repo name
+        sed -i '$ d' TAG_MANIFEST # delete the last line containing the artifactory repo
+        export json_data="{\"status\": \"success\", \"gitlab_pipeline_url\": \"${CI_PIPELINE_URL}\", \"image_name\": \"${a_image_name}\", \"tags\": $(cat TAG_MANIFEST | jq -R . | jq -s . | jq 'map(select(length > 0))' | jq -c .)}"
+        curl -v -X POST -H "Content-Type: application/json" -d "${json_data}" "${WEBHOOK_URL}"
+      else
+        export json_data="{\"status\": \"failed\", \"gitlab_pipeline_url\": \"${CI_PIPELINE_URL}\"}"
+        curl -v -X POST -H "Content-Type: application/json" -d "${json_data}" ${WEBHOOK_URL}
+      fi
+
 kitmaker_base:
   <<: *cuda_base_definition
   <<: *kitmaker_only
   # Need to build container images on a multi-arch capable machine
   <<: *tags_definition_multiarch
+  <<: *kitmaker_cleanup_after_script
 
 kitmaker_deploy:
   <<: *deploy_definition
   <<: *kitmaker_only
   <<: *tags_definition
+  <<: *kitmaker_cleanup_after_script
   needs:
     - job: kitmaker_base
-      artifacts: true
-
-# Requires two stages because CI_JOB_STATUS is not yet available in our infrastructure
-kitmaker_cleanup_success:
-  image: {{ gitlab_builder_image }}
-  stage: cleanup_success
-  <<: *tags_definition
-  script:
-    - |
-      cat TAG_MANIFEST
-      export a_image_name=$(awk '/./{line=$0} END{print line}' TAG_MANIFEST) # get the artifactory repo name
-      sed -i '$ d' TAG_MANIFEST # delete the last line containing the artifactory repo
-      export json_data="{\"status\": \"success\", \"gitlab_pipeline_url\": \"${CI_PIPELINE_URL}\", \"image_name\": \"${a_image_name}\", \"tags\": $(cat TAG_MANIFEST | jq -R . | jq -s . | jq 'map(select(length > 0))' | jq -c .)}"
-      curl -v -X POST -H "Content-Type: application/json" -d "${json_data}" "${WEBHOOK_URL}"
-  variables:
-    <<: *kitmaker_variables
-  rules:
-    - if: '$TRIGGER == "true" && $KITMAKER == "true"'
-      when: on_success
-  needs:
-    - job: kitmaker_base
-      artifacts: true
-    - job: kitmaker_deploy
-
-# Requires two stages because CI_JOB_STATUS is not yet available in our infrastructure
-kitmaker_cleanup_failed:
-  image: {{ gitlab_builder_image }}
-  stage: cleanup_failed
-  <<: *tags_definition
-  script:
-    - |
-      export json_data="{\"status\": \"failed\", \"gitlab_pipeline_url\": \"${CI_PIPELINE_URL}\"}"
-      curl -v -X POST -H "Content-Type: application/json" -d "${json_data}" ${WEBHOOK_URL}
-  variables:
-    <<: *kitmaker_variables
-  rules:
-    - if: '$TRIGGER == "true" && $KITMAKER == "true"'
-      when: on_failure
-  needs:
-    - job: kitmaker_base
-    - job: kitmaker_deploy
       artifacts: true
 
 {% for cuda_version in cuda if not cuda_version.startswith("manifest") %}
