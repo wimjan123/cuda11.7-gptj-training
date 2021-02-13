@@ -430,16 +430,16 @@ kitmaker_deploy:
     - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true"'
     - if: '$all == "true"'
 
-{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-scan-no-test-{{ arch }}:
-  <<: *scan_definition
-  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
-  # Override rules from only definition
-  needs:
-    - job: {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ arch }}
-  rules:
-    - if: '$NO_SCAN == "true"'
-      when: never
-    - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true" && $NO_TEST == "true"'
+{# {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-scan-no-test-{{ arch }}: #}
+  {# <<: *scan_definition #}
+  {# <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only #}
+  {# # Override rules from only definition #}
+  {# needs: #}
+    {# - job: {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ arch }} #}
+  {# rules: #}
+    {# - if: '$NO_SCAN == "true"' #}
+      {# when: never #}
+    {# - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true" && $NO_TEST == "true"' #}
 
 {% set needs = [
     "{}-v{}{}-{}".format(distro, cuda_version, pipeline_name_hyp, arch),
@@ -477,71 +477,71 @@ kitmaker_deploy:
     {% endif %}
   {% endfor %}
 
-# workaround for gitlab ci rules when NO_TEST and NO_SCAN are used...
-{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-deploy-{{ arch }}-no-test-no-scan:
-  <<: *deploy_definition
-  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
-  rules:
-    - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true" && $NO_TEST == "true" && $NO_SCAN == "true"'
-  needs:
-  {# This silly workaround is needed because variables lose scope in a for loop #}
-  {% set stahp = { 'flag': True } %}
-  {% for job in needs %}
-    {% if "-test-" in job %}
-    {% elif "-scan-" + arch in job %}
-    {% else %}
-    - job: {{ job }}
-      {% if stahp.flag %}
-      artifacts: true
-        {% do stahp.update({'flag':False}) %}
-      {% endif %}
-    {% endif %}
-  {% endfor %}
+{# # workaround for gitlab ci rules when NO_TEST and NO_SCAN are used... #}
+{# {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-deploy-{{ arch }}-no-test-no-scan: #}
+{#   <<: *deploy_definition #}
+{#   <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only #}
+{#   rules: #}
+{#     - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true" && $NO_TEST == "true" && $NO_SCAN == "true"' #}
+{#   needs: #}
+{#   [> This silly workaround is needed because variables lose scope in a for loop <] #}
+{#   {% set stahp = { 'flag': True } %} #}
+{#   {% for job in needs %} #}
+{#     {% if "-test-" in job %} #}
+{#     {% elif "-scan-" + arch in job %} #}
+{#     {% else %} #}
+{#     - job: {{ job }} #}
+{#       {% if stahp.flag %} #}
+{#       artifacts: true #}
+{#         {% do stahp.update({'flag':False}) %} #}
+{#       {% endif %} #}
+{#     {% endif %} #}
+{#   {% endfor %} #}
 
-# workaround for gitlab ci rules when NO_TEST is used...
-{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-deploy-{{ arch }}-no-test:
-  <<: *deploy_definition
-  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
-  rules:
-    - if: '$NO_SCAN == "true"'
-      when: never
-    - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true" && $NO_TEST == "true"'
-  needs:
-  {# This silly workaround is needed because variables lose scope in a for loop #}
-  {% set stahp = { 'flag': True } %}
-  {% for job in needs %}
-    {% if not "-scan-no-test-" in job and "-test-" in job %}
-    {% elif not "-scan-no-test-" in job and "-scan-" in job %}
-    {% else %}
-    - job: {{ job }}
-      {% if stahp.flag %}
-      artifacts: true
-        {% do stahp.update({'flag':False}) %}
-      {% endif %}
-    {% endif %}
-  {% endfor %}
+{# # workaround for gitlab ci rules when NO_TEST is used... #}
+{# {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-deploy-{{ arch }}-no-test: #}
+{#   <<: *deploy_definition #}
+{#   <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only #}
+{#   rules: #}
+{#     - if: '$NO_SCAN == "true"' #}
+{#       when: never #}
+{#     - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true" && $NO_TEST == "true"' #}
+{#   needs: #}
+{#   [> This silly workaround is needed because variables lose scope in a for loop <] #}
+{#   {% set stahp = { 'flag': True } %} #}
+{#   {% for job in needs %} #}
+{#     {% if not "-scan-no-test-" in job and "-test-" in job %} #}
+{#     {% elif not "-scan-no-test-" in job and "-scan-" in job %} #}
+{#     {% else %} #}
+{#     - job: {{ job }} #}
+{#       {% if stahp.flag %} #}
+{#       artifacts: true #}
+{#         {% do stahp.update({'flag':False}) %} #}
+{#       {% endif %} #}
+{#     {% endif %} #}
+{#   {% endfor %} #}
 
-# workaround for gitlab ci rules when NO_SCAN is used...
-{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-deploy-{{ arch }}-no-scan:
-  <<: *deploy_definition
-  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
-  rules:
-    - if: '$NO_TEST == "true"'
-      when: never
-    - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true" && $NO_SCAN == "true"'
-  needs:
-  {# This silly workaround is needed because variables lose scope in a for loop #}
-  {% set stahp = { 'flag': True } %}
-  {% for job in needs %}
-    {% if "-scan-" in job %}
-    {% else %}
-    - job: {{ job }}
-      {% if stahp.flag %}
-      artifacts: true
-        {% do stahp.update({'flag':False}) %}
-      {% endif %}
-    {% endif %}
-  {% endfor %}
+{# # workaround for gitlab ci rules when NO_SCAN is used... #}
+{# {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-deploy-{{ arch }}-no-scan: #}
+{#   <<: *deploy_definition #}
+{#   <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only #}
+{#   rules: #}
+{#     - if: '$NO_TEST == "true"' #}
+{#       when: never #}
+{#     - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true" && $NO_SCAN == "true"' #}
+{#   needs: #}
+{#   [> This silly workaround is needed because variables lose scope in a for loop <] #}
+{#   {% set stahp = { 'flag': True } %} #}
+{#   {% for job in needs %} #}
+{#     {% if "-scan-" in job %} #}
+{#     {% else %} #}
+{#     - job: {{ job }} #}
+{#       {% if stahp.flag %} #}
+{#       artifacts: true #}
+{#         {% do stahp.update({'flag':False}) %} #}
+{#       {% endif %} #}
+{#     {% endif %} #}
+{#   {% endfor %} #}
 
 {% endfor -%}
 {% endfor %}
