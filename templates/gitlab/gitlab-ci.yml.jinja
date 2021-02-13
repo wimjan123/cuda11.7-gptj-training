@@ -299,59 +299,36 @@ trigger:
     - if: '$TRIGGER == "true" && $KITMAKER == "true"'
       when: on_success
 
+.kitmaker_cleanup_after_script: &kitmaker_cleanup_after_script
+  # GITLAB ISSUE "on_success and on_failure" for after_script" https://gitlab.com/gitlab-org/gitlab-runner/-/issues/3116
+  after_script:
+    - |
+      echo "CI JOB STATUS: '$CI_JOB_STATUS'"
+      if [[ $CI_JOB_STATUS == "success" ]]; then
+        cat TAG_MANIFEST
+        export a_image_name=$(awk '/./{line=$0} END{print line}' TAG_MANIFEST) # get the artifactory repo name
+        sed -i '$ d' TAG_MANIFEST # delete the last line containing the artifactory repo
+        export json_data="{\"status\": \"success\", \"gitlab_pipeline_url\": \"${CI_PIPELINE_URL}\", \"image_name\": \"${a_image_name}\", \"tags\": $(cat TAG_MANIFEST | jq -R . | jq -s . | jq 'map(select(length > 0))' | jq -c .)}"
+        curl -v -X POST -H "Content-Type: application/json" -d "${json_data}" "${WEBHOOK_URL}"
+      else
+        export json_data="{\"status\": \"failed\", \"gitlab_pipeline_url\": \"${CI_PIPELINE_URL}\"}"
+        curl -v -X POST -H "Content-Type: application/json" -d "${json_data}" ${WEBHOOK_URL}
+      fi
+
 kitmaker_base:
   <<: *cuda_base_definition
   <<: *kitmaker_only
   # Need to build container images on a multi-arch capable machine
   <<: *tags_definition_multiarch
+  <<: *kitmaker_cleanup_after_script
 
 kitmaker_deploy:
   <<: *deploy_definition
   <<: *kitmaker_only
   <<: *tags_definition
+  <<: *kitmaker_cleanup_after_script
   needs:
     - job: kitmaker_base
-      artifacts: true
-
-# Requires two stages because CI_JOB_STATUS is not yet available in our infrastructure
-kitmaker_cleanup_success:
-  image: {{ gitlab_builder_image }}
-  stage: cleanup_success
-  <<: *tags_definition
-  script:
-    - |
-      cat TAG_MANIFEST
-      export a_image_name=$(awk '/./{line=$0} END{print line}' TAG_MANIFEST) # get the artifactory repo name
-      sed -i '$ d' TAG_MANIFEST # delete the last line containing the artifactory repo
-      export json_data="{\"status\": \"success\", \"gitlab_pipeline_url\": \"${CI_PIPELINE_URL}\", \"image_name\": \"${a_image_name}\", \"tags\": $(cat TAG_MANIFEST | jq -R . | jq -s . | jq 'map(select(length > 0))' | jq -c .)}"
-      curl -v -X POST -H "Content-Type: application/json" -d "${json_data}" "${WEBHOOK_URL}"
-  variables:
-    <<: *kitmaker_variables
-  rules:
-    - if: '$TRIGGER == "true" && $KITMAKER == "true"'
-      when: on_success
-  needs:
-    - job: kitmaker_base
-      artifacts: true
-    - job: kitmaker_deploy
-
-# Requires two stages because CI_JOB_STATUS is not yet available in our infrastructure
-kitmaker_cleanup_failed:
-  image: {{ gitlab_builder_image }}
-  stage: cleanup_failed
-  <<: *tags_definition
-  script:
-    - |
-      export json_data="{\"status\": \"failed\", \"gitlab_pipeline_url\": \"${CI_PIPELINE_URL}\"}"
-      curl -v -X POST -H "Content-Type: application/json" -d "${json_data}" ${WEBHOOK_URL}
-  variables:
-    <<: *kitmaker_variables
-  rules:
-    - if: '$TRIGGER == "true" && $KITMAKER == "true"'
-      when: on_failure
-  needs:
-    - job: kitmaker_base
-    - job: kitmaker_deploy
       artifacts: true
 
 {% for cuda_version in cuda if not cuda_version.startswith("manifest") %}
@@ -453,16 +430,16 @@ kitmaker_cleanup_failed:
     - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true"'
     - if: '$all == "true"'
 
-{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-scan-no-test-{{ arch }}:
-  <<: *scan_definition
-  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
-  # Override rules from only definition
-  needs:
-    - job: {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ arch }}
-  rules:
-    - if: '$NO_SCAN == "true"'
-      when: never
-    - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true" && $NO_TEST == "true"'
+{# {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-scan-no-test-{{ arch }}: #}
+  {# <<: *scan_definition #}
+  {# <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only #}
+  {# # Override rules from only definition #}
+  {# needs: #}
+    {# - job: {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ arch }} #}
+  {# rules: #}
+    {# - if: '$NO_SCAN == "true"' #}
+      {# when: never #}
+    {# - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true" && $NO_TEST == "true"' #}
 
 {% set needs = [
     "{}-v{}{}-{}".format(distro, cuda_version, pipeline_name_hyp, arch),
@@ -500,71 +477,71 @@ kitmaker_cleanup_failed:
     {% endif %}
   {% endfor %}
 
-# workaround for gitlab ci rules when NO_TEST and NO_SCAN are used...
-{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-deploy-{{ arch }}-no-test-no-scan:
-  <<: *deploy_definition
-  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
-  rules:
-    - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true" && $NO_TEST == "true" && $NO_SCAN == "true"'
-  needs:
-  {# This silly workaround is needed because variables lose scope in a for loop #}
-  {% set stahp = { 'flag': True } %}
-  {% for job in needs %}
-    {% if "-test-" in job %}
-    {% elif "-scan-" + arch in job %}
-    {% else %}
-    - job: {{ job }}
-      {% if stahp.flag %}
-      artifacts: true
-        {% do stahp.update({'flag':False}) %}
-      {% endif %}
-    {% endif %}
-  {% endfor %}
+{# # workaround for gitlab ci rules when NO_TEST and NO_SCAN are used... #}
+{# {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-deploy-{{ arch }}-no-test-no-scan: #}
+{#   <<: *deploy_definition #}
+{#   <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only #}
+{#   rules: #}
+{#     - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true" && $NO_TEST == "true" && $NO_SCAN == "true"' #}
+{#   needs: #}
+{#   [> This silly workaround is needed because variables lose scope in a for loop <] #}
+{#   {% set stahp = { 'flag': True } %} #}
+{#   {% for job in needs %} #}
+{#     {% if "-test-" in job %} #}
+{#     {% elif "-scan-" + arch in job %} #}
+{#     {% else %} #}
+{#     - job: {{ job }} #}
+{#       {% if stahp.flag %} #}
+{#       artifacts: true #}
+{#         {% do stahp.update({'flag':False}) %} #}
+{#       {% endif %} #}
+{#     {% endif %} #}
+{#   {% endfor %} #}
 
-# workaround for gitlab ci rules when NO_TEST is used...
-{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-deploy-{{ arch }}-no-test:
-  <<: *deploy_definition
-  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
-  rules:
-    - if: '$NO_SCAN == "true"'
-      when: never
-    - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true" && $NO_TEST == "true"'
-  needs:
-  {# This silly workaround is needed because variables lose scope in a for loop #}
-  {% set stahp = { 'flag': True } %}
-  {% for job in needs %}
-    {% if not "-scan-no-test-" in job and "-test-" in job %}
-    {% elif not "-scan-no-test-" in job and "-scan-" in job %}
-    {% else %}
-    - job: {{ job }}
-      {% if stahp.flag %}
-      artifacts: true
-        {% do stahp.update({'flag':False}) %}
-      {% endif %}
-    {% endif %}
-  {% endfor %}
+{# # workaround for gitlab ci rules when NO_TEST is used... #}
+{# {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-deploy-{{ arch }}-no-test: #}
+{#   <<: *deploy_definition #}
+{#   <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only #}
+{#   rules: #}
+{#     - if: '$NO_SCAN == "true"' #}
+{#       when: never #}
+{#     - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true" && $NO_TEST == "true"' #}
+{#   needs: #}
+{#   [> This silly workaround is needed because variables lose scope in a for loop <] #}
+{#   {% set stahp = { 'flag': True } %} #}
+{#   {% for job in needs %} #}
+{#     {% if not "-scan-no-test-" in job and "-test-" in job %} #}
+{#     {% elif not "-scan-no-test-" in job and "-scan-" in job %} #}
+{#     {% else %} #}
+{#     - job: {{ job }} #}
+{#       {% if stahp.flag %} #}
+{#       artifacts: true #}
+{#         {% do stahp.update({'flag':False}) %} #}
+{#       {% endif %} #}
+{#     {% endif %} #}
+{#   {% endfor %} #}
 
-# workaround for gitlab ci rules when NO_SCAN is used...
-{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-deploy-{{ arch }}-no-scan:
-  <<: *deploy_definition
-  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
-  rules:
-    - if: '$NO_TEST == "true"'
-      when: never
-    - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true" && $NO_SCAN == "true"'
-  needs:
-  {# This silly workaround is needed because variables lose scope in a for loop #}
-  {% set stahp = { 'flag': True } %}
-  {% for job in needs %}
-    {% if "-scan-" in job %}
-    {% else %}
-    - job: {{ job }}
-      {% if stahp.flag %}
-      artifacts: true
-        {% do stahp.update({'flag':False}) %}
-      {% endif %}
-    {% endif %}
-  {% endfor %}
+{# # workaround for gitlab ci rules when NO_SCAN is used... #}
+{# {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-deploy-{{ arch }}-no-scan: #}
+{#   <<: *deploy_definition #}
+{#   <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only #}
+{#   rules: #}
+{#     - if: '$NO_TEST == "true"' #}
+{#       when: never #}
+{#     - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true" && $NO_SCAN == "true"' #}
+{#   needs: #}
+{#   [> This silly workaround is needed because variables lose scope in a for loop <] #}
+{#   {% set stahp = { 'flag': True } %} #}
+{#   {% for job in needs %} #}
+{#     {% if "-scan-" in job %} #}
+{#     {% else %} #}
+{#     - job: {{ job }} #}
+{#       {% if stahp.flag %} #}
+{#       artifacts: true #}
+{#         {% do stahp.update({'flag':False}) %} #}
+{#       {% endif %} #}
+{#     {% endif %} #}
+{#   {% endfor %} #}
 
 {% endfor -%}
 {% endfor %}
