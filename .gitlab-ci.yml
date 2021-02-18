@@ -298,15 +298,16 @@ trigger:
   after_script:
     - |
       echo "CI JOB STATUS: '$CI_JOB_STATUS'"
-      if [[ $CI_JOB_STATUS == "success" ]]; then
-        cat TAG_MANIFEST
+      if [[ "${CI_JOB_STATUS}" =~ success ]]; then
         export a_image_name=$(awk '/./{line=$0} END{print line}' TAG_MANIFEST) # get the artifactory repo name
         sed -i '$ d' TAG_MANIFEST # delete the last line containing the artifactory repo
         export json_data="{\"status\": \"success\", \"gitlab_pipeline_url\": \"${CI_PIPELINE_URL}\", \"image_name\": \"${a_image_name}\", \"tags\": $(cat TAG_MANIFEST | jq -R . | jq -s . | jq 'map(select(length > 0))' | jq -c .)}"
-        curl -v -X POST -H "Content-Type: application/json" -d "${json_data}" "${WEBHOOK_URL}"
+        echo curl -v -H "Content-Type: application/json" -d "${json_data}" "${WEBHOOK_URL}"
+        curl -v -H "Content-Type: application/json" -d "${json_data}" "${WEBHOOK_URL}"
       else
         export json_data="{\"status\": \"failed\", \"gitlab_pipeline_url\": \"${CI_PIPELINE_URL}\"}"
-        curl -v -X POST -H "Content-Type: application/json" -d "${json_data}" ${WEBHOOK_URL}
+        echo curl -v -H "Content-Type: application/json" -d "${json_data}" ${WEBHOOK_URL}
+        curl -v -H "Content-Type: application/json" -d "${json_data}" ${WEBHOOK_URL}
       fi
 
 kitmaker_base:
