@@ -126,18 +126,21 @@ prepare:
   stage: cuda
   retry: 2
   script:
-    - if [[ "${NO_OS_SUFFIX}" == "true" ]]; then
-        export TAG_BASE=" -t ${IMAGE_NAME}:${CUDA_VERSION}-base${IMAGE_TAG_SUFFIX} ";
-        export TAG_RUNTIME=" -t ${IMAGE_NAME}:${CUDA_VERSION}-runtime${IMAGE_TAG_SUFFIX} ";
-        export TAG_DEVEL=" -t ${IMAGE_NAME}:${CUDA_VERSION}-devel${IMAGE_TAG_SUFFIX} ";
-        export CUDA_TAGS="${CUDA_VERSION}-base${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-runtime${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-devel${IMAGE_TAG_SUFFIX} ";
-      fi
-    - if [[ -z $DIST_BASE_PATH ]]; then
-        export DIST_BASE_PATH="dist/${OS}/${CUDA_VERSION}/${ARCH}";
-      else
-        export DIST_BASE_PATH="${DIST_BASE_PATH}/${OS}-${ARCH}";
-      fi
     - |
+      # How gitlab handles errors: https://gitlab.com/gitlab-org/gitlab-runner/-/issues/25394
+      # prevent exit codes from killing the pipeline completely, errors must now be handled manually
+      set +e
+      if [[ "${NO_OS_SUFFIX}" == "true" ]]; then
+        export TAG_BASE=" -t ${IMAGE_NAME}:${CUDA_VERSION}-base${IMAGE_TAG_SUFFIX} "
+        export TAG_RUNTIME=" -t ${IMAGE_NAME}:${CUDA_VERSION}-runtime${IMAGE_TAG_SUFFIX} "
+        export TAG_DEVEL=" -t ${IMAGE_NAME}:${CUDA_VERSION}-devel${IMAGE_TAG_SUFFIX} "
+        export CUDA_TAGS="${CUDA_VERSION}-base${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-runtime${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-devel${IMAGE_TAG_SUFFIX} "
+      fi
+      if [[ -z $DIST_BASE_PATH ]]; then
+        export DIST_BASE_PATH="dist/${OS}/${CUDA_VERSION}/${ARCH}"
+      else
+        export DIST_BASE_PATH="${DIST_BASE_PATH}/${OS}-${ARCH}"
+      fi
       if [ ! -z $KITMAKER ] && [ ! -z $TRIGGER ]; then
           export DIST_BASE_PATH="kitpick"
           rm -rf kitpick || true
@@ -145,30 +148,45 @@ prepare:
           find kitpick/
           NEW_CANDIDATE_URL="${CANDIDATE_URL}"
           [[ "${CANDIDATE_URL}" != */ ]] && NEW_CANDIDATE_URL="${CANDIDATE_URL}/"
-          retry 3 10 time wget --recursive --directory-prefix="rekt" --reject="index.html*" --no-parent ${NEW_CANDIDATE_URL}
+          if ! retry 3 10 time wget --recursive --directory-prefix="rekt" --reject="index.html*" --no-parent ${NEW_CANDIDATE_URL}; then
+              kitmaker_webhook_failed
+              exit 1
+          fi
           cp -R rekt/${CANDIDATE_URL#"http://"}/{base,devel,runtime} kitpick/
           echo "Contents of kitpick/"
           find kitpick/
       fi
-    - 'echo "DIST_BASE_PATH: ${DIST_BASE_PATH}"'
-    - 'echo "TAG_BASE: ${TAG_BASE}"'
-    - 'echo "TAG_RUNTIME: ${TAG_RUNTIME}"'
-    - 'echo "TAG_DEVEL: ${TAG_DEVEL}"'
-    # --driver-opt flag is needed to workaround https://github.com/docker/buildx/issues/386
-    - docker buildx create --use --platform linux/${ARCH} --driver-opt image=moby/buildkit:v0.8.1 --name cuda-${ARCH}
-    - docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_BASE} "${DIST_BASE_PATH}/base"
-                          --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain
-                          --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}
-    - docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_RUNTIME}
-                          --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/runtime"
-                          --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain
-                          --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}
-    - docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_DEVEL}
-                          --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel"
-                          --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain
-                          --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
-    - 'echo "CUDA_TAGS=\"${CUDA_TAGS} ${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}\"" >> tags.env'
-    - cat tags.env
+      echo "DIST_BASE_PATH: ${DIST_BASE_PATH}"
+      echo "TAG_BASE: ${TAG_BASE}"
+      echo "TAG_RUNTIME: ${TAG_RUNTIME}"
+      echo "TAG_DEVEL: ${TAG_DEVEL}"
+      # --driver-opt flag is needed to workaround https://github.com/docker/buildx/issues/386
+      docker buildx create --use --platform linux/${ARCH} --driver-opt image=moby/buildkit:v0.8.1 --name cuda-${ARCH}
+      if ! docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_BASE} "${DIST_BASE_PATH}/base" \
+                            --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain \
+                            --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}; then
+          echo "Failed building the base image!"
+          kitmaker_webhook_failed
+          exit 1
+      fi
+      if ! docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_RUNTIME} \
+                            --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/runtime" \
+                            --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain \
+                            --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}; then
+          echo "Failed building the runtime image!"
+          kitmaker_webhook_failed
+          exit 1
+      fi
+      if ! docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_DEVEL} \
+                            --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel" \
+                            --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain \
+                            --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}; then
+          echo "Failed building the devel image!"
+          kitmaker_webhook_failed
+          exit 1
+      fi
+      echo "CUDA_TAGS=\"${CUDA_TAGS} ${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}\"" >> tags.env
+      cat tags.env
   artifacts:
     reports:
       dotenv: tags.env
@@ -178,6 +196,7 @@ prepare:
   stage: cudnn
   retry: 2
   script:
+    # no set +e necessary here since we don't use this yet for kitmaker builds
     - if [[ -z $DIST_BASE_PATH ]]; then
         DIST_BASE_PATH="dist/${OS}/${CUDA_VERSION}/${ARCH}";
       else
@@ -248,26 +267,36 @@ prepare:
   retry: 2
   <<: *tags_definition
   script:
-    - for tag in $(env | grep 'CUDA.*_TAGS' | cut -f2 -d=); do
-        {# [[ $tag == "\"\"" ]] && continue; #}
-        echo ${tag//\"} >> TAG_MANIFEST;
-      done
-    - cat TAG_MANIFEST
-    - if [ ! -z $KITMAKER ] && [ ! -z $TRIGGER ]; then
-        retry 3 10 time wget --directory-prefix="kitpick" --reject="index.html*" --no-parent ${CANDIDATE_URL}/manifest-${OS_NAME}-${OS_VERSION}.yml;
-        export MANIFEST="kitpick/manifest-${OS_NAME}-${OS_VERSION}.yml";
-      fi
-    - python manager.py ${MANIFEST:+`echo "--manifest ${MANIFEST}"`} push
-        --tag-manifest TAG_MANIFEST
-        --image-name "${IMAGE_NAME}"
-        --os-name "${OS_NAME}"
-        --os-version "${OS_VERSION}"
-        --cuda-version "${CUDA_VERSION}"
-        --arch "${ARCH}"
-        ${PIPELINE_NAME:+`echo "--pipeline-name ${PIPELINE_NAME}"`}
-        ${IMAGE_TAG_SUFFIX:+`echo "--tag-suffix ${IMAGE_TAG_SUFFIX}"`} ${NO_PUSH:+"-n"}
     - |
+      # How gitlab handles errors: https://gitlab.com/gitlab-org/gitlab-runner/-/issues/25394
+      # prevent exit codes from killing the pipeline completely, errors must now be handled manually
+      set +e
+      for tag in $(env | grep 'CUDA.*_TAGS' | cut -f2 -d=); do
+          {# [[ $tag == "\"\"" ]] && continue; #}
+          echo ${tag//\"} >> TAG_MANIFEST
+      done
+      cat TAG_MANIFEST
+      if [ ! -z $KITMAKER ] && [ ! -z $TRIGGER ]; then
+          if ! retry 3 10 time wget --directory-prefix="kitpick" --reject="index.html*" --no-parent ${CANDIDATE_URL}/manifest-${OS_NAME}-${OS_VERSION}.yml; then
+              kitmaker_webhook_failed
+              exit 1
+          fi
+          export MANIFEST="kitpick/manifest-${OS_NAME}-${OS_VERSION}.yml";
+      fi
+      if ! python manager.py ${MANIFEST:+`echo "--manifest ${MANIFEST}"`} push \
+              --tag-manifest TAG_MANIFEST \
+              --image-name "${IMAGE_NAME}" \
+              --os-name "${OS_NAME}" \
+              --os-version "${OS_VERSION}" \
+              --cuda-version "${CUDA_VERSION}" \
+              --arch "${ARCH}" \
+              ${PIPELINE_NAME:+`echo "--pipeline-name ${PIPELINE_NAME}"`} \
+              ${IMAGE_TAG_SUFFIX:+`echo "--tag-suffix ${IMAGE_TAG_SUFFIX}"`} ${NO_PUSH:+"-n"}; then
+          kitmaker_webhook_failed
+          exit 1
+      fi
       cat $MANIFEST | grep "${ARCH}.*urm.nvidia.com" | cut -f2 -d: | xargs >> TAG_MANIFEST
+      kitmaker_cleanup_webhook_success
   artifacts:
     paths:
       - TAG_MANIFEST
@@ -299,36 +328,16 @@ trigger:
     - if: '$TRIGGER == "true" && $KITMAKER == "true"'
       when: on_success
 
-.kitmaker_cleanup_after_script: &kitmaker_cleanup_after_script
-  # GITLAB ISSUE "on_success and on_failure" for after_script" https://gitlab.com/gitlab-org/gitlab-runner/-/issues/3116
-  after_script:
-    - |
-      echo "CI JOB STATUS: '$CI_JOB_STATUS'"
-      if [[ "${CI_JOB_STATUS}" =~ success ]]; then
-        [[ ! -f TAG_MANIFEST ]] && exit 0  # Only call the success webhook in the deploy stage
-        export a_image_name=$(awk '/./{line=$0} END{print line}' TAG_MANIFEST) # get the artifactory repo name
-        sed -i '$ d' TAG_MANIFEST # delete the last line containing the artifactory repo
-        export json_data="{\"status\": \"success\", \"gitlab_pipeline_url\": \"${CI_PIPELINE_URL}\", \"image_name\": \"${a_image_name}\", \"tags\": $(cat TAG_MANIFEST | jq -R . | jq -s . | jq 'map(select(length > 0))' | jq -c .)}"
-        echo curl -v -H "Content-Type: application/json" -d "${json_data}" "${WEBHOOK_URL}"
-        curl -v -H "Content-Type: application/json" -d "${json_data}" "${WEBHOOK_URL}"
-      else
-        export json_data="{\"status\": \"failed\", \"gitlab_pipeline_url\": \"${CI_PIPELINE_URL}\"}"
-        echo curl -v -H "Content-Type: application/json" -d "${json_data}" ${WEBHOOK_URL}
-        curl -v -H "Content-Type: application/json" -d "${json_data}" ${WEBHOOK_URL}
-      fi
-
 kitmaker_base:
   <<: *cuda_base_definition
   <<: *kitmaker_only
   # Need to build container images on a multi-arch capable machine
   <<: *tags_definition_multiarch
-  <<: *kitmaker_cleanup_after_script
 
 kitmaker_deploy:
   <<: *deploy_definition
   <<: *kitmaker_only
   <<: *tags_definition
-  <<: *kitmaker_cleanup_after_script
   needs:
     - job: kitmaker_base
       artifacts: true
