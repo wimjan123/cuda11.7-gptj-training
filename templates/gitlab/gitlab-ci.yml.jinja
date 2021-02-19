@@ -320,6 +320,7 @@ trigger:
 # Need to pass these from the trigger
 .kitmaker_variables: &kitmaker_variables
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/${ARCH}"
+  CI_DEBUG_TRACE: "true"
 
 .kitmaker_only: &kitmaker_only
   variables:

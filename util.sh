@@ -24,7 +24,7 @@ kitmaker_cleanup_webhook_success() {
         [[ ! -f TAG_MANIFEST ]] && exit 0  # Only call the success webhook in the deploy stage
         export a_image_name=$(awk '/./{line=$0} END{print line}' TAG_MANIFEST) # get the artifactory repo name
         sed -i '$ d' TAG_MANIFEST # delete the last line containing the artifactory repo
-        export json_data="{\"status\": \"success\", \"gitlab_pipeline_url\": \"${CI_PIPELINE_URL}\", \"image_name\": \"${a_image_name}\", \"tags\": $(cat TAG_MANIFEST | jq -R . | jq -s . | jq 'map(select(length > 0))' | jq -c .)}"
+        export json_data="{\"status\": \"success\", \"CI_PIPELINE_ID\": \"${CI_PIPELINE_ID}\", \"CI_JOB_ID\": \"${CI_JOB_ID}\", \"CI_COMMIT_SHORT_SHA\": \"${CI_COMMIT_SHORT_SHA}\", \"gitlab_pipeline_url\": \"${CI_PIPELINE_URL}\", \"image_name\": \"${a_image_name}\", \"tags\": $(cat TAG_MANIFEST | jq -R . | jq -s . | jq 'map(select(length > 0))' | jq -c .)}"
         echo curl -v -H "Content-Type: application/json" -d "${json_data}" "${WEBHOOK_URL}"
         curl -v -H "Content-Type: application/json" -d "${json_data}" "${WEBHOOK_URL}"
     fi
@@ -32,7 +32,7 @@ kitmaker_cleanup_webhook_success() {
 
 kitmaker_webhook_failed() {
     if [ ! -z $KITMAKER ] && [ ! -z $TRIGGER ]; then
-        export json_data="{\"status\": \"failed\", \"gitlab_pipeline_url\": \"${CI_PIPELINE_URL}\"}"
+        export json_data="{\"status\": \"failed\", \"CI_PIPELINE_ID\": \"${CI_PIPELINE_ID}\", \"CI_JOB_ID\": \"${CI_JOB_ID}\", \"CI_COMMIT_SHORT_SHA\": \"${CI_COMMIT_SHORT_SHA}\", \"gitlab_pipeline_url\": \"${CI_PIPELINE_URL}\"}"
         echo curl -v -H "Content-Type: application/json" -d "${json_data}" ${WEBHOOK_URL}
         curl -v -H "Content-Type: application/json" -d "${json_data}" ${WEBHOOK_URL}
     fi
