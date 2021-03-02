@@ -192,6 +192,18 @@ Targeted:
 python manager.py generate --os ubi --os-version 7 --cuda-version 10.1  # A specific target
 ```
 
+#### Generating readmes under doc/ for latest cuda version
+
+```
+python manager.py --manifest manifests/cuda.yaml generate --readme      # with latest CUDA version
+```
+
+#### Updating supported and unsupported tags under doc/ based upon the manifest
+
+```
+python manager.py --manifest manifests/cuda.yaml generate --tags        # for all distros and CUDA versions
+```
+
 ### Cuda Component Selection
 
 TODO

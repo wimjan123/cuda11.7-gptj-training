@@ -37,9 +37,7 @@ import git
 import deepdiff
 import requests
 
-
 log = logging.getLogger()
-
 
 HTTP_RETRY_ATTEMPTS = 3
 HTTP_RETRY_WAIT_SECS = 30
@@ -90,7 +88,10 @@ class Manager(cli.Application):
     ci = None
 
     manifest_path = cli.SwitchAttr(
-        "--manifest", str, excludes=["--shipit-uuid"], help="Select a manifest to use.",
+        "--manifest",
+        str,
+        excludes=["--shipit-uuid"],
+        help="Select a manifest to use.",
     )
 
     shipit_uuid = cli.SwitchAttr(
@@ -301,7 +302,11 @@ class ManagerTrigger(Manager):
         return ci_vars
 
     def ci_pipelines(
-        self, cuda_version, distro, distro_version, arch,
+        self,
+        cuda_version,
+        distro,
+        distro_version,
+        arch,
     ):
         """Returns a list of pipelines extracted from the gitlab-ci.yml
 
@@ -629,7 +634,11 @@ class ManagerContainerPush(Manager):
         help="The name of the pipeline the deploy is coming from",
     )
 
-    tag_manifest = cli.SwitchAttr("--tag-manifest", str, help="A list of tags to push",)
+    tag_manifest = cli.SwitchAttr(
+        "--tag-manifest",
+        str,
+        help="A list of tags to push",
+    )
 
     client = None
     repos = []
@@ -757,20 +766,37 @@ class ManagerGenerate(Manager):
     output_path = {}  # The product of parsing the input templates
     key = ""
     cuda_version_is_release_label = False
+    cuda_version_regex = re.compile(r"cuda_v([\d\.]+)(?:_(\w+))?$")
 
     template_env = Environment(
         extensions=["jinja2.ext.do"], trim_blocks=True, lstrip_blocks=True
     )
 
-    generate_ci = cli.Flag(["--ci"], help="Generate the gitlab pipelines only.",)
+    generate_ci = cli.Flag(
+        ["--ci"],
+        help="Generate the gitlab pipelines only.",
+    )
 
-    generate_all = cli.Flag(["--all"], help="Generate all of the templates.",)
+    generate_all = cli.Flag(
+        ["--all"],
+        help="Generate all of the templates.",
+    )
+
+    generate_readme = cli.Flag(
+        ["--readme"],
+        help="Generate all readmes.",
+    )
+
+    generate_tag = cli.Flag(
+        ["--tags"],
+        help="Generate all supported and unsupported tag lists.",
+    )
 
     distro = cli.SwitchAttr(
         "--os-name",
         str,
         group="Targeted",
-        excludes=["--all"],
+        excludes=["--all", "--readme", "--tags"],
         help="The distro to use.",
         default=None,
     )
@@ -779,7 +805,7 @@ class ManagerGenerate(Manager):
         "--os-version",
         str,
         group="Targeted",
-        excludes=["--all"],
+        excludes=["--all", "--readme", "--tags"],
         help="The distro version",
         default=None,
     )
@@ -787,7 +813,7 @@ class ManagerGenerate(Manager):
     cuda_version = cli.SwitchAttr(
         "--cuda-version",
         str,
-        excludes=["--all"],
+        excludes=["--all", "--readme", "--tags"],
         group="Targeted",
         help="[DEPRECATED for newer cuda versions!] The cuda version to use. Example: '11.2'",
         default=None,
@@ -796,7 +822,7 @@ class ManagerGenerate(Manager):
     release_label = cli.SwitchAttr(
         "--release-label",
         str,
-        excludes=["--all"],
+        excludes=["--all", "--readme", "--tags"],
         group="Targeted",
         help="The cuda version to use. Example: '11.2.0'",
         default=None,
@@ -805,7 +831,7 @@ class ManagerGenerate(Manager):
     arch = cli.SwitchAttr(
         "--arch",
         cli.Set("x86_64", "ppc64le", "arm64", case_sensitive=False),
-        excludes=["--all"],
+        excludes=["--all", "--readme", "--tags"],
         group="Targeted",
         help="Generate container scripts for a particular architecture.",
     )
@@ -813,7 +839,7 @@ class ManagerGenerate(Manager):
     pipeline_name = cli.SwitchAttr(
         "--pipeline-name",
         str,
-        excludes=["--all"],
+        excludes=["--all", "--readme", "--tags"],
         group="Targeted",
         help="Use a pipeline name for manifest matching.",
         default="default",
@@ -848,6 +874,11 @@ class ManagerGenerate(Manager):
             if k.startswith("cudnn") and v:
                 obj.append(k)
         return obj
+
+    def matched(self, key):
+        match = self.cuda_version_regex.match(key)
+        if match:
+            return match
 
     # extracts arbitrary keys and inserts them into the templating context
     def extract_keys(self, val):
@@ -1004,11 +1035,18 @@ class ManagerGenerate(Manager):
         # and the discovered keys are injected into the template context.
         # We only checks at three levels in the manifest
         self.extract_keys(
-            self.get_data(conf, self.key, f"{self.distro}{self.distro_version}",)
+            self.get_data(
+                conf,
+                self.key,
+                f"{self.distro}{self.distro_version}",
+            )
         )
         self.extract_keys(
             self.get_data(
-                conf, self.key, f"{self.distro}{self.distro_version}", self.arch,
+                conf,
+                self.key,
+                f"{self.distro}{self.distro_version}",
+                self.arch,
             )
         )
         log.debug("template context %s" % (self.cuda))
@@ -1067,7 +1105,9 @@ class ManagerGenerate(Manager):
                 globber = f"{img}-*"
 
             log.debug(
-                "template_path: %s, output_path: %s", temp_path, self.output_path,
+                "template_path: %s, output_path: %s",
+                temp_path,
+                self.output_path,
             )
 
             self.output_template(
@@ -1107,14 +1147,8 @@ class ManagerGenerate(Manager):
                     comps[comp]["version"] = val["version"]
             return comps
 
-        def matched(key):
-            match = rgx.match(k)
-            if match:
-                return match
-
         for k, _ in manifest.items():
-            rgx = re.compile(r"cuda_v([\d\.]+)(?:_(\w+))?$")
-            if (match := matched(k)) is None:
+            if (match := self.matched(k)) is None:
                 log.debug("No match for %s" % k)
                 continue
 
@@ -1184,7 +1218,7 @@ class ManagerGenerate(Manager):
 
                     ctx[cuda_version][pipeline_name][distro]["cudnn"][arch] = get_cudnn_components(key, distro, arch)
 
-        log.debug(f"ci pipline context: {ctx}")
+        # log.debug(f"ci pipline context: {ctx}")
 
         input_template = pathlib.Path("templates/gitlab/gitlab-ci.yml.jinja")
         with open(input_template) as f:
@@ -1194,6 +1228,192 @@ class ManagerGenerate(Manager):
             with open(output_path, "w") as f2:
                 f2.write(template.render(cuda=ctx))
         #  sys.exit(1)
+
+    def generate_readmes(self):
+
+        distros = []  # local list variable to hold different distros
+
+        # to capture all release labels and corresponding Dockerfile's paths
+        release_info = {}
+        cuda_release_info = {}
+
+        manifest = self.parent.manifest
+        path = {"manifest_path": self.parent.manifest_path}
+
+        def get_releaseInfo_and_dockerfilePath(path):
+
+            for dirpath, directories, files in os.walk(path):
+                refPath = dirpath.split("dist/")
+                for file in files:
+                    if file == "Dockerfile":
+                        labels = {}
+                        releaseLabel = ""
+                        dockerfilePath = os.path.join(refPath[1], file)
+                        dockerfilePathList = dockerfilePath.split("/")
+
+                        for value in dockerfilePathList:
+                            if re.compile(r"([\d\.]+)").match(value):
+                                labels[1] = value
+                            if "cudnn" in value:
+                                labels[2] = value
+                            if value in ("base", "devel", "runtime"):
+                                labels[3] = value
+                            if re.compile(r"centos*|ubuntu*|ubi*").match(value):
+                                operating_system = value.split("-")
+                                labels[4] = operating_system[0]
+                                distros.append(labels[4])
+
+                        for key in sorted(labels.keys()):
+                            if not releaseLabel:
+                                releaseLabel = releaseLabel + labels[key]
+                            else:
+                                releaseLabel = releaseLabel + "-" + labels[key]
+
+                        # storing all release info in a dictionary variable
+                        release_info[dockerfilePath] = releaseLabel
+
+        for key, _ in manifest.items():
+            if match := self.matched(key):
+                if self.cuda_version_regex.match(key):
+                    path['dist_base_path'] = self.get_data(manifest, key, "dist_base_path")
+                    path['release_label'] = self.get_data(manifest, key, "release_label")
+                    # log.debug(ctx)
+                    get_releaseInfo_and_dockerfilePath(path['dist_base_path'])
+                    break  # to keep data for latest available version only
+
+        dist_path_list = path['dist_base_path'].split("/")
+
+        # to get all unique supported operating system names
+        distros = set(distros)
+        os_name = []  # to store names in required format like "CentOS 8", "Ubuntu 20.04" etc.
+
+        for OS in distros:
+            if "centos" in OS:
+                distro = OS.split("centos")
+                os_name.append(f'CentOS {distro[1]}')
+            elif "ubuntu" in OS:
+                distro = OS.split("ubuntu")
+                os_name.append(f'Ubuntu {distro[1]}')
+            else:
+                distro = OS.split("ubi")
+                os_name.append(f'UBI {distro[1]}')
+
+        # to help populate the OS types in all readmes in a sorted manner
+        for keys in sorted(release_info.keys(), reverse=True):
+            cuda_release_info[keys] = release_info[keys]
+
+        for arch in ("x86_64", "arm64", "ppc64le"):
+            # a data structure to manipulate readme template
+            readme = {'latest_version': dist_path_list[1],
+                      'release_label': path['release_label'],
+                      'cuda_release_info': cuda_release_info,
+                      'os_name': os_name,
+                      'arch': arch}
+
+            input_template = pathlib.Path("templates/doc/README.md.jinja")
+            with open(input_template) as rf:
+                log.debug("Processing template %s for architecture %s", input_template, arch)
+                output_path = pathlib.Path(f'doc/README-{arch}.md')
+                template = self.template_env.from_string(rf.read())
+                with open(output_path, "w") as wf:
+                    wf.write(template.render(readme=readme))
+                log.debug("README-%s.md created under doc/", arch)
+
+    def generate_tags(self):
+
+        tag_list = []  # local list variable to hold tags from dockerhub
+        distros_list = []  # local list variable to hold distros from dockerhub
+        cuda_releases = {}  # local dict variable for all CUDA releases
+        unsupported_release_labels = []  # to grab unsupported CUDA releases from manifest.yaml
+        unsupported_distros = []  # to grab unsupported CUDA distros from manifest.yaml
+        # for all supported CUDA releases
+        supported_cuda_releases = {}
+        supported_distros = []
+
+        docker_repo = "docker.io/nvidia/cuda"
+
+        def get_repo_tags(repo):
+            return skopeocmd(
+                ("list-tags", f"docker://{repo}"), printOutput=False, returnOut=True
+            )
+
+        try:
+            tag_dict = json.loads(get_repo_tags(docker_repo).stdout)
+        except:
+            log.error("Some problem occurred in getting tags from DockerHub")
+            sys.exit(1)
+
+        for key in tag_dict.keys():
+            if "Tags" in key:
+                tag_list = list(tag_dict[key])
+
+        for tags in tag_list:
+            if "ubuntu" in tags:
+                ubuntu_tags = tags.split("-")
+                for tag in ubuntu_tags:
+                    if "ubuntu" in tag:
+                        distros_list.append(tag)
+            elif "centos" in tags:
+                centos_tags = tags.split("-")
+                distros_list.append(centos_tags[len(centos_tags)-1])
+            elif "ubi" in tags:
+                ubi_tags = tags.split("-")
+                distros_list.append(ubi_tags[len(ubi_tags)-1])
+        distros_set = set(distros_list)
+
+        manifest = self.parent.manifest
+
+        for key, _ in manifest.items():
+            if match := self.matched(key):
+                if self.cuda_version_regex.match(key):
+                    new_key = key.split("v")
+                    cuda_releases[new_key[1]] = self.get_data(manifest, key, "release_label")
+            if key == "unsupported":
+                unsupported_distros = self.get_data(manifest, key, "distros")
+                unsupported_release_labels = self.get_data(manifest, key, "release_label")
+
+        for distro in distros_set:
+            if distro not in unsupported_distros:
+                supported_distros.append(distro)
+
+        for key, value in cuda_releases.items():
+            if value not in unsupported_release_labels:
+                supported_cuda_releases[key] = cuda_releases[key]
+
+        # update cuda_releases with unsupported release info
+        for label in unsupported_release_labels:
+            if re.compile(r"([\d\.]+)$").match(str(label)):
+                cuda_releases[str(label)] = label
+            else:  # to handle special cases like 11.0 RC and 11.0 Update 1
+                tag = label.split(" ")
+                if len(tag) == 2:
+                    cuda_releases[tag[0]] = label
+                else:
+                    cuda_releases[(tag[0]+"."+tag[len(tag)-1])] = label
+        # log.debug(cuda_releases)
+
+        supported = {'cuda_tags': tag_list,
+                     'supported_distros': sorted(supported_distros, reverse=True),
+                     'supported_cuda_releases': supported_cuda_releases}
+
+        unsupported = {'cuda_tags': tag_list,
+                       'cuda_releases': cuda_releases,
+                       'unsupported_distros': sorted(unsupported_distros, reverse=True),
+                       'unsupported_cuda_releases': unsupported_release_labels,
+                       'supported_distros': sorted(supported_distros, reverse=True)}
+
+        for tag in ("supported", "unsupported"):
+            if "unsupported" in tag:
+                tags = unsupported
+            else:
+                tags = supported
+            input_template = pathlib.Path(f'templates/doc/{tag}-tags.md.Jinja')
+            with open(input_template) as rf:
+                log.debug("Processing template %s for %s tags", input_template, tag)
+                output_path = pathlib.Path(f'doc/{tag}-tags.md')
+                template = self.template_env.from_string(rf.read())
+                with open(output_path, "w") as wf:
+                    wf.write(template.render(tags=tags))
 
     # fmt: on
     def get_shipit_funnel_json(self):
@@ -1456,7 +1676,10 @@ class ManagerGenerate(Manager):
 
             self.dist_base_path = pathlib.Path(
                 self.parent.get_data(
-                    self.parent.manifest, self.key, "dist_base_path", can_skip=False,
+                    self.parent.manifest,
+                    self.key,
+                    "dist_base_path",
+                    can_skip=False,
                 )
             )
             if not self.output_manifest_path:
@@ -1481,6 +1704,10 @@ class ManagerGenerate(Manager):
                 self.parent.load_ci_yaml()
                 if self.generate_all:
                     self.target_all()
+                elif self.generate_readme:
+                    self.generate_readmes()
+                elif self.generate_tag:
+                    self.generate_tags()
                 else:
                     self.targeted()
         log.info("Done")
