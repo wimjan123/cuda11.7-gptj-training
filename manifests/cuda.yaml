@@ -27,6 +27,16 @@ push_repos:
       ppc64le: nvidia/cuda-ppc64le
       arm64: nvidia/cuda-arm64
 
+unsupported:
+  distros:
+   - centos6
+   - ubuntu14.04
+   - ubuntu17.04
+  release_label:
+   - 6.5
+   - 7.0
+   - 7.5
+   - 11.0 RC
 
 .requires_v11.2.1: &cuda11_2_1_requires
   requires: "cuda>=11.2 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=440,driver<441 driver>=450,driver<451"
@@ -75,6 +85,7 @@ push_repos:
 
 cuda_v11.2.1:
   dist_base_path: dist/11.2.1
+  release_label: 11.2 Update 1
   ubuntu20.04:
     template_path: templates/ubuntu
     base_image: ubuntu:20.04
@@ -271,6 +282,7 @@ cuda_v11.2.1:
 
 cuda_v11.2.0:
   dist_base_path: dist/11.2.0
+  release_label: 11.2.0
   ubuntu20.04:
     template_path: templates/ubuntu
     base_image: ubuntu:20.04
@@ -467,6 +479,7 @@ cuda_v11.2.0:
 
 cuda_v11.1.1:
   dist_base_path: dist/11.1.1
+  release_label: 11.1 Update 1
   ubuntu20.04:
     template_path: templates/ubuntu
     base_image: ubuntu:20.04
@@ -673,6 +686,7 @@ cuda_v11.1.1:
 
 cuda_v11.0.3:
   dist_base_path: dist/11.0.3
+  release_label: 11.0 Update 1
   ubuntu20.04:
     template_path: templates/ubuntu
     base_image: ubuntu:20.04
@@ -849,6 +863,7 @@ cuda_v11.0.3:
 
 cuda_v10.2:
   dist_base_path: dist/10.2
+  release_label: 10.2
   ubuntu18.04:
     template_path: templates/ubuntu/legacy
     base_image: ubuntu:18.04
@@ -996,6 +1011,7 @@ cuda_v10.2:
 
 cuda_v10.1:
   dist_base_path: dist/10.1
+  release_label: 10.1
   ubuntu18.04:
     template_path: templates/ubuntu/legacy
     base_image: ubuntu:18.04
@@ -1166,6 +1182,7 @@ cuda_v10.1:
 
 cuda_v10.0:
   dist_base_path: dist/10.0
+  release_label: 10.0
   ubuntu18.04:
     template_path: templates/ubuntu/legacy
     base_image: ubuntu:18.04
@@ -1260,6 +1277,7 @@ cuda_v10.0:
 
 cuda_v9.2:
   dist_base_path: dist/9.2
+  release_label: 9.2
   ubuntu18.04:
     template_path: templates/ubuntu/legacy
     base_image: ubuntu:18.04
@@ -1369,6 +1387,7 @@ cuda_v9.2:
 
 cuda_v9.1:
   dist_base_path: dist/9.1
+  release_label: 9.1
   ubuntu16.04:
     template_path: templates/ubuntu/legacy
     base_image: ubuntu:16.04
@@ -1458,6 +1477,7 @@ cuda_v9.1:
 
 cuda_v9.0:
   dist_base_path: dist/9.0
+  release_label: 9.0
   ubuntu16.04:
     template_path: templates/ubuntu/legacy
     base_image: ubuntu:16.04
@@ -1535,7 +1555,11 @@ cuda_v9.0:
         cudnn7:
           version: 7.2.1.38
           sha256sum: 4c0937b5618cb0d1d7eed195b3a4ba6a49e061f9e734f5702b030c8522cdfc9c
-
+  unsupported:
+   - centos6
+   - ubuntu14.04
+   - cuda6.5
+   - cuda7
 
 .requires_v8.0: &cuda8_0_requires
   requires: "cuda>=8.0"
@@ -1547,6 +1571,7 @@ cuda_v9.0:
 
 cuda_v8.0:
   dist_base_path: dist/8.0
+  release_label: 8.0
   ubuntu16.04:
     template_path: templates/ubuntu/legacy
     base_image: ubuntu:16.04
