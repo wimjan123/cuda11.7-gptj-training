@@ -88,10 +88,7 @@ class Manager(cli.Application):
     ci = None
 
     manifest_path = cli.SwitchAttr(
-        "--manifest",
-        str,
-        excludes=["--shipit-uuid"],
-        help="Select a manifest to use.",
+        "--manifest", str, excludes=["--shipit-uuid"], help="Select a manifest to use.",
     )
 
     shipit_uuid = cli.SwitchAttr(
@@ -302,11 +299,7 @@ class ManagerTrigger(Manager):
         return ci_vars
 
     def ci_pipelines(
-        self,
-        cuda_version,
-        distro,
-        distro_version,
-        arch,
+        self, cuda_version, distro, distro_version, arch,
     ):
         """Returns a list of pipelines extracted from the gitlab-ci.yml
 
@@ -634,11 +627,7 @@ class ManagerContainerPush(Manager):
         help="The name of the pipeline the deploy is coming from",
     )
 
-    tag_manifest = cli.SwitchAttr(
-        "--tag-manifest",
-        str,
-        help="A list of tags to push",
-    )
+    tag_manifest = cli.SwitchAttr("--tag-manifest", str, help="A list of tags to push",)
 
     client = None
     repos = []
@@ -772,24 +761,14 @@ class ManagerGenerate(Manager):
         extensions=["jinja2.ext.do"], trim_blocks=True, lstrip_blocks=True
     )
 
-    generate_ci = cli.Flag(
-        ["--ci"],
-        help="Generate the gitlab pipelines only.",
-    )
+    generate_ci = cli.Flag(["--ci"], help="Generate the gitlab pipelines only.",)
 
-    generate_all = cli.Flag(
-        ["--all"],
-        help="Generate all of the templates.",
-    )
+    generate_all = cli.Flag(["--all"], help="Generate all of the templates.",)
 
-    generate_readme = cli.Flag(
-        ["--readme"],
-        help="Generate all readmes.",
-    )
+    generate_readme = cli.Flag(["--readme"], help="Generate all readmes.",)
 
     generate_tag = cli.Flag(
-        ["--tags"],
-        help="Generate all supported and unsupported tag lists.",
+        ["--tags"], help="Generate all supported and unsupported tag lists.",
     )
 
     distro = cli.SwitchAttr(
@@ -1035,18 +1014,11 @@ class ManagerGenerate(Manager):
         # and the discovered keys are injected into the template context.
         # We only checks at three levels in the manifest
         self.extract_keys(
-            self.get_data(
-                conf,
-                self.key,
-                f"{self.distro}{self.distro_version}",
-            )
+            self.get_data(conf, self.key, f"{self.distro}{self.distro_version}",)
         )
         self.extract_keys(
             self.get_data(
-                conf,
-                self.key,
-                f"{self.distro}{self.distro_version}",
-                self.arch,
+                conf, self.key, f"{self.distro}{self.distro_version}", self.arch,
             )
         )
         log.debug("template context %s" % (self.cuda))
@@ -1105,9 +1077,7 @@ class ManagerGenerate(Manager):
                 globber = f"{img}-*"
 
             log.debug(
-                "template_path: %s, output_path: %s",
-                temp_path,
-                self.output_path,
+                "template_path: %s, output_path: %s", temp_path, self.output_path,
             )
 
             self.output_template(
@@ -1676,10 +1646,7 @@ class ManagerGenerate(Manager):
 
             self.dist_base_path = pathlib.Path(
                 self.parent.get_data(
-                    self.parent.manifest,
-                    self.key,
-                    "dist_base_path",
-                    can_skip=False,
+                    self.parent.manifest, self.key, "dist_base_path", can_skip=False,
                 )
             )
             if not self.output_manifest_path:
@@ -1699,7 +1666,25 @@ class ManagerGenerate(Manager):
             self.shipit_manifest()
             self.targeted()
         else:
-            self.generate_gitlab_pipelines()
+            # Make sure all of our arguments are present
+            if any(
+                [
+                    not i
+                    for i in [
+                        self.arch,
+                        self.distro,
+                        self.distro_version,
+                        self.release_label,
+                    ]
+                ]
+            ):
+                # Plumbum doesn't allow this check
+                log.error(
+                    """Missing arguments (one or all): ["--arch", "--os", "--os-version", "--release-label"]"""
+                )
+                sys.exit(1)
+            if self.generate_all or self.generate_ci:
+                self.generate_gitlab_pipelines()
             if not self.generate_ci:
                 self.parent.load_ci_yaml()
                 if self.generate_all:
