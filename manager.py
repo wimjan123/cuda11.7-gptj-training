@@ -1666,25 +1666,26 @@ class ManagerGenerate(Manager):
             self.shipit_manifest()
             self.targeted()
         else:
-            # Make sure all of our arguments are present
-            if any(
-                [
-                    not i
-                    for i in [
-                        self.arch,
-                        self.distro,
-                        self.distro_version,
-                        self.release_label,
-                    ]
-                ]
-            ):
-                # Plumbum doesn't allow this check
-                log.error(
-                    """Missing arguments (one or all): ["--arch", "--os", "--os-version", "--release-label"]"""
-                )
-                sys.exit(1)
             if self.generate_all or self.generate_ci:
                 self.generate_gitlab_pipelines()
+            else:
+                # Make sure all of our arguments are present
+                if any(
+                    [
+                        not i
+                        for i in [
+                            self.arch,
+                            self.distro,
+                            self.distro_version,
+                            self.release_label,
+                        ]
+                    ]
+                ):
+                    # Plumbum doesn't allow this check
+                    log.error(
+                        """Missing arguments (one or all): ["--arch", "--os", "--os-version", "--release-label"]"""
+                    )
+                    sys.exit(1)
             if not self.generate_ci:
                 self.parent.load_ci_yaml()
                 if self.generate_all:

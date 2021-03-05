@@ -12,7 +12,7 @@ FROM ${IMAGE_NAME}:{{ cuda.version.release_label }}-runtime-{{ cuda.os.distro }}
 
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 
-{% if "libnccl2_dev" in cuda.components and cuda.components.libnccl2_dev %}
+{% if "libnccl2" in cuda.components and cuda.components.libnccl2 and "libnccl2_dev" in cuda.components and cuda.components.libnccl2_dev %}
     {% set libnccl2_dev_component_version = cuda.components.libnccl2_dev.version %}
     {% set libnccl2_dev_component_version_with_cuda = "%s+cuda%s.%s" | format(cuda.components.libnccl2_dev.version, cuda.version.major, cuda.version.minor) %}
 ENV NCCL_VERSION {{ libnccl2_dev_component_version[:-2] }}

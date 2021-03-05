@@ -11,7 +11,7 @@ LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 {% set libcublas_devel_component_version = cuda.version.major + "-" + cuda.version.minor + "-" + cuda.components.libcublas_dev.version %}
 {% set libnpp_devel_component_version = cuda.version.major + "-" + cuda.version.minor + "-" + cuda.components.libnpp_dev.version -%}
 
-{% if "libnccl2" in cuda.components %}
+{% if "libnccl2" in cuda.components and cuda.components.libnccl2 and "libnccl2_dev" in cuda.components and cuda.components.libnccl2_dev %}
     {% set libnccl2_component_version = cuda.components.libnccl2.version + "+cuda" + cuda.version.major + "." + cuda.version.minor %}
 ENV NCCL_VERSION {{ cuda.components.libnccl2.version[:-2] }}
 

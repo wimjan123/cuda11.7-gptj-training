@@ -148,6 +148,7 @@ cuda_v11.2.1:
       <<: *cuda11_2_1_requires
       components:
         <<: *cuda11_2_1_components
+        libnccl2:
   centos8:
     template_path: templates/redhat
     base_image: centos:8
@@ -344,6 +345,7 @@ cuda_v11.2.0:
       <<: *cuda11_2_0_requires
       components:
         <<: *cuda11_2_0_components
+        libnccl2:
   centos8:
     template_path: templates/redhat
     base_image: centos:8
