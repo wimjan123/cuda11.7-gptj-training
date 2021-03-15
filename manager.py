@@ -1666,7 +1666,7 @@ class ManagerGenerate(Manager):
             self.shipit_manifest()
             self.targeted()
         else:
-            if self.generate_all or self.generate_ci:
+            if self.generate_all or self.generate_ci or self.generate_readme:
                 self.generate_gitlab_pipelines()
             else:
                 # Make sure all of our arguments are present
