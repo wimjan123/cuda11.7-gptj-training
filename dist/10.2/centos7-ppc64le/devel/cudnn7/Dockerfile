@@ -2,7 +2,7 @@ ARG IMAGE_NAME
 FROM ${IMAGE_NAME}:10.2-devel-centos7
 LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 
-ENV CUDNN_VERSION 7.6.5.32
+ENV CUDNN_VERSION 7.6.5.33
 LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
 
 RUN yum install -y \

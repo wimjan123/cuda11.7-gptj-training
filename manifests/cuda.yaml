@@ -1139,8 +1139,10 @@ cuda_v10.2:
       requires: "cuda>=10.2"
       components:
         <<: *cuda10_2_components
+        cudnn7:
+          version: 7.6.5.33-1
         cudnn8:
-          version: 8.0.4.30-1
+          version: 8.0.5.39-1
   ubi8:
     template_path: templates/redhat/legacy
     base_image: registry.access.redhat.com/ubi8/ubi:latest
@@ -1155,10 +1157,8 @@ cuda_v10.2:
       <<: *cuda10_2_requires
       components:
         <<: *cuda10_2_components
-        # cudnn7 is not in the ML repo for rhel8
         cudnn7:
-          version: 7.6.5.32
-          sha256sum: 600267f2caaed2fd58eb214ba669d8ea35f396a7d19b94822e6b36f9f7088c20
+          version: 7.6.5.33-1
   ubi7:
     template_path: templates/redhat/legacy
     base_image: registry.access.redhat.com/ubi7/ubi:latest
@@ -1183,8 +1183,10 @@ cuda_v10.2:
       requires: "cuda>=10.2"
       components:
         <<: *cuda10_2_components
+        cudnn7:
+          version: 7.6.5.33-1
         cudnn8:
-          version: 8.0.4.30-1
+          version: 8.0.5.39-1
 
 
 .requires_v10.1: &cuda10_1_requires
