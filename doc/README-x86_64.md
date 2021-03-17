@@ -106,6 +106,9 @@ Visit [OpenSource @ Nvidia](https://developer.download.nvidia.com/compute/cuda/o
 - [`11.2.2-devel-centos8` (*11.2.2/centos8-x86_64/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.2/centos8-x86_64/devel/Dockerfile)
 - [`11.2.2-base-centos8` (*11.2.2/centos8-x86_64/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.2/centos8-x86_64/base/Dockerfile)
 ### CentOS 7
+
+NOT YET PUBLISHED! Release is BLOCKED by a detected CVE in the base centos7 images upstream. See https://gitlab.com/nvidia/container-images/cuda/-/issues/115
+
 - [`11.2.2-cudnn8-runtime-centos7` (*11.2.2/centos7-x86_64/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.2/centos7-x86_64/runtime/cudnn8/Dockerfile)
 - [`11.2.2-runtime-centos7` (*11.2.2/centos7-x86_64/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.2/centos7-x86_64/runtime/Dockerfile)
 - [`11.2.2-cudnn8-devel-centos7` (*11.2.2/centos7-x86_64/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.2/centos7-x86_64/devel/cudnn8/Dockerfile)
