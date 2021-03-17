@@ -1666,7 +1666,12 @@ class ManagerGenerate(Manager):
             self.shipit_manifest()
             self.targeted()
         else:
-            if self.generate_all or self.generate_ci or self.generate_readme:
+            if (
+                self.generate_all
+                or self.generate_ci
+                or self.generate_readme
+                or self.generate_tags
+            ):
                 self.generate_gitlab_pipelines()
             else:
                 # Make sure all of our arguments are present

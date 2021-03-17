@@ -69,13 +69,17 @@ For a full list of supported tags, click [*here*](https://gitlab.com/nvidia/cont
 
 Visit [OpenSource @ Nvidia](https://developer.download.nvidia.com/compute/cuda/opensource/image/) for the GPL sources of the packages contained in the CUDA base image layers.
 
+
 ### UBI 8
+
 - [`11.2.2-cudnn8-runtime-ubi8` (*11.2.2/ubi8-ppc64le/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.2/ubi8-ppc64le/runtime/cudnn8/Dockerfile)
 - [`11.2.2-runtime-ubi8` (*11.2.2/ubi8-ppc64le/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.2/ubi8-ppc64le/runtime/Dockerfile)
 - [`11.2.2-cudnn8-devel-ubi8` (*11.2.2/ubi8-ppc64le/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.2/ubi8-ppc64le/devel/cudnn8/Dockerfile)
 - [`11.2.2-devel-ubi8` (*11.2.2/ubi8-ppc64le/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.2/ubi8-ppc64le/devel/Dockerfile)
 - [`11.2.2-base-ubi8` (*11.2.2/ubi8-ppc64le/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.2/ubi8-ppc64le/base/Dockerfile)
+
 ### CentOS 8
+
 - [`11.2.2-cudnn8-runtime-centos8` (*11.2.2/centos8-ppc64le/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.2/centos8-ppc64le/runtime/cudnn8/Dockerfile)
 - [`11.2.2-runtime-centos8` (*11.2.2/centos8-ppc64le/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.2/centos8-ppc64le/runtime/Dockerfile)
 - [`11.2.2-cudnn8-devel-centos8` (*11.2.2/centos8-ppc64le/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.2/centos8-ppc64le/devel/cudnn8/Dockerfile)

@@ -5,7 +5,8 @@ A full list of tags that are supported with CUDA, cuDNN, and security updates.
 _Repos: nvcr.io/nvidia/cuda (x86_64), nvcr.io/nvidia/cuda-ppc64le (ppc64le)_<br />
 _Repos: docker.io/nvidia/cuda (x86_64), docker.io/nvidia/cuda-ppc64le (ppc64le)_
 
-{% set OS = [] %}
+{%- set OS = [] %}
+
 {% for os in tags.supported_distros %}
     {% set releases = [] %}
     {% for release_key, release_value in tags.supported_cuda_releases.items() %}
@@ -14,11 +15,11 @@ _Repos: docker.io/nvidia/cuda (x86_64), docker.io/nvidia/cuda-ppc64le (ppc64le)_
                 {% set path = tag.split("-") %}
                 {% if release_key == path[0] %}
                     {% if os not in OS %}
-                        {% print "### " %}{% print os %}{% print "\n" %}
+                        {% print "\n### " %}{% print os %}{% print "\n" %}
                         {% do OS.append(os) %}
                     {% endif %}
                     {% if release_key not in releases %}
-                        {% print "#### CUDA " %}{% print release_value %}{% print "\n" %}
+                        {% print "\n#### CUDA " %}{% print release_value %}{% print "\n\n" %}
                         {% do releases.append(release_key) %}
                     {% endif %}
                     {% print "- [`" %}{% print tag %}{% print "` (*" %}

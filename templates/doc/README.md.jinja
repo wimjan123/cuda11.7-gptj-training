@@ -76,7 +76,7 @@ Visit [OpenSource @ Nvidia](https://developer.download.nvidia.com/compute/cuda/o
             {% if os.replace(" ", "").lower() in keys %}
                 {% if readme.arch in keys %}
                     {% if os not in OS %}
-                        {% print "### " %}{% print os %}{% print "\n" %}
+                        {% print "\n### " %}{% print os %}{% print "\n\n" %}
                         {% do OS.append(os) %}
                     {% endif %}
                     {% print "- [`" %}{% print values %}{% print "` (*" %}{% print keys %}{% print "*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/" %}{% print keys %}{% print ")\n" %}

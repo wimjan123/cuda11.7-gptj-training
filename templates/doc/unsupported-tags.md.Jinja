@@ -19,11 +19,11 @@ The tags still exist but are un-supported and may contain critical vulnerabiliti
                                     {% set version = tag.split("-") %}
                                     {% if key == version[0] %}
                                         {% if os not in OS %}
-                                            {% print "### " %}{% print os %}{% print "\n" %}
+                                            {% print "\n### " %}{% print os %}{% print "\n\n" %}
                                             {% do OS.append(os) %}
                                         {% endif %}
                                         {% if release not in releases %}
-                                            {% print "#### CUDA " %}{% print release %}{% print "\n" %}
+                                            {% print "\n#### CUDA " %}{% print release %}{% print "\n\n" %}
                                             {% do releases.append(release) %}
                                         {% endif %}
                                         {% print "- `" %}{% print tag %}{% print "`\n" %}
