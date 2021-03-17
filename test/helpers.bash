@@ -1,9 +1,9 @@
 #!/bin/bash
 
-load /opt/bats/assert/load.bash
-
-dbg() {
-  echo "$@" | sed -e 's/^/# /' >&3 ;
+function debug() {
+    if [ $DEBUG -eq 1 ]; then
+        echo "DEBUG: $@" | sed -e 's/^/# /' >&3 ;
+    fi
 }
 
 function cleanup() {
@@ -11,7 +11,7 @@ function cleanup() {
 }
 
 function check_runtime() {
-    dbg "$(docker info | grep Runtimes)"
+    debug "$(docker info | grep Runtimes)"
     docker info | grep 'Runtimes:' | grep -q 'nvidia'
 }
 
@@ -73,11 +73,5 @@ function skip_if_ngc_cli_not_installed() {
     run sh -c "which ngc"
     if [[ "$status" -eq 1 ]]; then
         skip "ngc cli is not installed."
-    fi
-}
-
-function debug() {
-    if [ $DEBUG -eq 1 ]; then
-        echo "$@" | sed -e 's/^/# /' >&3 ;
     fi
 }

@@ -15,9 +15,10 @@ function setup() {
        skip "Only needed on x86_64."
     fi
     unsupported=('8.0', '9.0', '9.1', '9.2')
-    image_name=$(echo "${image}" | cut -d: -f3)
-    if printf '%s' "${unsupported[@]}" | grep -q "${image_name}"; then
-        skip "libnccl2 not supported for this platform"
+    debug "cuda_version: ${CUDA_VERSION}"
+    debug "unsupported: $(printf '%s' \"${unsupported[@]}\")"
+    if printf '%s' "${unsupported[@]}" | grep -q "${CUDA_VERSION}"; then
+        skip "NVIDIA_REQUIRE_CUDA not supported for this CUDA version"
     fi
     docker_run --rm --gpus 0 ${image} bash -c "printenv | grep -q 'brand=tesla'"
     [ "$status" -eq 0 ]
