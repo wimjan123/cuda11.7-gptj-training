@@ -156,6 +156,8 @@ prepare:
       echo "TAG_BASE: ${TAG_BASE}"
       echo "TAG_RUNTIME: ${TAG_RUNTIME}"
       echo "TAG_DEVEL: ${TAG_DEVEL}"
+      # COPY the NGC DEEP LEARNING CONTAINER LICENSE
+      cp -v ./NGC-DL-CONTAINER-LICENSE "${DIST_BASE_PATH}/base"
       # --driver-opt flag is needed to workaround https://github.com/docker/buildx/issues/386
       docker buildx create --use --platform linux/${ARCH} --driver-opt image=moby/buildkit:v0.8.1 --name cuda-${ARCH}
       if ! docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_BASE} "${DIST_BASE_PATH}/base" \
