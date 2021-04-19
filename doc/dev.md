@@ -204,6 +204,13 @@ python manager.py --manifest manifests/cuda.yaml generate --readme      # with l
 python manager.py --manifest manifests/cuda.yaml generate --tags        # for all distros and CUDA versions
 ```
 
+#### Updating readmes on DockerHub
+
+```
+python manager.py --manifest manifests/cuda.yaml push --readme          # for all x86_64, ppc64le and arm64 supported repos
+```
+_Note: --dry-run or -n can also be used in addition to not push readmes on DockerHub_
+
 ### Cuda Component Selection
 
 TODO

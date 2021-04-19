@@ -45,18 +45,24 @@ HTTP_RETRY_WAIT_SECS = 30
 SUPPORTED_DISTRO_LIST = ["ubuntu", "ubi", "centos"]
 
 
-def skopeocmd(args, printOutput=True, returnOut=False):
-    """Run the skopeo command with specified arguments.
+def shellcmd(bin, args, printOutput=True, returnOut=False):
+    """Run the shell command with specified arguments for skopeo/docker
 
     args        -- A tuple of arguments.
     printOutput -- If True, the output of the command will be send to the logger.
     returnOut   -- Return a tuple of the stdout, stderr, and return code. Default: returns true if the command
                  succeeded.
     """
-    skop = local["/usr/bin/skopeo"]
+    if "skopeo" in bin:
+        bin_name = local["/usr/bin/skopeo"]
+    elif "docker" in bin:
+        bin_name = local["/usr/bin/docker"]
+    else:
+        log.error("%s is not supported by method - shellcmd", bin)
+        sys.exit(1)
     out = ""
     err = ""
-    p = skop.popen(
+    p = bin_name.popen(
         args=args, shell=False, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     for line in io.TextIOWrapper(p.stdout, encoding="utf-8"):
@@ -88,7 +94,10 @@ class Manager(cli.Application):
     ci = None
 
     manifest_path = cli.SwitchAttr(
-        "--manifest", str, excludes=["--shipit-uuid"], help="Select a manifest to use.",
+        "--manifest",
+        str,
+        excludes=["--shipit-uuid"],
+        help="Select a manifest to use.",
     )
 
     shipit_uuid = cli.SwitchAttr(
@@ -126,8 +135,12 @@ class Manager(cli.Application):
         except glom.PathAccessError:
             if can_skip:
                 return
-            raise glom.PathAccessError
-        return data
+            # raise glom.PathAccessError
+            log.error(
+                "Exception occurred in get_data. Check if one or more required parameters are missing?"
+            )
+        else:
+            return data
 
     # Returns a unmarshalled json object
     def get_http_json(self, url):
@@ -205,7 +218,7 @@ class ManagerTrigger(Manager):
     branch = cli.SwitchAttr(
         "--branch",
         str,
-        help="The branch to trigger against on Gitlab",
+        help="The branch to trigger against on Gitlab.",
         default="master",
     )
 
@@ -241,7 +254,7 @@ class ManagerTrigger(Manager):
         cli.Set("x86_64", "ppc64le", "arm64", case_sensitive=False),
         group="Targeted",
         excludes=["--manifest", "--trigger-override"],
-        help="Generate container scripts for a particular architecture.",
+        help="Generate container scripts for a particular architecture",
     )
 
     candidate_number = cli.SwitchAttr(
@@ -249,7 +262,7 @@ class ManagerTrigger(Manager):
         str,
         group="Targeted",
         excludes=["--manifest", "--trigger-override"],
-        help="The CUDA release candidate number.",
+        help="The CUDA release candidate number",
         default=None,
     )
 
@@ -258,7 +271,7 @@ class ManagerTrigger(Manager):
         str,
         group="Targeted",
         excludes=["--manifest", "--trigger-override"],
-        help="The CUDA release candidate url.",
+        help="The CUDA release candidate url",
         default=None,
     )
 
@@ -267,7 +280,7 @@ class ManagerTrigger(Manager):
         str,
         group="Targeted",
         excludes=["--manifest", "--trigger-override"],
-        help="The url to POST to when the job is done. POST will include a list of tags pushed.",
+        help="The url to POST to when the job is done. POST will include a list of tags pushed",
         default=None,
     )
 
@@ -283,7 +296,7 @@ class ManagerTrigger(Manager):
         "--trigger-override",
         str,
         excludes=["--shipit-uuid"],
-        help="Override triggering from gitlab with a variable.",
+        help="Override triggering from gitlab with a variable",
         default=None,
     )
 
@@ -299,7 +312,11 @@ class ManagerTrigger(Manager):
         return ci_vars
 
     def ci_pipelines(
-        self, cuda_version, distro, distro_version, arch,
+        self,
+        cuda_version,
+        distro,
+        distro_version,
+        arch,
     ):
         """Returns a list of pipelines extracted from the gitlab-ci.yml
 
@@ -570,7 +587,7 @@ class ManagerTrigger(Manager):
             ):
                 # Plumbum doesn't allow this check
                 log.error(
-                    """Missing arguments (one or all): ["--arch", "--cuda-version", "--os", "--os-version", "--candidate-number"]"""
+                    """Missing arguments (one or all): ["--arch", "--cuda-version", "--os-name", "--os-version", "--candidate-number"]"""
                 )
                 sys.exit(1)
             log.debug("Triggering gitlab kitmaker pipeline using shipit source")
@@ -583,28 +600,44 @@ class ManagerTrigger(Manager):
 
 @Manager.subcommand("push")
 class ManagerContainerPush(Manager):
-    DESCRIPTION = "Login and push to the container registries"
-
-    image_name = cli.SwitchAttr(
-        "--image-name", str, help="The image name to tag", default="", mandatory=True
-    )
-
-    distro = cli.SwitchAttr(
-        "--os-name", str, help="The distro to use.", default=None, mandatory=True
-    )
-
-    distro_version = cli.SwitchAttr(
-        "--os-version", str, help="The distro version", default=None, mandatory=True
+    DESCRIPTION = (
+        "Login and push to the container registries.\n"
+        "Use either --image-name, --os-name, --os-version, --cuda-version 'to push images' or --readme 'to push readmes'."
     )
 
     dry_run = cli.Flag(["-n", "--dry-run"], help="Show output but don't do anything!")
 
+    image_name = cli.SwitchAttr(
+        "--image-name",
+        str,
+        requires=["--os-name", "--os-version", "--cuda-version"],
+        excludes=["--readme"],
+        help="The image name to tag",
+        default="",
+    )
+
+    distro = cli.SwitchAttr(
+        "--os-name",
+        str,
+        requires=["--image-name", "--os-version", "--cuda-version"],
+        help="The distro to use",
+        default=None,
+    )
+
+    distro_version = cli.SwitchAttr(
+        "--os-version",
+        str,
+        requires=["--image-name", "--os-name", "--cuda-version"],
+        help="The distro version",
+        default=None,
+    )
+
     cuda_version = cli.SwitchAttr(
         "--cuda-version",
         str,
+        requires=["--image-name", "--os-name", "--os-version"],
         help="The cuda version to use. Example: '10.1'",
         default=None,
-        mandatory=True,
     )
 
     image_tag_suffix = cli.SwitchAttr(
@@ -618,7 +651,7 @@ class ManagerContainerPush(Manager):
         "--arch",
         cli.Set("x86_64", "ppc64le", "arm64", case_sensitive=False),
         requires=["--image-name", "--os-name", "--os-version", "--cuda-version"],
-        help="Push images for a particular architecture.",
+        help="Push images for a particular architecture",
     )
 
     pipeline_name = cli.SwitchAttr(
@@ -627,10 +660,20 @@ class ManagerContainerPush(Manager):
         help="The name of the pipeline the deploy is coming from",
     )
 
-    tag_manifest = cli.SwitchAttr("--tag-manifest", str, help="A list of tags to push",)
+    tag_manifest = cli.SwitchAttr(
+        "--tag-manifest",
+        str,
+        help="A list of tags to push",
+    )
+
+    readme = cli.Flag(
+        "--readme",
+        help="Path to the README.md",
+    )
 
     client = None
     repos = []
+    repos_dict = {}
     tags = []
     key = ""
     copy_failed = False
@@ -667,9 +710,8 @@ class ManagerContainerPush(Manager):
                 log.info("repo: '%s' is excluded for this image", repo)
                 continue
             if self.arch not in metadata["registry"]:
-                log.debug(f"{repo} does not contain an entry for {self.arch}")
+                log.debug(f"{repo} does not contain an entry for arch: {self.arch}")
                 continue
-            creds = False
             user = os.getenv(metadata["user"])
             if not user:
                 user = metadata["user"]
@@ -699,7 +741,8 @@ class ManagerContainerPush(Manager):
                     log.debug("dry-run; not copying")
                     continue
                 for attempt in range(HTTP_RETRY_ATTEMPTS):
-                    if skopeocmd(
+                    if shellcmd(
+                        "skopeo",
                         (
                             "copy",
                             "--src-creds",
@@ -713,7 +756,7 @@ class ManagerContainerPush(Manager):
                             ),
                             f"docker://{self.image_name}:{tag}",
                             f"docker://{repo}:{tag}",
-                        )
+                        ),
                     ):
                         log.info("Copy was successful")
                         self.copy_failed = False
@@ -732,16 +775,86 @@ class ManagerContainerPush(Manager):
                     log.error("Errors were encountered copying images!")
                     sys.exit(1)
 
+    def auth_registries(self):
+        for repo, metadata in self.parent.manifest[self.key].items():
+            registry = {}
+            if repo in (
+                "gitlab-master",
+                "artifactory",
+                "nvcr.io",
+            ):  # TODO: push to Nvidia Registry
+                log.debug(f"Skipping push to {repo}")
+                continue
+            if metadata.get("only_if", False) and not os.getenv(metadata["only_if"]):
+                log.info("repo: '%s' only_if requirement not satisfied", repo)
+                continue
+            user = os.getenv(metadata["user"])
+            if not user:
+                user = metadata["user"]
+            passwd = os.getenv(metadata["pass"])
+            if not passwd:
+                passwd = metadata["pass"]
+            self.repo_creds[repo] = {"user": user, "pass": passwd}
+            for arch in ("x86_64", "ppc64le", "arm64"):
+                registry[f"README-{arch}.md"] = metadata["registry"][arch]
+            self.repos_dict[repo] = registry
+
+        if not self.repos_dict:
+            log.fatal("Could not retrieve registry credentials. Environment not set?")
+            sys.exit(1)
+        # docker login
+        result = shellcmd(
+            "docker",
+            (
+                "login",
+                f"-u" f"{self.repo_creds['docker.io']['user']}",
+                f"-p" f"{self.repo_creds['docker.io']['pass']}",
+            ),
+            printOutput=False,
+            returnOut=True,
+        )
+        if result.returncode > 0:
+            log.error(result.stderr)
+            log.error("Docker login failed!")
+            sys.exit(1)
+        else:
+            log.info("Docker login was successful.")
+
+    def push_readmes(self):
+        if self.dry_run:
+            log.debug(
+                f"dry-run mode: otherwise; docker pushrm could happen for -> {self.repos_dict['docker.io']}"
+            )
+        else:
+            for readme, repo in self.repos_dict["docker.io"].items():
+                # docker pushrm
+                result = shellcmd(
+                    "docker",
+                    ("pushrm", "-f", f"doc/{readme}", f"{repo}"),
+                    printOutput=False,
+                    returnOut=True,
+                )
+                if result.returncode > 0:
+                    log.error(result.stderr)
+                    log.error("Docker pushrm was unsuccessful for %s", repo)
+                else:
+                    log.info("Docker pushrm was successful for %s", repo)
+
     def main(self):
         log.debug("dry-run: %s", self.dry_run)
-        self.key = f"cuda_v{self.cuda_version}"
-        if self.pipeline_name:
-            self.key = f"cuda_v{self.cuda_version}_{self.pipeline_name}"
-        self.client = docker.DockerClient(
-            base_url="unix://var/run/docker.sock", timeout=600
-        )
-        self.setup_repos()
-        self.push_images()
+        if self.readme:
+            self.key = f"push_repos"
+            self.auth_registries()
+            self.push_readmes()
+        else:
+            self.key = f"cuda_v{self.cuda_version}"
+            if self.pipeline_name:
+                self.key = f"cuda_v{self.cuda_version}_{self.pipeline_name}"
+            self.client = docker.DockerClient(
+                base_url="unix://var/run/docker.sock", timeout=600
+            )
+            self.setup_repos()
+            self.push_images()
         log.info("Done")
 
 
@@ -761,14 +874,24 @@ class ManagerGenerate(Manager):
         extensions=["jinja2.ext.do"], trim_blocks=True, lstrip_blocks=True
     )
 
-    generate_ci = cli.Flag(["--ci"], help="Generate the gitlab pipelines only.",)
+    generate_ci = cli.Flag(
+        ["--ci"],
+        help="Generate the gitlab pipelines only.",
+    )
 
-    generate_all = cli.Flag(["--all"], help="Generate all of the templates.",)
+    generate_all = cli.Flag(
+        ["--all"],
+        help="Generate all of the templates.",
+    )
 
-    generate_readme = cli.Flag(["--readme"], help="Generate all readmes.",)
+    generate_readme = cli.Flag(
+        ["--readme"],
+        help="Generate all readmes.",
+    )
 
     generate_tag = cli.Flag(
-        ["--tags"], help="Generate all supported and unsupported tag lists.",
+        ["--tags"],
+        help="Generate all supported and unsupported tag lists.",
     )
 
     distro = cli.SwitchAttr(
@@ -1014,11 +1137,18 @@ class ManagerGenerate(Manager):
         # and the discovered keys are injected into the template context.
         # We only checks at three levels in the manifest
         self.extract_keys(
-            self.get_data(conf, self.key, f"{self.distro}{self.distro_version}",)
+            self.get_data(
+                conf,
+                self.key,
+                f"{self.distro}{self.distro_version}",
+            )
         )
         self.extract_keys(
             self.get_data(
-                conf, self.key, f"{self.distro}{self.distro_version}", self.arch,
+                conf,
+                self.key,
+                f"{self.distro}{self.distro_version}",
+                self.arch,
             )
         )
         log.debug("template context %s" % (self.cuda))
@@ -1077,7 +1207,9 @@ class ManagerGenerate(Manager):
                 globber = f"{img}-*"
 
             log.debug(
-                "template_path: %s, output_path: %s", temp_path, self.output_path,
+                "template_path: %s, output_path: %s",
+                temp_path,
+                self.output_path,
             )
 
             self.output_template(
@@ -1303,8 +1435,11 @@ class ManagerGenerate(Manager):
         docker_repo = "docker.io/nvidia/cuda"
 
         def get_repo_tags(repo):
-            return skopeocmd(
-                ("list-tags", f"docker://{repo}"), printOutput=False, returnOut=True
+            return shellcmd(
+                "skopeo",
+                ("list-tags", f"docker://{repo}"),
+                printOutput=False,
+                returnOut=True
             )
 
         try:
@@ -1646,7 +1781,10 @@ class ManagerGenerate(Manager):
 
             self.dist_base_path = pathlib.Path(
                 self.parent.get_data(
-                    self.parent.manifest, self.key, "dist_base_path", can_skip=False,
+                    self.parent.manifest,
+                    self.key,
+                    "dist_base_path",
+                    can_skip=False,
                 )
             )
             if not self.output_manifest_path:
@@ -1773,8 +1911,11 @@ class ManagerStaging(Manager):
     #  )
 
     def get_repo_tags(self, repo):
-        return skopeocmd(
-            ("list-tags", f"docker://{repo}"), printOutput=False, returnOut=True
+        return shellcmd(
+            "skopeo",
+            ("list-tags", f"docker://{repo}"),
+            printOutput=False,
+            returnOut=True,
         )
 
     def delete_all_tags(self):
@@ -1791,7 +1932,8 @@ class ManagerStaging(Manager):
             # FIXME: use python retry module decorator
             for attempt in range(HTTP_RETRY_ATTEMPTS):
                 log.debug(f"deleting {repo}:{tag}")
-                out2 = skopeocmd(
+                out2 = shellcmd(
+                    "skopeo",
                     ("delete", f"docker://{repo}:{tag}"),
                     printOutput=False,
                     returnOut=True,
