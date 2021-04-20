@@ -58,9 +58,9 @@ unsupported:
   libcublas_dev:
     version: 11.4.2.10064-1
   libnpp:
-    version: 11.3.3.4-1
+    version: 11.3.3.44-1
   libnpp_dev:
-    version: 11.3.3.4-1
+    version: 11.3.3.44-1
   libraries:
     version: 11.3.0-1
   libraries_dev:

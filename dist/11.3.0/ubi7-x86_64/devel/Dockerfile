@@ -14,7 +14,7 @@ RUN yum install -y \
     cuda-nvprof-11-3-11.3.58-1 \
     cuda-nvml-devel-11-3-11.3.58-1 \
     libcublas-devel-11-3-11.4.2.10064-1 \
-    libnpp-devel-11-3-11.3.3.4-1 \
+    libnpp-devel-11-3-11.3.3.44-1 \
     libnccl-devel-2.9.6-1+cuda11.3 \
     && yum clean all \
     && rm -rf /var/cache/yum/*

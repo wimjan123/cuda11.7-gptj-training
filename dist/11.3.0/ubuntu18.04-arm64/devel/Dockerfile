@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-minimal-build-11-3=11.3.0-1 \
     cuda-libraries-dev-11-3=11.3.0-1 \
     cuda-nvml-dev-11-3=11.3.58-1 \
-    libnpp-dev-11-3=11.3.3.4-1 \
+    libnpp-dev-11-3=11.3.3.44-1 \
     libcublas-dev-11-3=11.4.2.10064-1 \
     libcusparse-dev-11-3=11.5.0.58-1 \
     && rm -rf /var/lib/apt/lists/*
