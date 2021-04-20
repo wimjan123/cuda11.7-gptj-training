@@ -107,6 +107,8 @@ prepare:
       else
         export DIST_BASE_PATH="${DIST_BASE_PATH}/${OS}-${ARCH}";
       fi
+    # COPY the NGC DEEP LEARNING CONTAINER LICENSE
+    - cp -v ./NGC-DL-CONTAINER-LICENSE "${DIST_BASE_PATH}/runtime"
     - docker buildx create --use --platform linux/${ARCH} --driver-opt image=moby/buildkit:v0.8.1 --name cuda-${ARCH}
     - docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}" ${TAG_RUNTIME} "${DIST_BASE_PATH}/runtime"
                           --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain
