@@ -150,7 +150,7 @@ prepare:
           find kitpick/
           NEW_CANDIDATE_URL="${CANDIDATE_URL}"
           [[ "${CANDIDATE_URL}" != */ ]] && NEW_CANDIDATE_URL="${CANDIDATE_URL}/"
-          if ! retry 3 10 time wget --recursive --directory-prefix="rekt" --reject="index.html*" --no-parent ${NEW_CANDIDATE_URL}; then
+          if ! retry 3 10 wget --recursive --directory-prefix="rekt" --reject="index.html*" --no-parent ${NEW_CANDIDATE_URL}; then
               kitmaker_webhook_failed
               exit 1
           fi
@@ -282,7 +282,7 @@ prepare:
       done
       cat TAG_MANIFEST
       if [ ! -z $KITMAKER ] && [ ! -z $TRIGGER ]; then
-          if ! retry 3 10 time wget --directory-prefix="kitpick" --reject="index.html*" --no-parent ${CANDIDATE_URL}/manifest-${OS_NAME}-${OS_VERSION}.yml; then
+          if ! retry 3 10 wget --directory-prefix="kitpick" --reject="index.html*" --no-parent ${CANDIDATE_URL}/manifest-${OS_NAME}-${OS_VERSION}.yml; then
               kitmaker_webhook_failed
               exit 1
           fi
