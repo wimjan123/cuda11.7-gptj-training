@@ -51,10 +51,10 @@ before_script:
   - 'echo "IMAGE_TAG_SUFFIX: $IMAGE_TAG_SUFFIX"'
   - 'echo "NO_OS_SUFFIX: $NO_OS_SUFFIX"'
   # Gitlab is used to stage images
-  - docker login -u "gitlab-ci-token" -p $CI_JOB_TOKEN gitlab-master.nvidia.com:5005
+  - retry 5 20 docker login -u "gitlab-ci-token" -p $CI_JOB_TOKEN gitlab-master.nvidia.com:5005
   # Login to NGC to pull images (uses protected variables, only possible from master branch)
   - if [[ $CI_COMMIT_BRANCH == "master" ]]; then
-        docker login -u '$oauthtoken' -p $NVCR_TOKEN nvcr.io;
+        retry 5 20 docker login -u '$oauthtoken' -p $NVCR_TOKEN nvcr.io;
     fi
 
 stages:
