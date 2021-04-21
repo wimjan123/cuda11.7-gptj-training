@@ -231,15 +231,17 @@ prepare:
   script:
     - |
       set +e
+      rmicmd="docker rmi -f '${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}'"
       if ! bash -e ./test/scripts/bats_install.sh; then
           echo "ERROR: Could not install bats-core!"
           exit 1
       fi
       if ! bash -e ./test/scripts/run_tests.sh; then
           echo "ERROR: Tests failed!"
-          docker rmi -f '${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}'
+          ${rmicmd}
           exit 1
       fi
+      ${rmicmd}
 
 .scan_template: &scan_definition
   image: gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
