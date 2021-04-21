@@ -230,8 +230,16 @@ prepare:
     - cuda-test
   script:
     - |
-      bash -e ./test/scripts/bats_install.sh
-      bash -e ./test/scripts/run_tests.sh
+      set +e
+      if ! bash -e ./test/scripts/bats_install.sh; then
+          echo "ERROR: Could not install bats-core!"
+          exit 1
+      fi
+      if ! bash -e ./test/scripts/run_tests.sh; then
+          echo "ERROR: Tests failed!"
+          docker rmi -f '${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}'
+          exit 1
+      fi
 
 .scan_template: &scan_definition
   image: gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
