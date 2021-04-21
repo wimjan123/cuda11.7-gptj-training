@@ -237,7 +237,7 @@ prepare:
       set +e
       image=${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
       echo "HAVE IMAGE ${image}"
-      rmicmd="docker rmi -f ${image}; docker image prune --filter="dangling=true" -f"
+      rmicmd="docker rmi -f ${image}; docker image prune --filter='dangling=true' -f"
       if ! bash -e ./test/scripts/bats_install.sh; then
           echo "ERROR: Could not install bats-core!"
           exit 1
