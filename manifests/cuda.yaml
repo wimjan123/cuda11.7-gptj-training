@@ -85,7 +85,7 @@ unsupported:
 
 cuda_v11.3.0:
   dist_base_path: dist/11.3.0
-  release_label: 11.2 Update 2
+  release_label: 11.3.0
   ubuntu20.04:
     template_path: templates/ubuntu
     base_image: ubuntu:20.04
