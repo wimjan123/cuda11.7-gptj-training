@@ -377,6 +377,20 @@ ubuntu20.04-v11.3.0-x86_64:
   <<: *cuda_base_definition
   <<: *ubuntu20_04_11_3_0_x86_64_only
 
+ubuntu20.04-v11.3.0-cudnn8-x86_64:
+  <<: *cudnn_definition
+  <<: *ubuntu20_04_11_3_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu20_04_11_3_0_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubuntu20.04-v11.3.0-x86_64
+      artifacts: true
+
 ubuntu20.04-v11.3.0-test-x86_64:
   needs: ["ubuntu20.04-v11.3.0-x86_64"]
   <<: *ubuntu20_04_11_3_0_x86_64_only
@@ -415,6 +429,7 @@ ubuntu20.04-v11.3.0-deploy-x86_64:
       artifacts: true
     - job: ubuntu20.04-v11.3.0-test-x86_64
     - job: ubuntu20.04-v11.3.0-scan-x86_64
+    - job: ubuntu20.04-v11.3.0-cudnn8-x86_64
 
 
 
@@ -441,6 +456,20 @@ ubuntu20.04-v11.3.0-deploy-x86_64:
 ubuntu20.04-v11.3.0-arm64:
   <<: *cuda_base_definition
   <<: *ubuntu20_04_11_3_0_arm64_only
+
+ubuntu20.04-v11.3.0-cudnn8-arm64:
+  <<: *cudnn_definition
+  <<: *ubuntu20_04_11_3_0_arm64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu20_04_11_3_0_arm64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubuntu20.04-v11.3.0-arm64
+      artifacts: true
 
 ubuntu20.04-v11.3.0-test-arm64:
   needs: ["ubuntu20.04-v11.3.0-arm64"]
@@ -480,6 +509,7 @@ ubuntu20.04-v11.3.0-deploy-arm64:
       artifacts: true
     - job: ubuntu20.04-v11.3.0-test-arm64
     - job: ubuntu20.04-v11.3.0-scan-arm64
+    - job: ubuntu20.04-v11.3.0-cudnn8-arm64
 
 
 
@@ -505,6 +535,20 @@ ubuntu20.04-v11.3.0-deploy-arm64:
 ubuntu18.04-v11.3.0-x86_64:
   <<: *cuda_base_definition
   <<: *ubuntu18_04_11_3_0_x86_64_only
+
+ubuntu18.04-v11.3.0-cudnn8-x86_64:
+  <<: *cudnn_definition
+  <<: *ubuntu18_04_11_3_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu18_04_11_3_0_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubuntu18.04-v11.3.0-x86_64
+      artifacts: true
 
 ubuntu18.04-v11.3.0-test-x86_64:
   needs: ["ubuntu18.04-v11.3.0-x86_64"]
@@ -544,6 +588,7 @@ ubuntu18.04-v11.3.0-deploy-x86_64:
       artifacts: true
     - job: ubuntu18.04-v11.3.0-test-x86_64
     - job: ubuntu18.04-v11.3.0-scan-x86_64
+    - job: ubuntu18.04-v11.3.0-cudnn8-x86_64
 
 
 
@@ -635,6 +680,20 @@ ubuntu16.04-v11.3.0-x86_64:
   <<: *cuda_base_definition
   <<: *ubuntu16_04_11_3_0_x86_64_only
 
+ubuntu16.04-v11.3.0-cudnn8-x86_64:
+  <<: *cudnn_definition
+  <<: *ubuntu16_04_11_3_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu16_04_11_3_0_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubuntu16.04-v11.3.0-x86_64
+      artifacts: true
+
 ubuntu16.04-v11.3.0-test-x86_64:
   needs: ["ubuntu16.04-v11.3.0-x86_64"]
   <<: *ubuntu16_04_11_3_0_x86_64_only
@@ -673,6 +732,7 @@ ubuntu16.04-v11.3.0-deploy-x86_64:
       artifacts: true
     - job: ubuntu16.04-v11.3.0-test-x86_64
     - job: ubuntu16.04-v11.3.0-scan-x86_64
+    - job: ubuntu16.04-v11.3.0-cudnn8-x86_64
 
 
 
@@ -698,6 +758,20 @@ ubuntu16.04-v11.3.0-deploy-x86_64:
 centos8-v11.3.0-x86_64:
   <<: *cuda_base_definition
   <<: *centos8_11_3_0_x86_64_only
+
+centos8-v11.3.0-cudnn8-x86_64:
+  <<: *cudnn_definition
+  <<: *centos8_11_3_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos8_11_3_0_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: centos8-v11.3.0-x86_64
+      artifacts: true
 
 centos8-v11.3.0-test-x86_64:
   needs: ["centos8-v11.3.0-x86_64"]
@@ -737,6 +811,7 @@ centos8-v11.3.0-deploy-x86_64:
       artifacts: true
     - job: centos8-v11.3.0-test-x86_64
     - job: centos8-v11.3.0-scan-x86_64
+    - job: centos8-v11.3.0-cudnn8-x86_64
 
 
 
@@ -762,6 +837,20 @@ centos8-v11.3.0-deploy-x86_64:
 centos8-v11.3.0-ppc64le:
   <<: *cuda_base_definition
   <<: *centos8_11_3_0_ppc64le_only
+
+centos8-v11.3.0-cudnn8-ppc64le:
+  <<: *cudnn_definition
+  <<: *centos8_11_3_0_ppc64le_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos8_11_3_0_ppc64le_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: centos8-v11.3.0-ppc64le
+      artifacts: true
 
 centos8-v11.3.0-test-ppc64le:
   needs: ["centos8-v11.3.0-ppc64le"]
@@ -801,6 +890,7 @@ centos8-v11.3.0-deploy-ppc64le:
       artifacts: true
     - job: centos8-v11.3.0-test-ppc64le
     - job: centos8-v11.3.0-scan-ppc64le
+    - job: centos8-v11.3.0-cudnn8-ppc64le
 
 
 
@@ -826,6 +916,20 @@ centos8-v11.3.0-deploy-ppc64le:
 centos8-v11.3.0-arm64:
   <<: *cuda_base_definition
   <<: *centos8_11_3_0_arm64_only
+
+centos8-v11.3.0-cudnn8-arm64:
+  <<: *cudnn_definition
+  <<: *centos8_11_3_0_arm64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos8_11_3_0_arm64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: centos8-v11.3.0-arm64
+      artifacts: true
 
 centos8-v11.3.0-test-arm64:
   needs: ["centos8-v11.3.0-arm64"]
@@ -865,6 +969,7 @@ centos8-v11.3.0-deploy-arm64:
       artifacts: true
     - job: centos8-v11.3.0-test-arm64
     - job: centos8-v11.3.0-scan-arm64
+    - job: centos8-v11.3.0-cudnn8-arm64
 
 
 
@@ -890,6 +995,20 @@ centos8-v11.3.0-deploy-arm64:
 centos7-v11.3.0-x86_64:
   <<: *cuda_base_definition
   <<: *centos7_11_3_0_x86_64_only
+
+centos7-v11.3.0-cudnn8-x86_64:
+  <<: *cudnn_definition
+  <<: *centos7_11_3_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos7_11_3_0_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: centos7-v11.3.0-x86_64
+      artifacts: true
 
 centos7-v11.3.0-test-x86_64:
   needs: ["centos7-v11.3.0-x86_64"]
@@ -929,6 +1048,7 @@ centos7-v11.3.0-deploy-x86_64:
       artifacts: true
     - job: centos7-v11.3.0-test-x86_64
     - job: centos7-v11.3.0-scan-x86_64
+    - job: centos7-v11.3.0-cudnn8-x86_64
 
 
 
@@ -954,6 +1074,20 @@ centos7-v11.3.0-deploy-x86_64:
 ubi8-v11.3.0-x86_64:
   <<: *cuda_base_definition
   <<: *ubi8_11_3_0_x86_64_only
+
+ubi8-v11.3.0-cudnn8-x86_64:
+  <<: *cudnn_definition
+  <<: *ubi8_11_3_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi8_11_3_0_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubi8-v11.3.0-x86_64
+      artifacts: true
 
 ubi8-v11.3.0-test-x86_64:
   needs: ["ubi8-v11.3.0-x86_64"]
@@ -993,6 +1127,7 @@ ubi8-v11.3.0-deploy-x86_64:
       artifacts: true
     - job: ubi8-v11.3.0-test-x86_64
     - job: ubi8-v11.3.0-scan-x86_64
+    - job: ubi8-v11.3.0-cudnn8-x86_64
 
 
 
@@ -1018,6 +1153,20 @@ ubi8-v11.3.0-deploy-x86_64:
 ubi8-v11.3.0-ppc64le:
   <<: *cuda_base_definition
   <<: *ubi8_11_3_0_ppc64le_only
+
+ubi8-v11.3.0-cudnn8-ppc64le:
+  <<: *cudnn_definition
+  <<: *ubi8_11_3_0_ppc64le_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi8_11_3_0_ppc64le_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubi8-v11.3.0-ppc64le
+      artifacts: true
 
 ubi8-v11.3.0-test-ppc64le:
   needs: ["ubi8-v11.3.0-ppc64le"]
@@ -1057,6 +1206,7 @@ ubi8-v11.3.0-deploy-ppc64le:
       artifacts: true
     - job: ubi8-v11.3.0-test-ppc64le
     - job: ubi8-v11.3.0-scan-ppc64le
+    - job: ubi8-v11.3.0-cudnn8-ppc64le
 
 
 
@@ -1082,6 +1232,20 @@ ubi8-v11.3.0-deploy-ppc64le:
 ubi8-v11.3.0-arm64:
   <<: *cuda_base_definition
   <<: *ubi8_11_3_0_arm64_only
+
+ubi8-v11.3.0-cudnn8-arm64:
+  <<: *cudnn_definition
+  <<: *ubi8_11_3_0_arm64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi8_11_3_0_arm64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubi8-v11.3.0-arm64
+      artifacts: true
 
 ubi8-v11.3.0-test-arm64:
   needs: ["ubi8-v11.3.0-arm64"]
@@ -1121,6 +1285,7 @@ ubi8-v11.3.0-deploy-arm64:
       artifacts: true
     - job: ubi8-v11.3.0-test-arm64
     - job: ubi8-v11.3.0-scan-arm64
+    - job: ubi8-v11.3.0-cudnn8-arm64
 
 
 
@@ -1146,6 +1311,20 @@ ubi8-v11.3.0-deploy-arm64:
 ubi7-v11.3.0-x86_64:
   <<: *cuda_base_definition
   <<: *ubi7_11_3_0_x86_64_only
+
+ubi7-v11.3.0-cudnn8-x86_64:
+  <<: *cudnn_definition
+  <<: *ubi7_11_3_0_x86_64_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi7_11_3_0_x86_64_variables
+    CUDNN_VERSION: "cudnn8"
+  artifacts:
+    reports:
+      dotenv: cudnn8finaltags.env
+  needs:
+    - job: ubi7-v11.3.0-x86_64
+      artifacts: true
 
 ubi7-v11.3.0-test-x86_64:
   needs: ["ubi7-v11.3.0-x86_64"]
@@ -1185,6 +1364,7 @@ ubi7-v11.3.0-deploy-x86_64:
       artifacts: true
     - job: ubi7-v11.3.0-test-x86_64
     - job: ubi7-v11.3.0-scan-x86_64
+    - job: ubi7-v11.3.0-cudnn8-x86_64
 
 
 

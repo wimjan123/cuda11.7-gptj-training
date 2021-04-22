@@ -81,6 +81,8 @@ unsupported:
     version: 2.9.6-1
   libnccl2_dev:
     version: 2.9.6-1
+  cudnn8:
+    version: 8.2.0.53-1
 
 
 cuda_v11.3.0:
@@ -1252,7 +1254,7 @@ cuda_v11.0.3:
   libnccl2_dev:
     version: 2.9.6-1
   cudnn8:
-    version: 8.1.1.33-1
+    version: 8.2.0.53-1
   cudnn7:
     version: 7.6.5.32-1
 
