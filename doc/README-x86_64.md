@@ -67,43 +67,57 @@ Visit [OpenSource @ Nvidia](https://developer.download.nvidia.com/compute/cuda/o
 
 ### Ubuntu 20.04
 
+- [`11.3.0-cudnn8-runtime-ubuntu20.04` (*11.3.0/ubuntu20.04-x86_64/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/ubuntu20.04-x86_64/runtime/cudnn8/Dockerfile)
 - [`11.3.0-runtime-ubuntu20.04` (*11.3.0/ubuntu20.04-x86_64/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/ubuntu20.04-x86_64/runtime/Dockerfile)
+- [`11.3.0-cudnn8-devel-ubuntu20.04` (*11.3.0/ubuntu20.04-x86_64/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/ubuntu20.04-x86_64/devel/cudnn8/Dockerfile)
 - [`11.3.0-devel-ubuntu20.04` (*11.3.0/ubuntu20.04-x86_64/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/ubuntu20.04-x86_64/devel/Dockerfile)
 - [`11.3.0-base-ubuntu20.04` (*11.3.0/ubuntu20.04-x86_64/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/ubuntu20.04-x86_64/base/Dockerfile)
 
 ### Ubuntu 18.04
 
+- [`11.3.0-cudnn8-runtime-ubuntu18.04` (*11.3.0/ubuntu18.04-x86_64/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/ubuntu18.04-x86_64/runtime/cudnn8/Dockerfile)
 - [`11.3.0-runtime-ubuntu18.04` (*11.3.0/ubuntu18.04-x86_64/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/ubuntu18.04-x86_64/runtime/Dockerfile)
+- [`11.3.0-cudnn8-devel-ubuntu18.04` (*11.3.0/ubuntu18.04-x86_64/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/ubuntu18.04-x86_64/devel/cudnn8/Dockerfile)
 - [`11.3.0-devel-ubuntu18.04` (*11.3.0/ubuntu18.04-x86_64/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/ubuntu18.04-x86_64/devel/Dockerfile)
 - [`11.3.0-base-ubuntu18.04` (*11.3.0/ubuntu18.04-x86_64/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/ubuntu18.04-x86_64/base/Dockerfile)
 
 ### Ubuntu 16.04
 
+- [`11.3.0-cudnn8-runtime-ubuntu16.04` (*11.3.0/ubuntu16.04-x86_64/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/ubuntu16.04-x86_64/runtime/cudnn8/Dockerfile)
 - [`11.3.0-runtime-ubuntu16.04` (*11.3.0/ubuntu16.04-x86_64/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/ubuntu16.04-x86_64/runtime/Dockerfile)
+- [`11.3.0-cudnn8-devel-ubuntu16.04` (*11.3.0/ubuntu16.04-x86_64/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/ubuntu16.04-x86_64/devel/cudnn8/Dockerfile)
 - [`11.3.0-devel-ubuntu16.04` (*11.3.0/ubuntu16.04-x86_64/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/ubuntu16.04-x86_64/devel/Dockerfile)
 - [`11.3.0-base-ubuntu16.04` (*11.3.0/ubuntu16.04-x86_64/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/ubuntu16.04-x86_64/base/Dockerfile)
 
 ### UBI 8
 
+- [`11.3.0-cudnn8-runtime-ubi8` (*11.3.0/ubi8-x86_64/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/ubi8-x86_64/runtime/cudnn8/Dockerfile)
 - [`11.3.0-runtime-ubi8` (*11.3.0/ubi8-x86_64/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/ubi8-x86_64/runtime/Dockerfile)
+- [`11.3.0-cudnn8-devel-ubi8` (*11.3.0/ubi8-x86_64/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/ubi8-x86_64/devel/cudnn8/Dockerfile)
 - [`11.3.0-devel-ubi8` (*11.3.0/ubi8-x86_64/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/ubi8-x86_64/devel/Dockerfile)
 - [`11.3.0-base-ubi8` (*11.3.0/ubi8-x86_64/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/ubi8-x86_64/base/Dockerfile)
 
 ### UBI 7
 
+- [`11.3.0-cudnn8-runtime-ubi7` (*11.3.0/ubi7-x86_64/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/ubi7-x86_64/runtime/cudnn8/Dockerfile)
 - [`11.3.0-runtime-ubi7` (*11.3.0/ubi7-x86_64/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/ubi7-x86_64/runtime/Dockerfile)
+- [`11.3.0-cudnn8-devel-ubi7` (*11.3.0/ubi7-x86_64/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/ubi7-x86_64/devel/cudnn8/Dockerfile)
 - [`11.3.0-devel-ubi7` (*11.3.0/ubi7-x86_64/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/ubi7-x86_64/devel/Dockerfile)
 - [`11.3.0-base-ubi7` (*11.3.0/ubi7-x86_64/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/ubi7-x86_64/base/Dockerfile)
 
 ### CentOS 8
 
+- [`11.3.0-cudnn8-runtime-centos8` (*11.3.0/centos8-x86_64/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/centos8-x86_64/runtime/cudnn8/Dockerfile)
 - [`11.3.0-runtime-centos8` (*11.3.0/centos8-x86_64/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/centos8-x86_64/runtime/Dockerfile)
+- [`11.3.0-cudnn8-devel-centos8` (*11.3.0/centos8-x86_64/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/centos8-x86_64/devel/cudnn8/Dockerfile)
 - [`11.3.0-devel-centos8` (*11.3.0/centos8-x86_64/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/centos8-x86_64/devel/Dockerfile)
 - [`11.3.0-base-centos8` (*11.3.0/centos8-x86_64/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/centos8-x86_64/base/Dockerfile)
 
 ### CentOS 7
 
+- [`11.3.0-cudnn8-runtime-centos7` (*11.3.0/centos7-x86_64/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/centos7-x86_64/runtime/cudnn8/Dockerfile)
 - [`11.3.0-runtime-centos7` (*11.3.0/centos7-x86_64/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/centos7-x86_64/runtime/Dockerfile)
+- [`11.3.0-cudnn8-devel-centos7` (*11.3.0/centos7-x86_64/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/centos7-x86_64/devel/cudnn8/Dockerfile)
 - [`11.3.0-devel-centos7` (*11.3.0/centos7-x86_64/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/centos7-x86_64/devel/Dockerfile)
 - [`11.3.0-base-centos7` (*11.3.0/centos7-x86_64/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/centos7-x86_64/base/Dockerfile)
 
