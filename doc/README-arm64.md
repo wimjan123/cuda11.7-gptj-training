@@ -89,6 +89,12 @@ Visit [OpenSource @ Nvidia](https://developer.download.nvidia.com/compute/cuda/o
 
 ### CentOS 8
 
+*WARNING*: POSSIBLE MISSING IMAGE TAGS
+
+The Cuda image tags for centos7 and 8 may be missing on NGC and Docker Hub. Centos
+upstream images often fail security scans required by Nvidia before publishing images. Please check
+https://gitlab-master.nvidia.com/cuda-installer/cuda/-/issues for any security notices!
+
 - [`11.3.0-cudnn8-runtime-centos8` (*11.3.0/centos8-arm64/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/centos8-arm64/runtime/cudnn8/Dockerfile)
 - [`11.3.0-runtime-centos8` (*11.3.0/centos8-arm64/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/centos8-arm64/runtime/Dockerfile)
 - [`11.3.0-cudnn8-devel-centos8` (*11.3.0/centos8-arm64/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/centos8-arm64/devel/cudnn8/Dockerfile)
