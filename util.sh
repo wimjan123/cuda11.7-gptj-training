@@ -34,7 +34,7 @@ kitmaker_webhook_failed() {
     if [ ! -z $KITMAKER ] && [ ! -z $TRIGGER ]; then
         export json_data="{\"status\": \"failed\", \"CI_PIPELINE_ID\": \"${CI_PIPELINE_ID}\", \"CI_JOB_ID\": \"${CI_JOB_ID}\", \"CI_COMMIT_SHORT_SHA\": \"${CI_COMMIT_SHORT_SHA}\", \"gitlab_pipeline_url\": \"${CI_PIPELINE_URL}\"}"
         echo $CI_JOB_STATUS
-        if [ $CI_JOB_STATUS == "running"]; then
+        if [ $CI_JOB_STATUS == "running" ]; then
             echo "ERROR! Job is still running, but we are calling the webhook..."
         fi
         echo curl -v -H "Content-Type: application/json" -d "${json_data}" ${WEBHOOK_URL}
