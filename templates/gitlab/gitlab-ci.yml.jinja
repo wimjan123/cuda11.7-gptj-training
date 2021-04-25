@@ -151,8 +151,8 @@ prepare:
           NEW_CANDIDATE_URL="${CANDIDATE_URL}"
           [[ "${CANDIDATE_URL}" != */ ]] && NEW_CANDIDATE_URL="${CANDIDATE_URL}/"
           if ! retry 3 10 wget --recursive --directory-prefix="rekt" --reject="index.html*" --no-parent ${NEW_CANDIDATE_URL}; then
+              echo "Could not download files from '${CANDIDATE_URL}'!!"
               kitmaker_webhook_failed
-              exit 1
           fi
           cp -R rekt/${CANDIDATE_URL#"http://"}/{base,devel,runtime} kitpick/
           echo "Contents of kitpick/"
@@ -166,28 +166,25 @@ prepare:
       cp -v ./NGC-DL-CONTAINER-LICENSE "${DIST_BASE_PATH}/base"
       # --driver-opt flag is needed to workaround https://github.com/docker/buildx/issues/386
       docker buildx create --use --platform linux/${ARCH} --driver-opt image=moby/buildkit:v0.8.1 --name cuda-${ARCH}
-      if ! docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_BASE} "${DIST_BASE_PATH}/base" \
+      if ! run_cmd docker buildx build --no-cache --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_BASE} "${DIST_BASE_PATH}/base" \
                             --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain \
                             --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}; then
           echo "Failed building the base image!"
           kitmaker_webhook_failed
-          exit 1
       fi
-      if ! docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_RUNTIME} \
+      if ! run_cmd docker buildx build --no-cache --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_RUNTIME} \
                             --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/runtime" \
                             --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain \
                             --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}; then
           echo "Failed building the runtime image!"
           kitmaker_webhook_failed
-          exit 1
       fi
-      if ! docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_DEVEL} \
+      if ! run_cmd docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_DEVEL} \
                             --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel" \
                             --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain \
                             --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}; then
           echo "Failed building the devel image!"
           kitmaker_webhook_failed
-          exit 1
       fi
       echo "CUDA_TAGS=\"${CUDA_TAGS} ${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}\"" >> tags.env
       cat tags.env
@@ -295,12 +292,12 @@ prepare:
       cat TAG_MANIFEST
       if [ ! -z $KITMAKER ] && [ ! -z $TRIGGER ]; then
           if ! retry 3 10 wget --directory-prefix="kitpick" --reject="index.html*" --no-parent ${CANDIDATE_URL}/manifest-${OS_NAME}-${OS_VERSION}.yml; then
+              echo "Could not download files from '${CANDIDATE_URL}'!!"
               kitmaker_webhook_failed
-              exit 1
           fi
           export MANIFEST="kitpick/manifest-${OS_NAME}-${OS_VERSION}.yml";
       fi
-      if ! python manager.py ${MANIFEST:+`echo "--manifest ${MANIFEST}"`} push \
+      if ! run_cmd python manager.py ${MANIFEST:+`echo "--manifest ${MANIFEST}"`} push \
               --tag-manifest TAG_MANIFEST \
               --image-name "${IMAGE_NAME}" \
               --os-name "${OS_NAME}" \
@@ -309,8 +306,8 @@ prepare:
               --arch "${ARCH}" \
               ${PIPELINE_NAME:+`echo "--pipeline-name ${PIPELINE_NAME}"`} \
               ${IMAGE_TAG_SUFFIX:+`echo "--tag-suffix ${IMAGE_TAG_SUFFIX}"`} ${NO_PUSH:+"-n"}; then
+          echo "Error pushing images!"
           kitmaker_webhook_failed
-          exit 1
       fi
       cat $MANIFEST | grep "${ARCH}.*urm.nvidia.com" | cut -f2 -d: | xargs >> TAG_MANIFEST
       kitmaker_cleanup_webhook_success
@@ -337,7 +334,7 @@ trigger:
 # Need to pass these from the trigger
 .kitmaker_variables: &kitmaker_variables
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/${ARCH}"
-  CI_DEBUG_TRACE: "true"
+  # CI_DEBUG_TRACE: "true"
 
 .kitmaker_only: &kitmaker_only
   variables:
