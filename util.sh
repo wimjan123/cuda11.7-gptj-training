@@ -43,8 +43,7 @@ kitmaker_webhook_failed() {
             --arg ci_commit "${CI_COMMIT_SHORT_SHA}" \
             --arg pipeline_url "${CI_PIPELINE_URL}" \
             --arg cmd_output "$(cat cmd_output)" \
-            '{status: "status", pipeline_id: $pipeline_id, job_id: $job_id, ci_commit: $ci_commit, pipeline_url: $pipeline_url, cmd_output: $cmd_output}' | \
-                curl -v -H "Content-Type: application/json" -d @- ${WEBHOOK_URL}
+            '{status: $status, pipeline_id: $pipeline_id, job_id: $job_id, ci_commit: $ci_commit, pipeline_url: $pipeline_url, cmd_output: $cmd_output}' #| curl -v -H "Content-Type: application/json" -d @- ${WEBHOOK_URL}
             exit 1
         elif cat cmd_output | grep -q "DONE"; then
             echo "Seems the last 'run_cmd' command succeeded! Not calling webhook."
