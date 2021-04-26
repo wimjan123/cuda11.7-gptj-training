@@ -33,9 +33,18 @@ kitmaker_cleanup_webhook_success() {
 kitmaker_webhook_failed() {
     if [ ! -z $KITMAKER ] && [ ! -z $TRIGGER ]; then
         if cat cmd_output | grep -q "ERROR"; then
-            json_data="{\"status\": \"failed\", \"CI_PIPELINE_ID\": \"${CI_PIPELINE_ID}\", \"CI_JOB_ID\": \"${CI_JOB_ID}\", \"CI_COMMIT_SHORT_SHA\": \"${CI_COMMIT_SHORT_SHA}\", \"gitlab_pipeline_url\": \"${CI_PIPELINE_URL}\", \"cmd_output\": \"$(cat cmd_output)\"}"
             echo curl -v -H "Content-Type: application/json" -d "${json_data}" ${WEBHOOK_URL}
-            curl -v -H "Content-Type: application/json" -d "${json_data}" ${WEBHOOK_URL}
+
+# json_data="{\"status\": \"failed\", \"CI_PIPELINE_ID\": \"${CI_PIPELINE_ID}\", \"CI_JOB_ID\": \"${CI_JOB_ID}\", \ \"CI_COMMIT_SHORT_SHA\": \"${CI_COMMIT_SHORT_SHA}\", \"gitlab_pipeline_url\": \"${CI_PIPELINE_URL}\", \"cmd_output\": \"$(cat cmd_output)\"}"
+
+        jq -n --arg status "failed" \
+            --arg pipeline_id "${CI_PIPELINE_ID}" \
+            --arg job_id "${CI_JOB_ID}" \
+            --arg ci_commit "${CI_COMMIT_SHORT_SHA}" \
+            --arg pipeline_url "${CI_PIPELINE_URL}" \
+            --arg cmd_output "$(cat cmd_output)" \
+            '{status: "status", pipeline_id: $pipeline_id, job_id: $job_id, ci_commit: $ci_commit, pipeline_url: $pipeline_url, cmd_output: $cmd_output}" | \
+                curl -v -H "Content-Type: application/json" -d @- ${WEBHOOK_URL}
             exit 1
         elif cat cmd_output | grep -q "DONE"; then
             echo "Seems the last 'run_cmd' command succeeded! Not calling webhook."
