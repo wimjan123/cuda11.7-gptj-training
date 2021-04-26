@@ -33,8 +33,7 @@ kitmaker_cleanup_webhook_success() {
 kitmaker_webhook_failed() {
     if [ ! -z $KITMAKER ] && [ ! -z $TRIGGER ]; then
         if cat cmd_output | grep -q "ERROR"; then
-            echo curl -v -H "Content-Type: application/json" -d "${json_data}" ${WEBHOOK_URL}
-
+            # echo curl -v -H "Content-Type: application/json" -d "${json_data}" ${WEBHOOK_URL}
             # json_data="{\"status\": \"failed\", \"CI_PIPELINE_ID\": \"${CI_PIPELINE_ID}\", \"CI_JOB_ID\": \"${CI_JOB_ID}\", \ \"CI_COMMIT_SHORT_SHA\": \"${CI_COMMIT_SHORT_SHA}\", \"gitlab_pipeline_url\": \"${CI_PIPELINE_URL}\", \"cmd_output\": \"$(cat cmd_output)\"}"
 
             json_data=$(jq -n --arg status "failed" \
