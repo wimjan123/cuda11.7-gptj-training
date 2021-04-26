@@ -162,13 +162,13 @@ prepare:
       cp -v ./NGC-DL-CONTAINER-LICENSE "${DIST_BASE_PATH}/base"
       # --driver-opt flag is needed to workaround https://github.com/docker/buildx/issues/386
       docker buildx create --use --platform linux/${ARCH} --driver-opt image=moby/buildkit:v0.8.1 --name cuda-${ARCH}
-      if ! run_cmd docker buildx build --no-cache --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_BASE} "${DIST_BASE_PATH}/base" \
+      if ! run_cmd docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_BASE} "${DIST_BASE_PATH}/base" \
                             --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain \
                             --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}; then
           echo "Failed building the base image!"
           kitmaker_webhook_failed
       fi
-      if ! run_cmd docker buildx build --no-cache --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_RUNTIME} \
+      if ! run_cmd docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_RUNTIME} \
                             --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/runtime" \
                             --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain \
                             --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}; then
