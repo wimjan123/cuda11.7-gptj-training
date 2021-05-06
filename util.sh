@@ -2,7 +2,7 @@ retry() {
     counter=1
     maxtries=$1; shift;
     delay=$1; shift;
-    echo Retrying "$@" with maxtries:$maxtries and delay:$delay
+    echo RETRY: maxtries:$maxtries and delay:$delay
     while [[ $counter -le $maxtries ]]; do
         $@
         if [[ "$?" = "0" ]]; then
