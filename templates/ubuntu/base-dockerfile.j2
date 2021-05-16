@@ -2,6 +2,12 @@ FROM {{ cuda.base_image }}
 
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 
+{% if "flavor" in cuda and cuda.flavor == "l4t" %}
+ARG NVIDIA_REQUIRE_JETPACK_HOST_MOUNTS=base-only
+ENV NVIDIA_REQUIRE_JETPACK_HOST_MOUNTS ${NVIDIA_REQUIRE_JETPACK_HOST_MOUNTS}
+
+{% endif -%}
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
 {% if cuda.os.version in ["18.04", "20.04"] %}
     gnupg2 curl ca-certificates && \

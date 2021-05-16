@@ -3,7 +3,22 @@ push_repos:
     only_if: NV_ARTIFACTORY
     user: ARTIFACTORY_USER
     pass: ARTIFACTORY_PASS
-    registry:
+    registry: urm.nvidia.com
+    image_names:
       x86_64: urm.nvidia.com/sw-gpu-cuda-installer-docker-local/cuda-release-candidate/cuda
       ppc64le: urm.nvidia.com/sw-gpu-cuda-installer-docker-local/cuda-release-candidate/cuda-ppc64le
       arm64: urm.nvidia.com/sw-gpu-cuda-installer-docker-local/cuda-release-candidate/cuda-arm64
+
+l4t_push_repos:
+  artifactory:
+    registry: urm.nvidia.com
+    user: ARTIFACTORY_USER
+    pass: ARTIFACTORY_PASS
+    image_names:
+      arm64: urm.nvidia.com/sw-gpu-cuda-installer-docker-local/cuda/l4t-cuda
+  ngc:
+    registry: nvcr.io
+    pass: NGC_ACCESS_TOKEN
+    user: $oauthtoken
+    image_names:
+      arm64: urm.nvidia.com/sw-gpu-cuda-installer-docker-local/cuda/l4t-cuda

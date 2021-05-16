@@ -3,7 +3,6 @@ FROM ${IMAGE_NAME}:11.2.2-base-ubuntu20.04
 
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 
-
 ENV NCCL_VERSION 2.8.4
 
 RUN apt-get update && apt-get install -y --no-install-recommends \

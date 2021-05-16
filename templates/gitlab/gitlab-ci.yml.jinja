@@ -52,10 +52,8 @@ before_script:
   - 'echo "NO_OS_SUFFIX: $NO_OS_SUFFIX"'
   # Gitlab is used to stage images
   - retry 5 20 docker login -u "gitlab-ci-token" -p $CI_JOB_TOKEN gitlab-master.nvidia.com:5005
-  # Login to NGC to pull images (uses protected variables, only possible from master branch)
-  - if [[ $CI_COMMIT_BRANCH == "master" ]]; then
-        retry 5 20 docker login -u '$oauthtoken' -p $NVCR_TOKEN nvcr.io;
-    fi
+  # Login to NGC to pull images
+  - retry 5 20 docker login -u '$oauthtoken' -p $NVCR_TOKEN nvcr.io;
 
 stages:
   - prepare
@@ -163,13 +161,22 @@ prepare:
       # COPY the NGC DEEP LEARNING CONTAINER LICENSE
       cp -v ./NGC-DL-CONTAINER-LICENSE "${DIST_BASE_PATH}/base"
       # --driver-opt flag is needed to workaround https://github.com/docker/buildx/issues/386
-      run_cmd retry 3 10 docker buildx create --use --platform linux/${ARCH} --driver-opt image=moby/buildkit:v0.8.1 --name cuda-${ARCH}
+      if ! run_cmd retry 3 10 docker buildx create --use --platform linux/${ARCH} --driver-opt image=moby/buildkit:v0.8.1 --name cuda-${ARCH}; then
+          echo "Failed creating buildx instance!"
+          kitmaker_webhook_failed
+      fi
+      echo "####################################################################"
+      echo "BASE"
+      echo "####################################################################"
       if ! run_cmd retry 3 10 docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_BASE} "${DIST_BASE_PATH}/base" \
                             --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain \
                             --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}; then
           echo "Failed building the base image!"
           kitmaker_webhook_failed
       fi
+      echo "####################################################################"
+      echo "RUNTIME"
+      echo "####################################################################"
       if ! run_cmd retry 3 10 docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_RUNTIME} \
                             --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/runtime" \
                             --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain \
@@ -177,6 +184,9 @@ prepare:
           echo "Failed building the runtime image!"
           kitmaker_webhook_failed
       fi
+      echo "####################################################################"
+      echo "DEVEL"
+      echo "####################################################################"
       if ! run_cmd retry 3 10 docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_DEVEL} \
                             --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel" \
                             --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain \
@@ -194,32 +204,68 @@ prepare:
   image: {{ gitlab_builder_image }}
   stage: cudnn
   script:
-    # no set +e necessary here since we don't use this yet for kitmaker builds
-    - if [[ -z $DIST_BASE_PATH ]]; then
-        DIST_BASE_PATH="dist/${OS}/${CUDA_VERSION}/${ARCH}";
+    - |
+      # no set +e necessary here since we don't use this yet for kitmaker builds
+      if [[ -z $DIST_BASE_PATH ]]; then
+          DIST_BASE_PATH="dist/${OS}/${CUDA_VERSION}/${ARCH}";
       else
-        DIST_BASE_PATH="${DIST_BASE_PATH}/${OS}-${ARCH}";
+          DIST_BASE_PATH="${DIST_BASE_PATH}/${OS}-${ARCH}";
       fi
-    - 'echo "DIST_BASE_PATH: ${DIST_BASE_PATH}"'
-    - if [[ "${NO_OS_SUFFIX}" == "true" ]]; then
-        TAG_CUDNN_RUNTIME=" -t ${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime${IMAGE_TAG_SUFFIX} ";
-        TAG_CUDNN_DEVEL=" -t ${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel${IMAGE_TAG_SUFFIX} ";
-        export CUDA_EXTRA_TAGS="${CUDA_EXTRA_TAGS} ${CUDA_VERSION}-${CUDNN_VERSION}-runtime${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-${CUDNN_VERSION}-devel${IMAGE_TAG_SUFFIX}";
+      if [ ! -z $KITMAKER ] && [ ! -z $TRIGGER ]; then
+          export DIST_BASE_PATH="kitpick"
+          rm -rf kitpick || true
+          mkdir -p kitpick || true
+          find kitpick/
+          NEW_CANDIDATE_URL="${CANDIDATE_URL}"
+          [[ "${CANDIDATE_URL}" != */ ]] && NEW_CANDIDATE_URL="${CANDIDATE_URL}/"
+          if ! retry 3 10 wget --progress=dot:giga --recursive --directory-prefix="rekt" --reject="index.html*" --no-parent ${NEW_CANDIDATE_URL}; then
+              echo "Could not download files from '${CANDIDATE_URL}'!!"
+              kitmaker_webhook_failed
+          fi
+          cp -R rekt/${CANDIDATE_URL#"http://"}/{base,devel,runtime} kitpick/
+          echo "Contents of kitpick/"
+          find kitpick/
+          export CUDNN_VERSION="cudnn$(grep -r "CUDNN_VERSION" kitpick/ | head -n 1 | cut -f 3 -d" " | tr -d '[:space:]' | cut -c 1)"
       fi
-    - retry 3 10 docker buildx create --use --platform linux/${ARCH} --driver-opt image=moby/buildkit:v0.8.1 --name cuda-${ARCH}
-    - retry 3 10 docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_RUNTIME}
-                  --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/runtime/${CUDNN_VERSION}"
-                  --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain
-                  --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}
-    - retry 3 10 docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_DEVEL}
-                  --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel/${CUDNN_VERSION}"
-                  --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain
-                  --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
-    # this is not a great way to pass information between stages, but it is currently the only way
-    - 'echo "CUDA_TAGS=${CUDA_TAGS}" > ${CUDNN_VERSION}finaltags.env'
-    - 'echo "CUDA_${CUDNN_VERSION}_TAGS=\"${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}\"" >> ${CUDNN_VERSION}finaltags.env'
-    - 'echo "CUDA_EXTRA_${CUDNN_VERSION}_TAGS=\"${CUDA_EXTRA_TAGS}\"" >> ${CUDNN_VERSION}finaltags.env'
-    - cat ${CUDNN_VERSION}finaltags.env
+      echo "DIST_BASE_PATH: ${DIST_BASE_PATH}"
+      echo "CUDNN_VERSION: ${CUDNN_VERSION}"
+      if [[ "${NO_OS_SUFFIX}" == "true" ]]; then
+          TAG_CUDNN_RUNTIME=" -t ${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime${IMAGE_TAG_SUFFIX} ";
+          TAG_CUDNN_DEVEL=" -t ${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel${IMAGE_TAG_SUFFIX} ";
+          export CUDA_EXTRA_TAGS="${CUDA_EXTRA_TAGS} ${CUDA_VERSION}-${CUDNN_VERSION}-runtime${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-${CUDNN_VERSION}-devel${IMAGE_TAG_SUFFIX}";
+      fi
+      if ! run_cmd retry 3 10 docker buildx create --use --platform linux/${ARCH} --driver-opt image=moby/buildkit:v0.8.1 --name cuda-${ARCH}; then
+          echo "Failed creating buildx instance!"
+          kitmaker_webhook_failed
+      fi
+      echo "####################################################################"
+      echo "CUDNN RUNTIME"
+      echo "####################################################################"
+      if ! run_cmd retry 3 10 docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_RUNTIME} \
+                  --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/runtime/${CUDNN_VERSION}" \
+                  --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain \
+                  --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}; then
+          echo "Failed building the cudnn runtime image!"
+          kitmaker_webhook_failed
+      fi
+      echo "####################################################################"
+      echo "CUDNN DEVEL"
+      echo "####################################################################"
+      if ! run_cmd retry 3 10 docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_DEVEL} \
+                  --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel/${CUDNN_VERSION}" \
+                  --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain \
+                  --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}; then
+          echo "Failed building the cudnn devel image!"
+          kitmaker_webhook_failed
+      fi
+      # this is not a great way to pass information between stages, but it is currently the only way
+      echo "CUDA_TAGS=${CUDA_TAGS}" > cudnn_tags.env
+      echo "CUDA_${CUDNN_VERSION}_TAGS=\"${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}\"" >> cudnn_tags.env
+      echo "CUDA_EXTRA_${CUDNN_VERSION}_TAGS=\"${CUDA_EXTRA_TAGS}\"" >> cudnn_tags.env
+      cat cudnn_tags.env
+  artifacts:
+    reports:
+      dotenv: cudnn_tags.env
 
 .test_template: &test_definition
   image: {{ gitlab_builder_image }}
@@ -290,13 +336,19 @@ prepare:
           {# [[ $tag == "\"\"" ]] && continue; #}
           echo ${tag//\"} >> TAG_MANIFEST
       done
+      echo ">>> BEGIN TAG_MANIFEST <<<"
       cat TAG_MANIFEST
+      echo ">>> END TAG_MANIFEST <<<"
       if [ ! -z $KITMAKER ] && [ ! -z $TRIGGER ]; then
-          if ! retry 3 10 wget --progress=dot:giga --directory-prefix="kitpick" --reject="index.html*" --no-parent ${CANDIDATE_URL}/manifest-${OS_NAME}-${OS_VERSION}.yml; then
+          manifest_file="manifest-${OS_NAME}-${OS_VERSION}.yml"
+          if  [ ! -z $L4T ]; then
+              manifest_file="manifest-l4t.yml"
+          fi
+          if ! retry 3 10 wget --progress=dot:giga --directory-prefix="kitpick" --reject="index.html*" --no-parent ${CANDIDATE_URL}/${manifest_file}; then
               echo "Could not download files from '${CANDIDATE_URL}'!!"
               kitmaker_webhook_failed
           fi
-          export MANIFEST="kitpick/manifest-${OS_NAME}-${OS_VERSION}.yml";
+          export MANIFEST="kitpick/${manifest_file}";
       fi
       if ! run_cmd retry 3 10 python manager.py ${MANIFEST:+`echo "--manifest ${MANIFEST}"`} push \
               --tag-manifest TAG_MANIFEST \
@@ -310,7 +362,7 @@ prepare:
           echo "Error pushing images!"
           kitmaker_webhook_failed
       fi
-      cat $MANIFEST | grep "${ARCH}.*urm.nvidia.com" | cut -f2 -d: | xargs >> TAG_MANIFEST
+      cat $MANIFEST | grep "${ARCH}.*urm.nvidia.com" | cut -f2 -d: | head -n 1 | xargs >> TAG_MANIFEST
       kitmaker_cleanup_webhook_success
   artifacts:
     paths:
@@ -344,11 +396,28 @@ trigger:
     - if: '$TRIGGER == "true" && $KITMAKER == "true"'
       when: on_success
 
+.kitmaker_l4t_only: &kitmaker_l4t_only
+  variables:
+    <<: *kitmaker_variables
+  rules:
+    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $L4T == "true"'
+      when: on_success
+
 kitmaker_base:
   <<: *cuda_base_definition
   <<: *kitmaker_only
   # Need to build container images on a multi-arch capable machine
   <<: *tags_definition_multiarch
+
+# L4T only, will be removed!
+kitmaker_cudnn:
+  <<: *cudnn_definition
+  <<: *kitmaker_l4t_only
+  # Need to build container images on a multi-arch capable machine
+  <<: *tags_definition_multiarch
+  artifacts:
+    reports:
+      dotenv: cudnn_tags.env
 
 kitmaker_deploy:
   <<: *deploy_definition
@@ -357,6 +426,7 @@ kitmaker_deploy:
   needs:
     - job: kitmaker_base
       artifacts: true
+    - job: kitmaker_cudnn
 
 {% for cuda_version in cuda if not cuda_version.startswith("manifest") %}
 {% for pipeline in cuda[cuda_version] %}
@@ -419,9 +489,6 @@ kitmaker_deploy:
   variables:
     <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_variables
     CUDNN_VERSION: "{{ cudnn }}"
-  artifacts:
-    reports:
-      dotenv: {{ cudnn }}finaltags.env
   needs:
     - job: {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ arch }}
       artifacts: true

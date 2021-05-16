@@ -45,6 +45,42 @@ HTTP_RETRY_WAIT_SECS = 30
 SUPPORTED_DISTRO_LIST = ["ubuntu", "ubi", "centos"]
 
 
+def auth_registries(push_repos):
+    repos = {}
+    for repo, metadata in push_repos.items():
+        if metadata.get("only_if", False) and not os.getenv(metadata["only_if"]):
+            log.info("repo: '%s' only_if requirement not satisfied", repo)
+            continue
+        user = os.getenv(metadata["user"])
+        if not user:
+            user = metadata["user"]
+        passwd = os.getenv(metadata["pass"])
+        if not passwd:
+            passwd = metadata["pass"]
+        repos[metadata["registry"]] = {"user": user, "pass": passwd}
+
+    if not repos:
+        log.fatal("Could not retrieve registry credentials. Environment not set?")
+        sys.exit(1)
+
+    # docker login
+    for repo, data in repos.items():
+        log.info(f"Logging into {repo}")
+        #  log.debug(f"USER: {data['user']} PASS: {data['pass']}")
+        result = shellcmd(
+            "docker",
+            ("login", repo, f"-u" f"{data['user']}", f"-p" f"{data['pass']}",),
+            printOutput=False,
+            returnOut=True,
+        )
+        if result.returncode > 0:
+            log.error(result.stderr)
+            log.error("Docker login failed!")
+            sys.exit(1)
+        else:
+            log.info(f"Docker login to '{repo}' was successful.")
+
+
 def shellcmd(bin, args, printOutput=True, returnOut=False):
     """Run the shell command with specified arguments for skopeo/docker
 
@@ -56,7 +92,13 @@ def shellcmd(bin, args, printOutput=True, returnOut=False):
     if "skopeo" in bin:
         bin_name = local["/usr/bin/skopeo"]
     elif "docker" in bin:
-        bin_name = local["/usr/bin/docker"]
+        # find docker
+        if pathlib.Path("/usr/local/bin/docker").exists():
+            bin_name = local["/usr/local/bin/docker"]
+        elif pathlib.Path("/usr/bin/docker").exists():
+            bin_name = local["/usr/bin/docker"]
+        else:
+            raise Exception("Can't find docker client executable!")
     else:
         log.error("%s is not supported by method - shellcmd", bin)
         sys.exit(1)
@@ -94,10 +136,7 @@ class Manager(cli.Application):
     ci = None
 
     manifest_path = cli.SwitchAttr(
-        "--manifest",
-        str,
-        excludes=["--shipit-uuid"],
-        help="Select a manifest to use.",
+        "--manifest", str, excludes=["--shipit-uuid"], help="Select a manifest to use.",
     )
 
     shipit_uuid = cli.SwitchAttr(
@@ -300,9 +339,12 @@ class ManagerTrigger(Manager):
         default=None,
     )
 
+    l4t = cli.Flag(["--l4t"], help="Flag the pipeline as being for L4T",)
+
     def ci_pipeline_by_name(self, name):
         log.debug(f"have pipeline_name: {name}")
-        rgx = re.compile(fr"^\s+- \$(?!all)(.*_{name}_.*) == \"true\"$")
+        #  rgx = re.compile(fr"^\s+- \$(?!all)(.*_{name}_.*) == \"true\"$")
+        rgx = re.compile(fr"^\s+- if: '\$([\w\._]*{name}[\w\._]*)\s+==\s.true.'$")
         ci_vars = []
         with open(".gitlab-ci.yml", "r") as fp:
             for _, line in enumerate(fp):
@@ -312,11 +354,7 @@ class ManagerTrigger(Manager):
         return ci_vars
 
     def ci_pipelines(
-        self,
-        cuda_version,
-        distro,
-        distro_version,
-        arch,
+        self, cuda_version, distro, distro_version, arch,
     ):
         """Returns a list of pipelines extracted from the gitlab-ci.yml
 
@@ -481,9 +519,20 @@ class ManagerTrigger(Manager):
 
                 # Any or all of the variables passed to this function can be None
                 for cvar in self.ci_pipelines(version, distro, distro_version, arch):
-                    if not cvar in self.trigger_explicit:
-                        log.info("Triggering '%s'", cvar)
-                        self.trigger_explicit.append(cvar)
+                    if self.pipeline_name:
+                        pipeline_vars = self.ci_pipeline_by_name(self.pipeline_name)
+                    else:
+                        pipeline_vars = self.ci_pipelines(
+                            version, distro, distro_version, arch
+                        )
+
+                    #  __import__("pprint").pprint(pipeline_vars)
+                    #  sys.exit(1)
+
+                    for cvar in pipeline_vars:
+                        if not cvar in self.trigger_explicit:
+                            log.info("Triggering '%s'", cvar)
+                            self.trigger_explicit.append(cvar)
 
             return True
 
@@ -513,6 +562,8 @@ class ManagerTrigger(Manager):
             payload[f"variables[NO_PUSH]"] = "true"
         if rebuildb:
             payload[f"variables[REBUILD_BUILDER]"] = "true"
+        if self.l4t:
+            payload[f"variables[L4T]"] = "true"
         final_url = f"{url}/projects/{project_id}/trigger/pipeline"
         log.info("url %s", final_url)
         log.info("payload %s", payload)
@@ -541,6 +592,8 @@ class ManagerTrigger(Manager):
             payload[f"variables[NO_TEST]"] = "true"
         if no_push:
             payload[f"variables[NO_PUSH]"] = "true"
+        if self.l4t:
+            payload[f"variables[L4T]"] = "true"
         payload[f"variables[TRIGGER]"] = "true"
         payload[f"variables[OS]"] = f"{self.distro}{self.distro_version}"
         payload[f"variables[OS_NAME]"] = self.distro
@@ -660,16 +713,11 @@ class ManagerContainerPush(Manager):
         help="The name of the pipeline the deploy is coming from",
     )
 
-    tag_manifest = cli.SwitchAttr(
-        "--tag-manifest",
-        str,
-        help="A list of tags to push",
-    )
+    tag_manifest = cli.SwitchAttr("--tag-manifest", str, help="A list of tags to push",)
 
-    readme = cli.Flag(
-        "--readme",
-        help="Path to the README.md",
-    )
+    readme = cli.Flag("--readme", help="Path to the README.md",)
+
+    l4t = cli.Flag(["--l4t"], help="Flag the push as being for L4T",)
 
     client = None
     repos = []
@@ -709,7 +757,7 @@ class ManagerContainerPush(Manager):
             if excluded_repos and repo in excluded_repos:
                 log.info("repo: '%s' is excluded for this image", repo)
                 continue
-            if self.arch not in metadata["registry"]:
+            if self.arch not in metadata["image_names"]:
                 log.debug(f"{repo} does not contain an entry for arch: {self.arch}")
                 continue
             user = os.getenv(metadata["user"])
@@ -718,7 +766,7 @@ class ManagerContainerPush(Manager):
             passwd = os.getenv(metadata["pass"])
             if not passwd:
                 passwd = metadata["pass"]
-            registry = metadata["registry"][self.arch]
+            registry = metadata["image_names"][self.arch]
             self.repo_creds[registry] = {"user": user, "pass": passwd}
             self.repos.append(registry)
         if not self.repos:
@@ -775,50 +823,50 @@ class ManagerContainerPush(Manager):
                     log.error("Errors were encountered copying images!")
                     sys.exit(1)
 
-    def auth_registries(self):
-        for repo, metadata in self.parent.manifest[self.key].items():
-            registry = {}
-            if repo in (
-                "gitlab-master",
-                "artifactory",
-                "nvcr.io",
-            ):  # TODO: push to Nvidia Registry
-                log.debug(f"Skipping push to {repo}")
-                continue
-            if metadata.get("only_if", False) and not os.getenv(metadata["only_if"]):
-                log.info("repo: '%s' only_if requirement not satisfied", repo)
-                continue
-            user = os.getenv(metadata["user"])
-            if not user:
-                user = metadata["user"]
-            passwd = os.getenv(metadata["pass"])
-            if not passwd:
-                passwd = metadata["pass"]
-            self.repo_creds[repo] = {"user": user, "pass": passwd}
-            for arch in ("x86_64", "ppc64le", "arm64"):
-                registry[f"README-{arch}.md"] = metadata["registry"][arch]
-            self.repos_dict[repo] = registry
+    #  def auth_registries(self):
+    #      for repo, metadata in self.parent.manifest[self.key].items():
+    #          registry = {}
+    #          if repo in (
+    #              "gitlab-master",
+    #              "artifactory",
+    #              "nvcr.io",
+    #          ):  # TODO: push to Nvidia Registry
+    #              log.debug(f"Skipping push to {repo}")
+    #              continue
+    #          if metadata.get("only_if", False) and not os.getenv(metadata["only_if"]):
+    #              log.info("repo: '%s' only_if requirement not satisfied", repo)
+    #              continue
+    #          user = os.getenv(metadata["user"])
+    #          if not user:
+    #              user = metadata["user"]
+    #          passwd = os.getenv(metadata["pass"])
+    #          if not passwd:
+    #              passwd = metadata["pass"]
+    #          self.repo_creds[repo] = {"user": user, "pass": passwd}
+    #          for arch in ("x86_64", "ppc64le", "arm64"):
+    #              registry[f"README-{arch}.md"] = metadata["registry"][arch]
+    #          self.repos_dict[repo] = registry
 
-        if not self.repos_dict:
-            log.fatal("Could not retrieve registry credentials. Environment not set?")
-            sys.exit(1)
-        # docker login
-        result = shellcmd(
-            "docker",
-            (
-                "login",
-                f"-u" f"{self.repo_creds['docker.io']['user']}",
-                f"-p" f"{self.repo_creds['docker.io']['pass']}",
-            ),
-            printOutput=False,
-            returnOut=True,
-        )
-        if result.returncode > 0:
-            log.error(result.stderr)
-            log.error("Docker login failed!")
-            sys.exit(1)
-        else:
-            log.info("Docker login was successful.")
+    #      if not self.repos_dict:
+    #          log.fatal("Could not retrieve registry credentials. Environment not set?")
+    #          sys.exit(1)
+    #      # docker login
+    #      result = shellcmd(
+    #          "docker",
+    #          (
+    #              "login",
+    #              f"-u" f"{self.repo_creds['docker.io']['user']}",
+    #              f"-p" f"{self.repo_creds['docker.io']['pass']}",
+    #          ),
+    #          printOutput=False,
+    #          returnOut=True,
+    #      )
+    #      if result.returncode > 0:
+    #          log.error(result.stderr)
+    #          log.error("Docker login failed!")
+    #          sys.exit(1)
+    #      else:
+    #          log.info("Docker login was successful.")
 
     def push_readmes(self):
         if self.dry_run:
@@ -870,28 +918,21 @@ class ManagerGenerate(Manager):
     cuda_version_is_release_label = False
     cuda_version_regex = re.compile(r"cuda_v([\d\.]+)(?:_(\w+))?$")
 
+    product_name = ""
+    candidate_number = ""
+
     template_env = Environment(
         extensions=["jinja2.ext.do"], trim_blocks=True, lstrip_blocks=True
     )
 
-    generate_ci = cli.Flag(
-        ["--ci"],
-        help="Generate the gitlab pipelines only.",
-    )
+    generate_ci = cli.Flag(["--ci"], help="Generate the gitlab pipelines only.",)
 
-    generate_all = cli.Flag(
-        ["--all"],
-        help="Generate all of the templates.",
-    )
+    generate_all = cli.Flag(["--all"], help="Generate all of the templates.",)
 
-    generate_readme = cli.Flag(
-        ["--readme"],
-        help="Generate all readmes.",
-    )
+    generate_readme = cli.Flag(["--readme"], help="Generate all readmes.",)
 
     generate_tag = cli.Flag(
-        ["--tags"],
-        help="Generate all supported and unsupported tag lists.",
+        ["--tags"], help="Generate all supported and unsupported tag lists.",
     )
 
     distro = cli.SwitchAttr(
@@ -945,6 +986,20 @@ class ManagerGenerate(Manager):
         group="Targeted",
         help="Use a pipeline name for manifest matching.",
         default="default",
+    )
+
+    flavor = cli.SwitchAttr(
+        "--flavor", str, help="Identifier passed to template context.",
+    )
+
+    #
+    # WAR ONLY USED FOR L4T and will be removed in the future
+    #
+    cudnn_json_path = cli.SwitchAttr(
+        "--cudnn-json-path",
+        str,
+        group="L4T",
+        help="File path to json encoded file containing cudnn package metadata.",
     )
 
     def supported_distro_list_by_cuda_version(self, version):
@@ -1111,6 +1166,7 @@ class ManagerGenerate(Manager):
 
         # The templating context. This data structure is used to fill the templates.
         self.cuda = {
+            "flavor": self.flavor,
             "use_ml_repo": False,
             "version": {
                 "release_label": self.cuda_version
@@ -1137,18 +1193,11 @@ class ManagerGenerate(Manager):
         # and the discovered keys are injected into the template context.
         # We only checks at three levels in the manifest
         self.extract_keys(
-            self.get_data(
-                conf,
-                self.key,
-                f"{self.distro}{self.distro_version}",
-            )
+            self.get_data(conf, self.key, f"{self.distro}{self.distro_version}",)
         )
         self.extract_keys(
             self.get_data(
-                conf,
-                self.key,
-                f"{self.distro}{self.distro_version}",
-                self.arch,
+                conf, self.key, f"{self.distro}{self.distro_version}", self.arch,
             )
         )
         log.debug("template context %s" % (self.cuda))
@@ -1207,9 +1256,7 @@ class ManagerGenerate(Manager):
                 globber = f"{img}-*"
 
             log.debug(
-                "template_path: %s, output_path: %s",
-                temp_path,
-                self.output_path,
+                "template_path: %s, output_path: %s", temp_path, self.output_path,
             )
 
             self.output_template(
@@ -1530,16 +1577,21 @@ class ManagerGenerate(Manager):
         modified_arch = self.arch.replace("_", "-")
         if modified_arch == "arm64":
             modified_arch = "sbsa"
+        shipit_distro = f"{funnel_distro}{modified_distro_version}"
+        if "tegra" in self.product_name:
+            shipit_distro = "l4t"
+            modified_arch = "aarch64"
         last_dot_index = self.release_label.rfind(".")
-        platform_name = f"{funnel_distro}{modified_distro_version}-cuda-r{modified_cuda_version[:last_dot_index]}-linux-{modified_arch}.json"
-        shipit_json = f"http://cuda-repo.nvidia.com/funnel/{self.parent.shipit_uuid}/{platform_name}"
+
+        platform_name = (
+            f"{shipit_distro}-{self.product_name}-linux-{modified_arch}.json"
+        )
+        shipit_json = f"http://cuda-internal.nvidia.com/funnel/{self.parent.shipit_uuid}/{platform_name}"
         log.info(f"Retrieving funnel json from: {shipit_json}")
         return self.parent.get_http_json(shipit_json)
 
     def get_shipit_global_json(self):
-        global_json = (
-            f"http://cuda-repo.nvidia.com/funnel/{self.parent.shipit_uuid}/global.json"
-        )
+        global_json = f"http://cuda-internal.nvidia.com/funnel/{self.parent.shipit_uuid}/global.json"
         log.info(f"Retrieving global json from: {global_json}")
         return self.parent.get_http_json(global_json)
 
@@ -1619,8 +1671,6 @@ class ManagerGenerate(Manager):
         return components
 
     def kitpick_repo_url(self, global_json):
-        product_name = global_json["product_name"]
-        cand_number = global_json["cand_number"]
         repo_distro = self.distro
         if any(x in repo_distro for x in ["ubi", "centos"]):
             repo_distro = "rhel"
@@ -1630,23 +1680,105 @@ class ManagerGenerate(Manager):
             arch = "ppc64el"
         elif arch == "arm64":
             arch = "sbsa"
-        return f"http://cuda-repo.nvidia.com/release-candidates/kitpicks/{product_name}/{self.release_label}/{cand_number}/repos/{clean_distro}/{arch}"
+        suffix = f"{clean_distro}/{arch}"
+        if "tegra" in self.product_name:
+            arch = "arm64"
+            suffix = f"l4t/{arch}"
+        return f"http://cuda-internal.nvidia.com/release-candidates/kitpicks/{self.product_name}/{self.release_label}/{self.candidate_number}/repos/{suffix}"
+
+    def latest_l4t_base_image(self):
+        l4t_base_image = "nvcr.io/nvidian/nvidia-l4t-base"
+        #  return f"{l4t_base_image}:r32_CUDA_10.2.460_RC_006"
+        #  return f"{l4t_base_image}:r32.2"
+        # bash equivalent
+        #  /usr/bin/skopeo list-tags docker://nvcr.io/nvidian/nvidia-l4t-base | jq -r '.["Tags"] | .[]' | grep "^r[[:digit:]]*\." | sort -r -n | head -n 1
+        out = shellcmd(
+            "skopeo",
+            ("list-tags", f"docker://{l4t_base_image}"),
+            printOutput=False,
+            returnOut=True,
+        )
+        try:
+            tag_dict = json.loads(out.stdout)
+        except:
+            log.error(
+                f"Some problem occurred in getting tags from NGC (nvcr.io): {out.stderr}"
+            )
+            sys.exit(1)
+        tag_list = []
+        # TODO: refactor
+        for key in tag_dict.keys():
+            if "Tags" in key:
+                tag_list = list(tag_dict[key])
+        tag_list2 = []
+        for tag in tag_list:
+            # Match r32\.*
+            #  if re.match("^r[\d]*\.", tag):
+            # Match r32_CUDA
+            if re.match("^r[\d_]*CUDA", tag):
+                tag_list2.append(tag)
+        return f"{l4t_base_image}:{sorted(tag_list2, reverse=True)[0]}"
 
     def shipit_manifest(self):
         log.debug("Building the shipit manifest")
-        sjson = self.get_shipit_funnel_json()
         gjson = self.get_shipit_global_json()
+        self.product_name = gjson["product_name"]
+        self.candidate_number = gjson["cand_number"]
         #  self.release_label = gjson["rel_label"]
+        log.info(f"Product Name: '{self.product_name}'")
+        log.info(f"Candidate Number: '{self.candidate_number}'")
         log.info(f"Release label: {self.release_label}")
+
+        platform = f"{self.distro}{self.distro_version}"
+        if "tegra" in self.product_name:
+            platform = "l4t"
+            if not self.cudnn_json_path:
+                log.error("Argument `--cudnn-json-path` is not set!")
+                sys.exit(1)
+        self.set_output_path(platform)
+
+        sjson = self.get_shipit_funnel_json()
+
         pkgs = self.template_packages()
         log.debug(f"template packages: {pkgs}")
         components = self.shipit_components(sjson, pkgs)
+
+        # TEMP WAR: populate cudnn component for L4T
+        if "l4t" in platform:
+            cudnn_comp = {
+                "cudnn8": {
+                    "version": "",
+                    "source": "",
+                    "dev": {"source": "", "md5sum": ""},
+                }
+            }
+            #  print(self.cudnn_json_path)
+            with open(pathlib.Path(self.cudnn_json_path), "r") as f:
+                cudnn = json.loads(f.read())
+            for x in cudnn:
+                artpath = f"https://urm.nvidia.com/artifactory/{x['repo']}/{x['path']}/{x['name']}"
+                if "arm64" in x["name"]:
+                    if "-dev_" in x["name"]:
+                        #  cudnn_comp["cudnn8"]["dev"]["version"] = x["version"]
+                        cudnn_comp["cudnn8"]["dev"]["source"] = artpath
+                        cudnn_comp["cudnn8"]["dev"]["md5sum"] = x["actual_md5"]
+                    else:
+                        cudnn_comp["cudnn8"]["version"] = x["version"]
+                        cudnn_comp["cudnn8"]["source"] = artpath
+                        cudnn_comp["cudnn8"]["md5sum"] = x["actual_md5"]
+            if cudnn_comp:
+                #  print(cudnn_comp)
+                components.update(cudnn_comp)
+
         image_name = (
             "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
         )
         template_path = "templates/ubuntu"
         if "ubuntu" not in self.distro:
             template_path = "templates/redhat"
+        #  if all(x in self.product_name for x in ["tegra", "10-2"]):
+        #      template_path = "templates/ubuntu/legacy"
+
         if not "x86_64" in self.arch:
             image_name = f"gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda-{self.arch}"
         base_image = f"{self.distro}:{self.distro_version}"
@@ -1654,6 +1786,19 @@ class ManagerGenerate(Manager):
             base_image = (
                 f"registry.access.redhat.com/ubi{self.distro_version}/ubi:latest"
             )
+        requires = ""
+
+        key = "push_repos"
+        if "tegra" in self.product_name:
+            key = "l4t_push_repos"
+        prepos = self._load_rc_push_repos_manifest_yaml()[key]
+        auth_registries(prepos)
+
+        if "tegra" in self.product_name:
+            base_image = self.latest_l4t_base_image()
+            requires = "cuda>=10.2"
+            image_name = f"gitlab-master.nvidia.com:5005/cuda-installer/cuda/l4t-cuda"
+
         self.parent.manifest = {
             f"cuda_v{self.release_label}": {
                 "dist_base_path": self.dist_base_path.as_posix(),
@@ -1665,14 +1810,12 @@ class ManagerGenerate(Manager):
                     "image_tag_suffix": f"-{gjson['cand_number']}",
                     f"{self.arch}": {
                         "image_name": image_name,
-                        #  "requires": f"cuda>={self.cuda_version}",
-                        "requires": "",
+                        "requires": requires,
                         "components": components,
                     },
                 },
             }
         }
-        prepos = self._load_rc_push_repos_manifest_yaml()["push_repos"]
         self.parent.manifest.update({"push_repos": prepos})
         log.info(f"Writing shipit manifest: {self.output_manifest_path}")
         self.write_shipit_manifest(self.parent.manifest)
@@ -1686,13 +1829,16 @@ class ManagerGenerate(Manager):
         self.output_path = pathlib.Path(f"{self.dist_base_path}/{target}-{self.arch}")
         if self.parent.shipit_uuid:
             if self.dist_base_path.exists:
-                log.debug(f"Removing {self.dist_base_path}")
+                log.debug(f"Removing path '{self.dist_base_path}'")
                 rm["-rf", self.dist_base_path]()
-            self.output_path = pathlib.Path(
-                f"{self.dist_base_path}/{target}-{self.arch}"
-            )
+            platform = f"{target}-{self.arch}"
+            os = f"{self.distro}-{self.distro_version}"
+            if "tegra" in self.product_name:
+                platform = f"{target}-cuda"
+                os = "l4t"
+            self.output_path = pathlib.Path(f"{self.dist_base_path}/{platform}")
             self.output_manifest_path = pathlib.Path(
-                f"{self.dist_base_path}/{target}-{self.arch}/manifest-{self.distro}-{self.distro_version}.yml"
+                f"{self.dist_base_path}/{platform}/manifest-{os}.yml"
             )
             log.debug(f"output_manifest_path: {self.output_manifest_path}")
 
@@ -1700,6 +1846,7 @@ class ManagerGenerate(Manager):
             log.debug(f"Removing {self.output_path}")
             rm["-rf", self.output_path]()
 
+        log.debug(f"self.output_path: '{self.output_path}' target: '{target}'")
         log.debug(f"Creating {self.output_path}")
         self.output_path.mkdir(parents=True, exist_ok=False)
 
@@ -1781,10 +1928,7 @@ class ManagerGenerate(Manager):
 
             self.dist_base_path = pathlib.Path(
                 self.parent.get_data(
-                    self.parent.manifest,
-                    self.key,
-                    "dist_base_path",
-                    can_skip=False,
+                    self.parent.manifest, self.key, "dist_base_path", can_skip=False,
                 )
             )
             if not self.output_manifest_path:
@@ -1800,7 +1944,6 @@ class ManagerGenerate(Manager):
         if self.parent.shipit_uuid:
             log.debug("Have shippit source, generating manifest and scripts")
             self.dist_base_path = pathlib.Path("kitpick")
-            self.set_output_path(f"{self.distro}{self.distro_version}")
             self.shipit_manifest()
             self.targeted()
         else:
