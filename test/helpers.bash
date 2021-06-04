@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function debug() {
-    if [ $DEBUG -eq 1 ]; then
+    if [[ $DEBUG -eq 1 ]]; then
         echo "DEBUG: $@" | sed -e 's/^/# /' >&3 ;
     fi
 }
