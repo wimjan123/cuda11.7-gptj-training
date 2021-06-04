@@ -32,6 +32,11 @@ The following product pages will still exist but will no longer be supported:
 * https://ngc.nvidia.com/containers/nvidia:cuda-ppc64le
 * https://ngc.nvidia.com/containers/nvidia:cuda-arm64
 
+The following gitlab repositories will be archived:
+
+* https://gitlab.com/nvidia/container-images/cuda-ppc64le
+* https://gitlab.com/nvidia/container-images/cuda-arm64
+
 Additionally, existing cuda-arm64 and cuda-ppc64le tags will not be deleted from Docker Hub or NGC and will be marked as unsupported in our [documentation](https://gitlab.com/nvidia/container-images/cuda/blob/master/doc/unsupported-tags.md).
 
 ### Deprecated: "latest" tag
@@ -75,7 +80,7 @@ Supported tags are updated to the latest CUDA and cuDNN versions. These tags are
 
 For a full list of supported tags, click [*here*](https://gitlab.com/nvidia/container-images/cuda/blob/master/doc/supported-tags.md).
 
-## LATEST CUDA 11.3 Update 1
+## LATEST CUDA 11.3.1
 
 Visit [OpenSource @ Nvidia](https://developer.download.nvidia.com/compute/cuda/opensource/image/) for the GPL sources of the packages contained in the CUDA base image layers.
 
