@@ -32,7 +32,3 @@ COPY pyproject.toml /root/
 WORKDIR /root
 
 RUN . $HOME/.poetry/env && poetry config virtualenvs.create false && poetry install
-RUN apt-get install -y cuda-samples-11-3
-RUN apt-get install -y cuda-samples-11-3
-RUN apt-get install -y cuda-samples-11-3
-RUN apt-get install -y cuda-samples-11-3
