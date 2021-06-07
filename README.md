@@ -48,6 +48,7 @@ export CUDA_VERSION="11.0"
 export OS="ubuntu20.04"
 export ARCH=`uname -m`
 
+cp NGC-DL-CONTAINER-LICENSE dist/${CUDA_VERSION}/${OS}-${ARCH}/base/
 docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}" "dist/${CUDA_VERSION}/${OS}-${ARCH}/base"
 docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}" --build-arg "IMAGE_NAME=${IMAGE_NAME}" "dist/${CUDA_VERSION}/${OS}-${ARCH}/runtime"
 docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}" --build-arg "IMAGE_NAME=${IMAGE_NAME}" "dist/${CUDA_VERSION}/${OS}-${ARCH}/devel"
