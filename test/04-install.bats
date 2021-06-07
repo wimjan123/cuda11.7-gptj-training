@@ -18,7 +18,7 @@ function setup() {
     # different cuda version. We only want one cuda version in the images
     docker pull ${image}
     local num=2
-    if [[ "11.3" == "${major}.${minor}" ]] && [[ ${rev} -ge 1 ]]; then
+    if [[ "11.3" == "${major}.${minor}" ]] && ([[ ${rev} -ge 1 ]] || [[ "${OS_NAME}" == "ubi" ]]); then
         printf "%s\n" "RUN apt-get install -y cuda-samples-${major}-${minor}" >> Dockerfile
         num=3
     fi
