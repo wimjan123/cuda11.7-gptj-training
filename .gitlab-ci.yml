@@ -420,6 +420,14 @@ kitmaker_deploy:
   needs:
     - job: kitmaker_base
       artifacts: true
+
+kitmaker_cudnn_deploy:
+  <<: *deploy_definition
+  <<: *kitmaker_l4t_only
+  <<: *tags_definition
+  needs:
+    - job: kitmaker_base
+      artifacts: true
     - job: kitmaker_cudnn
 
 .ubuntu20_04_11_3_1_x86_64_variables: &ubuntu20_04_11_3_1_x86_64_variables
@@ -452,9 +460,6 @@ ubuntu20.04-v11.3.1-cudnn8-x86_64:
   variables:
     <<: *ubuntu20_04_11_3_1_x86_64_variables
     CUDNN_VERSION: "cudnn8"
-  artifacts:
-    reports:
-      dotenv: cudnn8finaltags.env
   needs:
     - job: ubuntu20.04-v11.3.1-x86_64
       artifacts: true
@@ -532,9 +537,6 @@ ubuntu20.04-v11.3.1-cudnn8-arm64:
   variables:
     <<: *ubuntu20_04_11_3_1_arm64_variables
     CUDNN_VERSION: "cudnn8"
-  artifacts:
-    reports:
-      dotenv: cudnn8finaltags.env
   needs:
     - job: ubuntu20.04-v11.3.1-arm64
       artifacts: true
@@ -611,9 +613,6 @@ ubuntu18.04-v11.3.1-cudnn8-x86_64:
   variables:
     <<: *ubuntu18_04_11_3_1_x86_64_variables
     CUDNN_VERSION: "cudnn8"
-  artifacts:
-    reports:
-      dotenv: cudnn8finaltags.env
   needs:
     - job: ubuntu18.04-v11.3.1-x86_64
       artifacts: true
@@ -755,9 +754,6 @@ ubuntu16.04-v11.3.1-cudnn8-x86_64:
   variables:
     <<: *ubuntu16_04_11_3_1_x86_64_variables
     CUDNN_VERSION: "cudnn8"
-  artifacts:
-    reports:
-      dotenv: cudnn8finaltags.env
   needs:
     - job: ubuntu16.04-v11.3.1-x86_64
       artifacts: true
@@ -834,9 +830,6 @@ centos8-v11.3.1-cudnn8-x86_64:
   variables:
     <<: *centos8_11_3_1_x86_64_variables
     CUDNN_VERSION: "cudnn8"
-  artifacts:
-    reports:
-      dotenv: cudnn8finaltags.env
   needs:
     - job: centos8-v11.3.1-x86_64
       artifacts: true
@@ -913,9 +906,6 @@ centos8-v11.3.1-cudnn8-ppc64le:
   variables:
     <<: *centos8_11_3_1_ppc64le_variables
     CUDNN_VERSION: "cudnn8"
-  artifacts:
-    reports:
-      dotenv: cudnn8finaltags.env
   needs:
     - job: centos8-v11.3.1-ppc64le
       artifacts: true
@@ -992,9 +982,6 @@ centos8-v11.3.1-cudnn8-arm64:
   variables:
     <<: *centos8_11_3_1_arm64_variables
     CUDNN_VERSION: "cudnn8"
-  artifacts:
-    reports:
-      dotenv: cudnn8finaltags.env
   needs:
     - job: centos8-v11.3.1-arm64
       artifacts: true
@@ -1071,9 +1058,6 @@ centos7-v11.3.1-cudnn8-x86_64:
   variables:
     <<: *centos7_11_3_1_x86_64_variables
     CUDNN_VERSION: "cudnn8"
-  artifacts:
-    reports:
-      dotenv: cudnn8finaltags.env
   needs:
     - job: centos7-v11.3.1-x86_64
       artifacts: true
@@ -1150,9 +1134,6 @@ ubi8-v11.3.1-cudnn8-x86_64:
   variables:
     <<: *ubi8_11_3_1_x86_64_variables
     CUDNN_VERSION: "cudnn8"
-  artifacts:
-    reports:
-      dotenv: cudnn8finaltags.env
   needs:
     - job: ubi8-v11.3.1-x86_64
       artifacts: true
@@ -1229,9 +1210,6 @@ ubi8-v11.3.1-cudnn8-ppc64le:
   variables:
     <<: *ubi8_11_3_1_ppc64le_variables
     CUDNN_VERSION: "cudnn8"
-  artifacts:
-    reports:
-      dotenv: cudnn8finaltags.env
   needs:
     - job: ubi8-v11.3.1-ppc64le
       artifacts: true
@@ -1308,9 +1286,6 @@ ubi8-v11.3.1-cudnn8-arm64:
   variables:
     <<: *ubi8_11_3_1_arm64_variables
     CUDNN_VERSION: "cudnn8"
-  artifacts:
-    reports:
-      dotenv: cudnn8finaltags.env
   needs:
     - job: ubi8-v11.3.1-arm64
       artifacts: true
@@ -1387,9 +1362,6 @@ ubi7-v11.3.1-cudnn8-x86_64:
   variables:
     <<: *ubi7_11_3_1_x86_64_variables
     CUDNN_VERSION: "cudnn8"
-  artifacts:
-    reports:
-      dotenv: cudnn8finaltags.env
   needs:
     - job: ubi7-v11.3.1-x86_64
       artifacts: true
