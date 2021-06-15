@@ -1,6 +1,5 @@
 push_repos:
   artifactory:
-    only_if: NV_ARTIFACTORY
     user: ARTIFACTORY_USER
     pass: ARTIFACTORY_PASS
     registry: urm.nvidia.com
