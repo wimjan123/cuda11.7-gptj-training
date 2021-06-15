@@ -3,7 +3,6 @@ FROM ${IMAGE_NAME}:11.3.0-base-ubuntu16.04
 
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 
-
 RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-libraries-11-3=11.3.0-1 \
     libnpp-11-3=11.3.3.44-1 \

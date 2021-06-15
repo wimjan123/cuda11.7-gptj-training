@@ -38,7 +38,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     {% if "libcublas" in cuda.components %}
         {% if cuda.version.major_minor in ["10.1", "10.2"] %}
             {% set l4t = (cuda.arch == "arm64" and cuda.version.build != 89) %}
-            {% set suffix = "10" if not l4t else "-10-2" %}
+            {# {% set suffix = "10" if not l4t else "-10-2" %} #}
+            {% set suffix = "10" %}
             {% set cublas_vers = suffix + "=" + cuda.components.libcublas.version %}
         {% else %}
             {% set cublas_vers = "-" + libcublas_component_version %}

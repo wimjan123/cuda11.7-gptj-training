@@ -8,13 +8,17 @@ retry() {
         if [[ "$?" = "0" ]]; then
             break
         else
+            >&2 echo "###############################################################################"
             >&2 echo Failed attempt $counter/$maxtries
+            >&2 echo "###############################################################################"
             ((counter++))
             sleep $delay
         fi
     done
     if [[ $counter -gt $maxtries ]]; then
+        >&2 echo "###############################################################################"
         >&2 echo RETRIES FAILED
+        >&2 echo "###############################################################################"
         return 1
     fi
 }
@@ -22,6 +26,10 @@ retry() {
 kitmaker_cleanup_webhook_success() {
     if [ ! -z $KITMAKER ] && [ ! -z $TRIGGER ]; then
         [[ ! -f TAG_MANIFEST ]] && exit 0  # Only call the success webhook in the deploy stage
+        echo "Preparing success json in kitmaker_cleanup_webhook_success()"
+        echo ">>> BEGIN TAG_MANIFEST <<<"
+        cat TAG_MANIFEST
+        echo ">>> BEGIN TAG_MANIFEST <<<"
         export a_image_name=$(awk '/./{line=$0} END{print line}' TAG_MANIFEST) # get the artifactory repo name
         sed -i '$ d' TAG_MANIFEST # delete the last line containing the artifactory repo
         export json_data="{\"status\": \"success\", \"CI_PIPELINE_ID\": \"${CI_PIPELINE_ID}\", \"CI_JOB_ID\": \"${CI_JOB_ID}\", \"CI_COMMIT_SHORT_SHA\": \"${CI_COMMIT_SHORT_SHA}\", \"gitlab_pipeline_url\": \"${CI_PIPELINE_URL}\", \"image_name\": \"${a_image_name}\", \"tags\": $(cat TAG_MANIFEST | jq -R . | jq -s . | jq 'map(select(length > 0))' | jq -c .)}"
@@ -32,7 +40,7 @@ kitmaker_cleanup_webhook_success() {
 
 kitmaker_webhook_failed() {
     if [ ! -z $KITMAKER ] && [ ! -z $TRIGGER ]; then
-        if cat cmd_output | grep -q "ERROR"; then
+        if cat cmd_output | grep -q "error\|Error\|ERROR\|FAILED"; then
             # echo curl -v -H "Content-Type: application/json" -d "${json_data}" ${WEBHOOK_URL}
             # json_data="{\"status\": \"failed\", \"CI_PIPELINE_ID\": \"${CI_PIPELINE_ID}\", \"CI_JOB_ID\": \"${CI_JOB_ID}\", \ \"CI_COMMIT_SHORT_SHA\": \"${CI_COMMIT_SHORT_SHA}\", \"gitlab_pipeline_url\": \"${CI_PIPELINE_URL}\", \"cmd_output\": \"$(cat cmd_output)\"}"
 

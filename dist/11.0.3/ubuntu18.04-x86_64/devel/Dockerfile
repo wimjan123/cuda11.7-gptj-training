@@ -1,4 +1,3 @@
-
 ARG IMAGE_NAME
 FROM ${IMAGE_NAME}:11.0.3-runtime-ubuntu18.04
 
