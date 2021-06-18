@@ -36,6 +36,7 @@ import docker
 import git
 import deepdiff
 import requests
+from retry import retry
 
 log = logging.getLogger()
 
@@ -45,6 +46,36 @@ HTTP_RETRY_WAIT_SECS = 30
 SUPPORTED_DISTRO_LIST = ["ubuntu", "ubi", "centos"]
 
 
+class RequestsRetry(Exception):
+    """An exception to handle retries for requests http gets"""
+
+    pass
+
+
+class ImageRegistryLoginRetry(Exception):
+    """An exception to handle retries for container registry login"""
+
+    pass
+
+
+class ImagePushRetry(Exception):
+    """An exception to handle retries for pushing container images"""
+
+    pass
+
+
+class ImageDeleteRetry(Exception):
+    """An exception to handle retries for image deletion"""
+
+    pass
+
+
+@retry(
+    (ImageRegistryLoginRetry),
+    tries=HTTP_RETRY_ATTEMPTS,
+    delay=HTTP_RETRY_WAIT_SECS,
+    logger=log,
+)
 def auth_registries(push_repos):
     repos = {}
     for repo, metadata in push_repos.items():
@@ -74,9 +105,7 @@ def auth_registries(push_repos):
             returnOut=True,
         )
         if result.returncode > 0:
-            log.error(result.stderr)
-            log.error("Docker login failed!")
-            sys.exit(1)
+            raise ImageRegistryLoginRetry()
         else:
             log.info(f"Docker login to '{repo}' was successful.")
 
@@ -182,26 +211,20 @@ class Manager(cli.Application):
             return data
 
     # Returns a unmarshalled json object
+    @retry(
+        (RequestsRetry),
+        tries=HTTP_RETRY_ATTEMPTS,
+        delay=HTTP_RETRY_WAIT_SECS,
+        logger=log,
+    )
     def get_http_json(self, url):
-        for attempt in range(HTTP_RETRY_ATTEMPTS):
-            r = requests.get(url)
-            log.debug("response status code %s", r.status_code)
-            #  log.debug("response body %s", r.json())
-            if r.status_code == 200:
-                log.info("http json get successful")
-                break
-            else:
-                if attempt < HTTP_RETRY_ATTEMPTS:
-                    log.warning(
-                        "http json get attempt failed! ({} of {})".format(
-                            attempt + 1, HTTP_RETRY_ATTEMPTS
-                        )
-                    )
-                    log.warning("Sleeping {} seconds".format(HTTP_RETRY_WAIT_SECS))
-                    time.sleep(HTTP_RETRY_WAIT_SECS)
-                else:
-                    log.critical("Could not get shipit json!")
-                    sys.exit(1)
+        r = requests.get(url)
+        log.debug("response status code %s", r.status_code)
+        #  log.debug("response body %s", r.json())
+        if r.status_code == 200:
+            log.info("http json get successful")
+        else:
+            raise RequestsRetry()
         return r.json()
 
     def main(self):
@@ -724,7 +747,7 @@ class ManagerContainerPush(Manager):
     repos_dict = {}
     tags = []
     key = ""
-    copy_failed = False
+    #  copy_failed = False
     repo_creds = {}
 
     def setup_repos(self):
@@ -775,6 +798,12 @@ class ManagerContainerPush(Manager):
             )
             sys.exit(1)
 
+    @retry(
+        (ImagePushRetry),
+        tries=HTTP_RETRY_ATTEMPTS,
+        delay=HTTP_RETRY_WAIT_SECS,
+        logger=log,
+    )
     def push_images(self):
         with open(self.tag_manifest) as f:
             tags = f.readlines()
@@ -788,40 +817,29 @@ class ManagerContainerPush(Manager):
                 if self.dry_run:
                     log.debug("dry-run; not copying")
                     continue
-                for attempt in range(HTTP_RETRY_ATTEMPTS):
-                    if shellcmd(
-                        "skopeo",
-                        (
-                            "copy",
-                            "--src-creds",
-                            "{}:{}".format(
-                                "gitlab-ci-token", os.getenv("CI_JOB_TOKEN")
-                            ),
-                            "--dest-creds",
-                            "{}:{}".format(
-                                self.repo_creds[repo]["user"],
-                                self.repo_creds[repo]["pass"],
-                            ),
-                            f"docker://{self.image_name}:{tag}",
-                            f"docker://{repo}:{tag}",
+                if shellcmd(
+                    "skopeo",
+                    (
+                        "copy",
+                        "--src-creds",
+                        "{}:{}".format("gitlab-ci-token", os.getenv("CI_JOB_TOKEN")),
+                        "--dest-creds",
+                        "{}:{}".format(
+                            self.repo_creds[repo]["user"],
+                            self.repo_creds[repo]["pass"],
                         ),
-                    ):
-                        log.info("Copy was successful")
-                        self.copy_failed = False
-                        break
-                    else:
-                        log.warning(
-                            "Copy Attempt failed! ({} of {})".format(
-                                attempt + 1, HTTP_RETRY_ATTEMPTS
-                            )
-                        )
-                        log.warning("Sleeping {} seconds".format(HTTP_RETRY_WAIT_SECS))
-                        time.sleep(HTTP_RETRY_WAIT_SECS)
-                        self.copy_failed = True
-                if self.copy_failed:
-                    log.warning("Copy failed!")
-                    log.error("Errors were encountered copying images!")
-                    sys.exit(1)
+                        f"docker://{self.image_name}:{tag}",
+                        f"docker://{repo}:{tag}",
+                    ),
+                ):
+                    log.info("Copy was successful")
+                    #  self.copy_failed = False
+                else:
+                    raise ImagePushRetry()
+                #  if self.copy_failed:
+                #      log.warning("Copy failed!")
+                #      log.error("Errors were encountered copying images!")
+                #      sys.exit(1)
 
     #  def auth_registries(self):
     #      for repo, metadata in self.parent.manifest[self.key].items():
@@ -2065,6 +2083,12 @@ class ManagerStaging(Manager):
         for repo in self.repos:
             self.delete_all_tags_repo(repo)
 
+    @retry(
+        (ImageDeleteRetry),
+        tries=HTTP_RETRY_ATTEMPTS,
+        delay=HTTP_RETRY_WAIT_SECS,
+        logger=log,
+    )
     def delete_all_tags_repo(self, repo):
         out = self.get_repo_tags(repo)
         if out.returncode > 0:
@@ -2072,30 +2096,17 @@ class ManagerStaging(Manager):
             sys.exit(1)
         tags = json.loads(out.stdout)["Tags"]
         for tag in tags:
-            # FIXME: use python retry module decorator
-            for attempt in range(HTTP_RETRY_ATTEMPTS):
-                log.debug(f"deleting {repo}:{tag}")
-                out2 = shellcmd(
-                    "skopeo",
-                    ("delete", f"docker://{repo}:{tag}"),
-                    printOutput=False,
-                    returnOut=True,
-                )
-                if out2.returncode > 0:
-                    log.info(f"deleted {repo}:{tag}")
-                    break
-                else:
-                    if attempt < HTTP_RETRY_ATTEMPTS:
-                        log.warning(
-                            "skopeo delete attempt failed! ({} of {})".format(
-                                attempt + 1, HTTP_RETRY_ATTEMPTS
-                            )
-                        )
-                        log.warning("Sleeping {} seconds".format(HTTP_RETRY_WAIT_SECS))
-                        time.sleep(HTTP_RETRY_WAIT_SECS)
-                    else:
-                        log.warning("could not delete the tag!")
-            sys.exit(1)
+            log.debug(f"deleting {repo}:{tag}")
+            out2 = shellcmd(
+                "skopeo",
+                ("delete", f"docker://{repo}:{tag}"),
+                printOutput=False,
+                returnOut=True,
+            )
+            if out2.returncode > 0:
+                log.info(f"deleted {repo}:{tag}")
+            else:
+                raise ImageDeleteRetry()
 
     def main(self):
         if self.delete_all:

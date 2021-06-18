@@ -1,18 +1,18 @@
 [[package]]
-name = "atomicwrites"
-version = "1.3.0"
-description = "Atomic file writes."
 category = "dev"
+description = "Atomic file writes."
+name = "atomicwrites"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+version = "1.3.0"
 
 [[package]]
-name = "attrs"
-version = "19.1.0"
-description = "Classes Without Boilerplate"
 category = "main"
+description = "Classes Without Boilerplate"
+name = "attrs"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+version = "19.1.0"
 
 [package.extras]
 dev = ["coverage", "hypothesis", "pympler", "pytest", "six", "zope.interface", "sphinx", "pre-commit"]
@@ -20,59 +20,68 @@ docs = ["sphinx", "zope.interface"]
 tests = ["coverage", "hypothesis", "pympler", "pytest", "six", "zope.interface"]
 
 [[package]]
-name = "boltons"
-version = "20.2.1"
+category = "main"
 description = "When they're not builtins, they're boltons."
-category = "main"
+name = "boltons"
 optional = false
 python-versions = "*"
+version = "20.2.1"
 
 [[package]]
-name = "certifi"
-version = "2019.3.9"
+category = "main"
 description = "Python package for providing Mozilla's CA Bundle."
-category = "main"
+name = "certifi"
 optional = false
 python-versions = "*"
+version = "2019.3.9"
 
 [[package]]
-name = "chardet"
-version = "3.0.4"
+category = "main"
 description = "Universal encoding detector for Python 2 and 3"
-category = "main"
+name = "chardet"
 optional = false
 python-versions = "*"
+version = "3.0.4"
 
 [[package]]
-name = "colorama"
-version = "0.4.1"
-description = "Cross-platform colored terminal text."
 category = "main"
+description = "Cross-platform colored terminal text."
+marker = "sys_platform == \"win32\""
+name = "colorama"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+version = "0.4.1"
 
 [[package]]
-name = "coloredlogs"
-version = "10.0"
-description = "Colored terminal output for Python's logging module"
 category = "main"
+description = "Colored terminal output for Python's logging module"
+name = "coloredlogs"
 optional = false
 python-versions = "*"
+version = "10.0"
 
 [package.dependencies]
-colorama = {version = "*", markers = "sys_platform == \"win32\""}
+colorama = "*"
 humanfriendly = ">=4.7"
 
 [package.extras]
 cron = ["capturer (>=2.4)"]
 
 [[package]]
-name = "deepdiff"
-version = "4.0.6"
-description = "Deep Difference and Search of any Python object/data."
 category = "main"
+description = "Decorators for Humans"
+name = "decorator"
+optional = false
+python-versions = ">=3.5"
+version = "5.0.9"
+
+[[package]]
+category = "main"
+description = "Deep Difference and Search of any Python object/data."
+name = "deepdiff"
 optional = false
 python-versions = ">=3.4"
+version = "4.0.6"
 
 [package.dependencies]
 jsonpickle = ">=1.0"
@@ -82,63 +91,66 @@ ordered-set = ">=3.1"
 murmur = ["mmh3"]
 
 [[package]]
-name = "docker"
-version = "4.0.1"
-description = "A Python library for the Docker Engine API."
 category = "main"
+description = "A Python library for the Docker Engine API."
+name = "docker"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+version = "4.0.1"
 
 [package.dependencies]
-pypiwin32 = {version = "223", markers = "sys_platform == \"win32\" and python_version >= \"3.6\""}
 requests = ">=2.14.2,<2.18.0 || >2.18.0"
 six = ">=1.4.0"
 websocket-client = ">=0.32.0"
+
+[package.dependencies.pypiwin32]
+python = ">=3.6"
+version = "223"
 
 [package.extras]
 ssh = ["paramiko (>=2.4.2)"]
 tls = ["pyOpenSSL (>=17.5.0)", "cryptography (>=1.3.4)", "idna (>=2.0.0)"]
 
 [[package]]
-name = "face"
-version = "20.1.1"
-description = "A command-line application framework (and CLI parser). Friendly for users, full-featured for developers."
 category = "main"
+description = "A command-line application framework (and CLI parser). Friendly for users, full-featured for developers."
+name = "face"
 optional = false
 python-versions = "*"
+version = "20.1.1"
 
 [package.dependencies]
 boltons = ">=20.0.0"
 
 [[package]]
-name = "gitdb2"
-version = "2.0.5"
-description = "Git Object Database"
 category = "main"
+description = "Git Object Database"
+name = "gitdb2"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+version = "2.0.5"
 
 [package.dependencies]
 smmap2 = ">=2.0.0"
 
 [[package]]
-name = "gitpython"
-version = "2.1.11"
-description = "Python Git Library"
 category = "main"
+description = "Python Git Library"
+name = "gitpython"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+version = "2.1.11"
 
 [package.dependencies]
 gitdb2 = ">=2.0.0"
 
 [[package]]
-name = "glom"
-version = "20.8.0"
-description = "A declarative object transformer and formatter, for conglomerating nested data."
 category = "main"
+description = "A declarative object transformer and formatter, for conglomerating nested data."
+name = "glom"
 optional = false
 python-versions = "*"
+version = "20.8.0"
 
 [package.dependencies]
 attrs = "*"
@@ -149,31 +161,31 @@ face = ">=20.1.0"
 yaml = ["pyyaml"]
 
 [[package]]
-name = "humanfriendly"
-version = "4.18"
-description = "Human friendly output for text interfaces using Python"
 category = "main"
+description = "Human friendly output for text interfaces using Python"
+name = "humanfriendly"
 optional = false
 python-versions = "*"
+version = "4.18"
 
 [package.dependencies]
-pyreadline = {version = "*", markers = "sys_platform == \"win32\""}
+pyreadline = "*"
 
 [[package]]
-name = "idna"
-version = "2.8"
-description = "Internationalized Domain Names in Applications (IDNA)"
 category = "main"
+description = "Internationalized Domain Names in Applications (IDNA)"
+name = "idna"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+version = "2.8"
 
 [[package]]
-name = "importlib-metadata"
-version = "0.18"
-description = "Read metadata from Python packages"
 category = "dev"
+description = "Read metadata from Python packages"
+name = "importlib-metadata"
 optional = false
 python-versions = ">=2.7,!=3.0,!=3.1,!=3.2,!=3.3"
+version = "0.18"
 
 [package.dependencies]
 zipp = ">=0.5"
@@ -182,12 +194,12 @@ zipp = ">=0.5"
 docs = ["sphinx", "docutils (0.12)", "rst.linker"]
 
 [[package]]
-name = "jinja2"
-version = "2.10.1"
-description = "A small but fast and easy to use stand-alone template engine written in pure python."
 category = "main"
+description = "A small but fast and easy to use stand-alone template engine written in pure python."
+name = "jinja2"
 optional = false
 python-versions = "*"
+version = "2.10.1"
 
 [package.dependencies]
 MarkupSafe = ">=0.23"
@@ -196,52 +208,52 @@ MarkupSafe = ">=0.23"
 i18n = ["Babel (>=0.8)"]
 
 [[package]]
-name = "jsonpickle"
-version = "1.2"
-description = "Python library for serializing any arbitrary object graph into JSON"
 category = "main"
+description = "Python library for serializing any arbitrary object graph into JSON"
+name = "jsonpickle"
 optional = false
 python-versions = "*"
+version = "1.2"
 
 [[package]]
-name = "markupsafe"
-version = "1.1.1"
-description = "Safely add untrusted strings to HTML/XML markup."
 category = "main"
+description = "Safely add untrusted strings to HTML/XML markup."
+name = "markupsafe"
 optional = false
 python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"
+version = "1.1.1"
 
 [[package]]
-name = "mmh3"
-version = "2.5.1"
-description = "Python wrapper for MurmurHash (MurmurHash3), a set of fast and robust hash functions."
 category = "main"
+description = "Python wrapper for MurmurHash (MurmurHash3), a set of fast and robust hash functions."
+name = "mmh3"
 optional = false
 python-versions = "*"
+version = "2.5.1"
 
 [[package]]
-name = "more-itertools"
-version = "7.0.0"
-description = "More routines for operating on iterables, beyond itertools"
 category = "dev"
+description = "More routines for operating on iterables, beyond itertools"
+name = "more-itertools"
 optional = false
 python-versions = ">=3.4"
+version = "7.0.0"
 
 [[package]]
-name = "ordered-set"
-version = "3.1.1"
-description = "A MutableSet that remembers its order, so that every entry has an index."
 category = "main"
+description = "A MutableSet that remembers its order, so that every entry has an index."
+name = "ordered-set"
 optional = false
 python-versions = ">=2.7"
+version = "3.1.1"
 
 [[package]]
-name = "pluggy"
-version = "0.12.0"
-description = "plugin and hook calling mechanisms for python"
 category = "dev"
+description = "plugin and hook calling mechanisms for python"
+name = "pluggy"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+version = "0.12.0"
 
 [package.dependencies]
 importlib-metadata = ">=0.12"
@@ -250,80 +262,84 @@ importlib-metadata = ">=0.12"
 dev = ["pre-commit", "tox"]
 
 [[package]]
-name = "plumbum"
-version = "1.6.7"
-description = "Plumbum: shell combinators library"
 category = "main"
+description = "Plumbum: shell combinators library"
+name = "plumbum"
 optional = false
 python-versions = "*"
+version = "1.6.7"
 
 [[package]]
-name = "py"
-version = "1.8.0"
+category = "main"
 description = "library with cross-python path, ini-parsing, io, code, log facilities"
-category = "dev"
+name = "py"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+version = "1.8.0"
 
 [[package]]
-name = "pypiwin32"
-version = "223"
-description = ""
 category = "main"
+description = ""
+marker = "sys_platform == \"win32\" and python_version >= \"3.6\""
+name = "pypiwin32"
 optional = false
 python-versions = "*"
+version = "223"
 
 [package.dependencies]
 pywin32 = ">=223"
 
 [[package]]
-name = "pyreadline"
-version = "2.1"
-description = "A python implmementation of GNU readline."
 category = "main"
+description = "A python implmementation of GNU readline."
+marker = "sys_platform == \"win32\""
+name = "pyreadline"
 optional = false
 python-versions = "*"
+version = "2.1"
 
 [[package]]
-name = "pytest"
-version = "3.10.1"
-description = "pytest: simple powerful testing with Python"
 category = "dev"
+description = "pytest: simple powerful testing with Python"
+name = "pytest"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+version = "3.10.1"
 
 [package.dependencies]
 atomicwrites = ">=1.0"
 attrs = ">=17.4.0"
-colorama = {version = "*", markers = "sys_platform == \"win32\""}
+colorama = "*"
 more-itertools = ">=4.0.0"
 pluggy = ">=0.7"
 py = ">=1.5.0"
+setuptools = "*"
 six = ">=1.10.0"
 
 [[package]]
-name = "pywin32"
-version = "224"
-description = "Python for Window Extensions"
 category = "main"
+description = "Python for Window Extensions"
+marker = "sys_platform == \"win32\" and python_version >= \"3.6\""
+name = "pywin32"
 optional = false
 python-versions = "*"
+version = "224"
 
 [[package]]
-name = "pyyaml"
-version = "5.1.1"
-description = "YAML parser and emitter for Python"
 category = "main"
+description = "YAML parser and emitter for Python"
+name = "pyyaml"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+version = "5.1.1"
 
 [[package]]
-name = "pyyaml-include"
-version = "1.2"
-description = "Extending PyYAML with a custom constructor for including YAML files within YAML files"
 category = "main"
+description = "Extending PyYAML with a custom constructor for including YAML files within YAML files"
+name = "pyyaml-include"
 optional = false
 python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"
+version = "1.2"
 
 [package.dependencies]
 PyYAML = ">=3.12,<4.0.0 || >=5.0.0,<6.0"
@@ -333,12 +349,12 @@ all = ["toml"]
 toml = ["toml"]
 
 [[package]]
-name = "requests"
-version = "2.22.0"
-description = "Python HTTP for Humans."
 category = "main"
+description = "Python HTTP for Humans."
+name = "requests"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+version = "2.22.0"
 
 [package.dependencies]
 certifi = ">=2017.4.17"
@@ -351,60 +367,71 @@ security = ["pyOpenSSL (>=0.14)", "cryptography (>=1.3.4)", "idna (>=2.0.0)"]
 socks = ["PySocks (>=1.5.6,<1.5.7 || >1.5.7)", "win-inet-pton"]
 
 [[package]]
-name = "six"
-version = "1.12.0"
-description = "Python 2 and 3 compatibility utilities"
 category = "main"
-optional = false
-python-versions = ">=2.6, !=3.0.*, !=3.1.*"
-
-[[package]]
-name = "smmap2"
-version = "2.0.5"
-description = "A pure Python implementation of a sliding window memory map manager"
-category = "main"
-optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-
-[[package]]
-name = "urllib3"
-version = "1.22"
-description = "HTTP library with thread-safe connection pooling, file post, and more."
-category = "main"
+description = "Easy to use retry decorator."
+name = "retry"
 optional = false
 python-versions = "*"
+version = "0.9.2"
+
+[package.dependencies]
+decorator = ">=3.4.2"
+py = ">=1.4.26,<2.0.0"
+
+[[package]]
+category = "main"
+description = "Python 2 and 3 compatibility utilities"
+name = "six"
+optional = false
+python-versions = ">=2.6, !=3.0.*, !=3.1.*"
+version = "1.12.0"
+
+[[package]]
+category = "main"
+description = "A pure Python implementation of a sliding window memory map manager"
+name = "smmap2"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+version = "2.0.5"
+
+[[package]]
+category = "main"
+description = "HTTP library with thread-safe connection pooling, file post, and more."
+name = "urllib3"
+optional = false
+python-versions = "*"
+version = "1.22"
 
 [package.extras]
 secure = ["pyOpenSSL (>=0.14)", "cryptography (>=1.3.4)", "idna (>=2.0.0)", "certifi", "ipaddress"]
 socks = ["PySocks (>=1.5.6,<1.5.7 || >1.5.7,<2.0)"]
 
 [[package]]
-name = "websocket-client"
-version = "0.56.0"
-description = "WebSocket client for Python. hybi13 is supported."
 category = "main"
+description = "WebSocket client for Python. hybi13 is supported."
+name = "websocket-client"
 optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
+version = "0.56.0"
 
 [package.dependencies]
 six = "*"
 
 [[package]]
-name = "zipp"
-version = "0.5.1"
-description = "Backport of pathlib-compatible object wrapper for zip files"
 category = "dev"
+description = "Backport of pathlib-compatible object wrapper for zip files"
+name = "zipp"
 optional = false
 python-versions = ">=2.7"
+version = "0.5.1"
 
 [package.extras]
 docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["pathlib2", "contextlib2", "unittest2"]
 
 [metadata]
-lock-version = "1.1"
+content-hash = "e8e7f59aad2b07bbf32586087b8b1de1c4e144a69788ac17129746da1e9cfb88"
 python-versions = ">3.6"
-content-hash = "777a8f3aa4186a52155f3307ef2e0375ea936a0a0e0a63ae6a710959d373d4b4"
 
 [metadata.files]
 atomicwrites = [
@@ -434,6 +461,10 @@ colorama = [
 coloredlogs = [
     {file = "coloredlogs-10.0-py2.py3-none-any.whl", hash = "sha256:34fad2e342d5a559c31b6c889e8d14f97cb62c47d9a2ae7b5ed14ea10a79eff8"},
     {file = "coloredlogs-10.0.tar.gz", hash = "sha256:b869a2dda3fa88154b9dd850e27828d8755bfab5a838a1c97fbc850c6e377c36"},
+]
+decorator = [
+    {file = "decorator-5.0.9-py3-none-any.whl", hash = "sha256:6e5c199c16f7a9f0e3a61a4a54b3d27e7dad0dbdde92b944426cb20914376323"},
+    {file = "decorator-5.0.9.tar.gz", hash = "sha256:72ecfba4320a893c53f9706bebb2d55c270c1e51a28789361aa93e4a21319ed5"},
 ]
 deepdiff = [
     {file = "deepdiff-4.0.6-py3-none-any.whl", hash = "sha256:856966b80109df002a1ee406ba21cd66e64746167b2ea8f5353d692762326ac9"},
@@ -579,6 +610,10 @@ pyyaml-include = [
 requests = [
     {file = "requests-2.22.0-py2.py3-none-any.whl", hash = "sha256:9cf5292fcd0f598c671cfc1e0d7d1a7f13bb8085e9a590f48c010551dc6c4b31"},
     {file = "requests-2.22.0.tar.gz", hash = "sha256:11e007a8a2aa0323f5a921e9e6a2d7e4e67d9877e85773fba9ba6419025cbeb4"},
+]
+retry = [
+    {file = "retry-0.9.2-py2.py3-none-any.whl", hash = "sha256:ccddf89761fa2c726ab29391837d4327f819ea14d244c232a1d24c67a2f98606"},
+    {file = "retry-0.9.2.tar.gz", hash = "sha256:f8bfa8b99b69c4506d6f5bd3b0aabf77f98cdb17f3c9fc3f5ca820033336fba4"},
 ]
 six = [
     {file = "six-1.12.0-py2.py3-none-any.whl", hash = "sha256:3350809f0555b11f552448330d0b52d5f24c91a322ea4a15ef22629740f3761c"},
