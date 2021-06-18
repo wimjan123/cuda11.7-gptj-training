@@ -10,6 +10,18 @@
 # Editors of this file should use https://github.com/python/black for auto formatting.
 #
 
+# >>> REALLY IMPORTANT NOTICE ABOUT DEPENDENCIES... <<<
+#
+# 1. Dependency handling is done in two places, cudaRcImage.groovy in the jenkins pipeline library code
+#
+#    a: Dependencies will be added automatically to the kitmaker trigger builder images
+#
+# 2. Gitlab pipeline "prepare" stage.
+#
+#    a: This needs to be updated manually at the moment, to do this go to
+#    https://gitlab-master.nvidia.com/cuda-installer/cuda/-/pipelines/new and set the variable to "REBUILD_BUILDER=true" and
+#    run it. This will run the gitlab builder image rebuild to include the new dependencies.
+#
 import re
 import os
 import pathlib
@@ -37,6 +49,19 @@ import git
 import deepdiff
 import requests
 from retry import retry
+
+# >>> REALLY IMPORTANT NOTICE ABOUT DEPENDENCIES... <<<
+#
+# 1. Dependency handling is done in two places, cudaRcImage.groovy in the jenkins pipeline library code
+#
+#    a: Dependencies will be added automatically to the kitmaker trigger builder images
+#
+# 2. Gitlab pipeline "prepare" stage.
+#
+#    a: This needs to be updated manually at the moment, to do this go to
+#    https://gitlab-master.nvidia.com/cuda-installer/cuda/-/pipelines/new and set the variable to "REBUILD_BUILDER=true" and
+#    run it. This will run the gitlab builder image rebuild to include the new dependencies.
+#
 
 log = logging.getLogger()
 
