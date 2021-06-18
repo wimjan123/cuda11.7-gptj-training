@@ -40,7 +40,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     gnupg2 curl ca-certificates && \
     curl -fsSL http://cuda-internal.nvidia.com/release-candidates/kitpicks/tensorrt-rel-8-0-tegra/8.0.0/001/repos/l4t/arm64/7fa2af80.pub | apt-key add - && \
     echo "deb http://cuda-internal.nvidia.com/release-candidates/kitpicks/tensorrt-rel-8-0-tegra/8.0.0/001/repos/l4t/arm64 /" > /etc/apt/sources.list.d/cuda.list && \
-    PYSFX=`echo "$PYVER" | cut -c1-1 || echo ""` && \
+    export PYSFX=`echo "$PYVER" | cut -c1-1 || echo ""` && \
     apt-get update && apt-get install -y --no-install-recommends \
         gnupg2 curl ca-certificates \
         python$PYSFX \
