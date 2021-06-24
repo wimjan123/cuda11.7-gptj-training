@@ -426,15 +426,8 @@ kitmaker_deploy:
   needs:
     - job: kitmaker_base
       artifacts: true
-
-kitmaker_cudnn_deploy:
-  <<: *deploy_definition
-  <<: *kitmaker_l4t_only
-  <<: *tags_definition
-  needs:
-    - job: kitmaker_base
-      artifacts: true
     - job: kitmaker_cudnn
+      optional: true
 
 {% for cuda_version in cuda if not cuda_version.startswith("manifest") %}
 {% for pipeline in cuda[cuda_version] %}

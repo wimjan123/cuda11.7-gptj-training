@@ -7,7 +7,7 @@
 #
 ARG IMAGE_NAME
 
-FROM ${IMAGE_NAME}:10.2.526-cudnn8-runtime-ubuntu18.04-011 as builds
+FROM ${IMAGE_NAME}:10.2.460-cudnn8-runtime-ubuntu18.04-006 as builds
 
 # TEMPORARY
 RUN mkdir /builds
@@ -19,7 +19,7 @@ WORKDIR /builds
 # RUN wget https://urm.nvidia.com/artifactory/sw-gpu-cuda-installer-generic-local/packaging/rel-8.0/tensorrt/linux-aarch64/l4t/8.0.0.1/cuda-10.2/libnvinfer-doc_8.0.0-1+cuda10.2_all.deb
 # RUN wget https://urm.nvidia.com/artifactory/sw-gpu-cuda-installer-generic-local/packaging/rel-8.0/tensorrt/linux-aarch64/l4t/8.0.0.1/cuda-10.2/libnvinfer-dev_8.0.0-1+cuda10.2_arm64.deb
 
-RUN wget https://urm.nvidia.com/artifactory/sw-gpu-cuda-installer-generic-local/packaging/rel-8.0/tensorrt/linux-aarch64/l4t/8.0.0.2/cuda-10.2/onnx-graphsurgeon_8.0.0-1+cuda10.2_arm64.deb
+RUN wget https://urm.nvidia.com/artifactory/sw-gpu-cuda-installer-generic-local/packaging/rel-8.0/tensorrt/linux-aarch64/l4t/8.0.0.3/cuda-10.2/onnx-graphsurgeon_8.0.0-1+cuda10.2_arm64.deb
 
 # WAR until kitmaker handles trt wheels
 # RUN wget http://cuda-repo.nvidia.com/release-candidates/Libraries/TensorRT/v8.0/8.0.0.1-e155eb70/10.2-r440/l4t-aarch64/tar/TensorRT-8.0.0.1.Ubuntu-18.04.aarch64-gnu.cuda-10.2.cudnn8.2.tar.gz
@@ -30,7 +30,7 @@ RUN wget https://urm.nvidia.com/artifactory/sw-gpu-cuda-installer-generic-local/
 #     cp /builds/TensorRT-8.0.0.1/python/tensorrt-8.0.0.1-cp38-none-linux_aarch64.whl \
 #        /builds/TensorRT-8.0.0.1/python/tensorrt-8.0.0.1-cp38-none-linux_arm64.whl
 
-FROM ${IMAGE_NAME}:10.2.526-cudnn8-runtime-ubuntu18.04-011
+FROM ${IMAGE_NAME}:10.2.460-cudnn8-runtime-ubuntu18.04-006
 
 ARG NVIDIA_TENSORRT_VERSION
 ENV NVIDIA_TENSORRT_VERSION ${NVIDIA_TENSORRT_VERSION}
