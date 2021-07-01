@@ -136,21 +136,6 @@ cuda_v11.4.0:
         libnccl2:
         libnccl2_dev:
         cudnn8:
-  ubuntu16.04:
-    template_path: templates/ubuntu
-    base_image: ubuntu:16.04
-    push_repos:
-      - artifactory
-      - docker.io
-      - nvcr.io
-    x86_64:
-      image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
-      repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64
-      ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604/x86_64
-      <<: *cuda11_4_0_requires
-      components:
-        <<: *cuda11_4_0_components
-        libnccl2:
   centos8:
     template_path: templates/redhat
     base_image: centos:8
