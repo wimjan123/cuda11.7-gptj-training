@@ -1,0 +1,19 @@
+ARG IMAGE_NAME
+FROM ${IMAGE_NAME}:11.4.0-runtime-centos7
+
+LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
+
+RUN yum install -y \
+    make \
+    cuda-command-line-tools-11-4-11.4.0-1 \
+    cuda-libraries-devel-11-4-11.4.0-1 \
+    cuda-minimal-build-11-4-11.4.0-1 \
+    cuda-cudart-devel-11-4-11.4.43-1 \
+    cuda-nvprof-11-4-11.4.43-1 \
+    cuda-nvml-devel-11-4-11.4.43-1 \
+    libcublas-devel-11-4-11.5.2.43-1 \
+    libnpp-devel-11-4-11.4.0.33-1 \
+    && yum clean all \
+    && rm -rf /var/cache/yum/*
+
+ENV LIBRARY_PATH /usr/local/cuda/lib64/stubs
