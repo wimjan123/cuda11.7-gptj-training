@@ -18,10 +18,18 @@ function setup() {
     # different cuda version. We only want one cuda version in the images
     docker pull ${image}
     local num=2
-    if ([[ "11.3" == "${major}.${minor}" ]] && ([[ ${rev} -ge 1 ]] || [[ "${OS_NAME}" == "ubi" ]])) || ([[ "11.3.0" == "${major}.${minor}.${rev}" ]] && ([[ "${OS_NAME}" == "ubuntu" ]] || [[ "${OS_NAME}" == "ubi" ]])); then
-        printf "%s\n" "RUN apt-get install -y cuda-samples-${major}-${minor}" >> Dockerfile
+
+    #
+    # A different alternatives structure in /usr/local/ for cuda is used on...
+    #
+    # - 11.3.1 and greater for all distros
+    # - 11.3.0 for ubuntu and ubi (redhat)
+    #
+    if ([[ "11.3.1" == "${major}.${minor}.${rev}" ]] || ([[ ${major} -eq 11 ]] && [[ ${minor} -gt 3 ]])) || \
+       ([[ "11.3.0" == "${major}.${minor}.${rev}" ]] && ([[ "${OS_NAME}" == "ubuntu" ]] || [[ "${OS_NAME}" == "ubi" ]])); then
         num=3
     fi
+
     debug "num = ${num}"
     docker_run --rm --gpus 0 ${image} bash -c "[[ \$(ls -l /usr/local/ | grep cuda | wc -l) == ${num} ]] || false"
     [ "$status" -eq 0 ]
