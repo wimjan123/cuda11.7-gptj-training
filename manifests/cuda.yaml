@@ -41,7 +41,7 @@ unsupported:
 
 
 .requires_v11.4.0: &cuda11_4_0_requires
-  requires: "cuda>=11.3 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=440,driver<441 driver>=450"
+  requires: "cuda>=11.4 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=440,driver<441 driver>=450"
 
 
 .components_v11.4.0: &cuda11_4_0_components
