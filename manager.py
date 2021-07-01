@@ -1155,15 +1155,20 @@ class ManagerGenerate(Manager):
         def use_ml_repo():
             use_ml_repo = False
             # First check the manifest to see if a ml repo url is specified
-            if not self.get_data(
+            log.debug(
+                f"self.key: {self.key} distro: {self.distro}{self.distro_version} arch: {self.arch}"
+            )
+            ml_repo_url = self.get_data(
                 self.parent.manifest,
                 self.key,
                 f"{self.distro}{self.distro_version}",
                 self.arch,
                 "ml_repo_url",
                 can_skip=True,
-            ):
-                return use_ml_repo
+            )
+            if not ml_repo_url:
+                return False
+            use_ml_repo = True
             # if a cudnn component contains "source", then it is installed from a different source than the public machine
             # learning repo
             # If any of the cudnn components lack the source key, then the ML repo should be used
@@ -1171,8 +1176,8 @@ class ManagerGenerate(Manager):
                 if next(
                     (True for mlcomp in ["cudnn", "nccl"] if mlcomp in comp), False
                 ):
-                    if val and "source" not in val:
-                        use_ml_repo = True
+                    if val and "source" in val:
+                        use_ml_repo = False
             return use_ml_repo
 
         conf = self.parent.manifest
@@ -1311,6 +1316,7 @@ class ManagerGenerate(Manager):
             # copy files
             log.debug(f"temp_path: {temp_path} img: {img}")
             for filename in pathlib.Path(temp_path).glob(globber):
+                log.debug(f"filename: {filename}")
                 if "dockerfile" in filename.name.lower():
                     continue
                 #  log.debug("Checking %s", filename)
