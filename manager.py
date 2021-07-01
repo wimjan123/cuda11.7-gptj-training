@@ -390,7 +390,7 @@ class ManagerTrigger(Manager):
     l4t = cli.Flag(["--l4t"], help="Flag the pipeline as being for L4T",)
 
     def ci_pipeline_by_name(self, name):
-        log.debug(f"have pipeline_name: {name}")
+        #  log.debug(f"have pipeline_name: {name}")
         #  rgx = re.compile(fr"^\s+- \$(?!all)(.*_{name}_.*) == \"true\"$")
         rgx = re.compile(fr"^\s+- if: '\$([\w\._]*{name}[\w\._]*)\s+==\s.true.'$")
         ci_vars = []
@@ -423,12 +423,12 @@ class ManagerTrigger(Manager):
             distro_list_by_cuda_version = self.supported_distro_list_by_cuda_version(
                 version
             )
-            log.debug(f"distro_list_by_cuda_version: {distro_list_by_cuda_version}")
+            #  log.debug(f"distro_list_by_cuda_version: {distro_list_by_cuda_version}")
 
-        log.debug(
-            "version: '%s' distro: '%s' distro_version: '%s' arch: '%s'"
-            % (cuda_version, distro or "any", distro_version or "any", arch or "any")
-        )
+        #  log.debug(
+        #      "version: '%s' distro: '%s' distro_version: '%s' arch: '%s'"
+        #      % (cuda_version, distro or "any", distro_version or "any", arch or "any")
+        #  )
 
         if not arch:
             arch = "(x86_64|arm64|ppc64le)"
@@ -450,7 +450,7 @@ class ManagerTrigger(Manager):
         #  ^\s+- if: '\$((ubuntu\d{2}_\d{2})?(?(2)|([a-z]*\d))_(\d{1,2}_\d{1,2}_?\d?)_(x86_64|arm64|ppc64le))\s+==\s.true.'$
 
         rgx_temp = fr"^\s+- if: '\$({distro}_{cuda_version}_{arch})\s+==\s.true.'$"
-        log.debug(f"regex_matcher: {rgx_temp}")
+        #  log.debug(f"regex_matcher: {rgx_temp}")
         rgx = re.compile(rgx_temp)
         ci_vars = []
         with open(".gitlab-ci.yml", "r") as fp:
@@ -567,7 +567,8 @@ class ManagerTrigger(Manager):
 
                 # Any or all of the variables passed to this function can be None
                 for cvar in self.ci_pipelines(version, distro, distro_version, arch):
-                    if self.pipeline_name:
+                    #  log.debug(f"self.pipeline_name: {self.pipeline_name} cvar: {cvar}")
+                    if self.pipeline_name and not "default" in self.pipeline_name:
                         pipeline_vars = self.ci_pipeline_by_name(self.pipeline_name)
                     else:
                         pipeline_vars = self.ci_pipelines(
