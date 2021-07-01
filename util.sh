@@ -61,6 +61,8 @@ kitmaker_webhook_failed() {
             echo "Seems the last 'run_cmd' command succeeded! Not calling webhook."
         fi
     fi
+    # If this function is called, it should always fail
+    exit 1
 }
 
 run_cmd() {
