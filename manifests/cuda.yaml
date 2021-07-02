@@ -5,7 +5,7 @@ push_repos:
     only_if: NV_ARTIFACTORY
     user: ARTIFACTORY_USER
     pass: ARTIFACTORY_PASS
-    registry:
+    image_names:
       x86_64: urm.nvidia.com/sw-gpu-cuda-installer-docker-local/cuda
       ppc64le: urm.nvidia.com/sw-gpu-cuda-installer-docker-local/cuda/cuda-ppc64le
       arm64: urm.nvidia.com/sw-gpu-cuda-installer-docker-local/cuda/cuda-arm64
@@ -13,7 +13,7 @@ push_repos:
     only_if: NVCR_TOKEN
     pass: NVCR_TOKEN
     user: $oauthtoken
-    registry:
+    image_names:
       x86_64: nvcr.io/nvidia/cuda
       ppc64le: nvcr.io/nvidia/cuda-ppc64le
       arm64: nvcr.io/nvidia/cuda-arm64
@@ -22,7 +22,7 @@ push_repos:
     only_if: REGISTRY_TOKEN
     pass: REGISTRY_TOKEN
     user: REGISTRY_USER
-    registry:
+    image_names:
       x86_64: nvidia/cuda
       ppc64le: nvidia/cuda-ppc64le
       arm64: nvidia/cuda-arm64
