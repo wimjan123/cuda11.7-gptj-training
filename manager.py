@@ -1172,6 +1172,9 @@ class ManagerGenerate(Manager):
                 can_skip=True,
             )
             if not ml_repo_url:
+                log.warning(
+                    f"ml_repo_url not set for {self.key}.{self.distro}{self.distro_version}.{self.arch} in manifest"
+                )
                 return False
             use_ml_repo = True
             # if a cudnn component contains "source", then it is installed from a different source than the public machine
@@ -1321,11 +1324,12 @@ class ManagerGenerate(Manager):
             # copy files
             log.debug(f"temp_path: {temp_path} img: {img}")
             for filename in pathlib.Path(temp_path).glob(globber):
-                log.debug(f"filename: {filename}")
+                log.info(f"have template: {filename}")
                 if "dockerfile" in filename.name.lower():
                     continue
                 #  log.debug("Checking %s", filename)
                 if not self.cuda["use_ml_repo"] and "nvidia-ml" in str(filename):
+                    log.warning("Not setting ml-repo!")
                     continue
                 if any(f in filename.name for f in [".j2", ".jinja"]):
                     self.output_template(filename, f"{self.output_path}/{img}")

@@ -7,7 +7,6 @@ RUN NVIDIA_GPGKEY_SUM=d1be581509378368edeec8c1eb2958702feedf3bc3d17011adbf24efac
     echo "$NVIDIA_GPGKEY_SUM  /etc/pki/rpm-gpg/RPM-GPG-KEY-NVIDIA" | sha256sum -c --strict  -
 
 COPY cuda.repo /etc/yum.repos.d/cuda.repo
-COPY nvidia-ml.repo /etc/yum.repos.d/nvidia-ml.repo
 
 ENV CUDA_VERSION 10.1.243
 ENV CUDA_PKG_VERSION 10-1-$CUDA_VERSION-1
