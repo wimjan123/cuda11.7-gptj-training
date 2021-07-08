@@ -3,7 +3,7 @@ FROM ${IMAGE_NAME}:10.2-runtime-centos7
 
 LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 
-ENV NCCL_VERSION 2.9.6
+ENV NCCL_VERSION 2.10.3
 
 RUN yum install -y \
     make \
@@ -15,7 +15,7 @@ RUN yum install -y \
     cuda-minimal-build-$CUDA_PKG_VERSION \
     cuda-nvprof-$CUDA_PKG_VERSION \
     cuda-npp-dev-$CUDA_PKG_VERSION \
-    libnccl-devel-2.9.6-1+cuda10.2 \
+    libnccl-devel-2.10.3-1+cuda10.2 \
     && yum clean all \
     && rm -rf /var/cache/yum/*
 

@@ -304,8 +304,9 @@ prepare:
       # CVE-2020-36313 WAIVED via https://nvbugs/3303060
       # CVE-2021-3501  WAIVED via https://nvbugs/3303060
       # CVE-2021-27219 WAIVED via https://nvbugs/3317302
+      # CVE-2021-25217 WAIVED via https://nvbugs/3321404
       python3 contamer.py --debug-logs -ls --fail-on-non-os ${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX} \
-          --suppress-vulns CVE-2021-27219 CVE-2020-14352 CVE-2020-15888 CVE-2019-25013 CVE-2020-8625 CVE-2021-25215 CVE-2020-12362 CVE-2020-36313 CVE-2021-3501 | tee /tmp/output
+          --suppress-vulns CVE-2021-27219 CVE-2020-14352 CVE-2020-15888 CVE-2019-25013 CVE-2020-8625 CVE-2021-25215 CVE-2020-12362 CVE-2020-36313 CVE-2021-3501 CVE-2021-25217 | tee /tmp/output
       retval=$?
       echo "Contamer return value: ${retval}";
 

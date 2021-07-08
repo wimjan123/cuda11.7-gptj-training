@@ -77,10 +77,10 @@ unsupported:
     version: 11.6.0.43-1
   libcusparse_dev:
     version: 11.6.0.43-1
-  # libnccl2:
-  #   version: 2.9.9-1
-  # libnccl2_dev:
-  #   version: 2.9.9-1
+  libnccl2:
+    version: 2.10.3-1
+  libnccl2_dev:
+    version: 2.10.3-1
   # cudnn8:
   #   version: 8.2.0.53-1
 
@@ -1457,9 +1457,9 @@ cuda_v11.1.1:
   libcusparse_dev:
     version: 11.1.1.245-1
   libnccl2:
-    version: 2.9.6-1
+    version: 2.10.3-1
   libnccl2_dev:
-    version: 2.9.6-1
+    version: 2.10.3-1
   cudnn8:
     version: 8.0.5.39-1
 
@@ -1635,9 +1635,9 @@ cuda_v11.0.3:
   libcublas_dev:
     version: 10.2.2.89-1
   libnccl2:
-    version: 2.9.6-1
+    version: 2.10.3-1
   libnccl2_dev:
-    version: 2.9.6-1
+    version: 2.10.3-1
   cudnn8:
     version: 8.2.0.53-1
   cudnn7:

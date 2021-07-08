@@ -3,6 +3,8 @@ FROM ${IMAGE_NAME}:11.4.0-runtime-ubi7
 
 LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 
+ENV NCCL_VERSION 2.10.3
+
 RUN yum install -y \
     make \
     cuda-command-line-tools-11-4-11.4.0-1 \
@@ -13,6 +15,7 @@ RUN yum install -y \
     cuda-nvml-devel-11-4-11.4.43-1 \
     libcublas-devel-11-4-11.5.2.43-1 \
     libnpp-devel-11-4-11.4.0.33-1 \
+    libnccl-devel-2.10.3-1+cuda11.4 \
     && yum clean all \
     && rm -rf /var/cache/yum/*
 
