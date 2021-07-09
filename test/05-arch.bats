@@ -5,6 +5,7 @@ load helpers
 image="${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}"
 
 function setup() {
+    docker pull --platform linux/${ARCH} ${image}
     check_runtime
 }
 
@@ -13,7 +14,6 @@ function setup() {
     if [[ ${ARCH} == "arm64" ]]; then
         narch="aarch64"
     fi
-    docker pull ${image}
-    docker_run --rm --gpus 0 ${image} bash -c "[[ \$(uname -m) == ${narch} ]] || false"
+    docker_run --rm --gpus 0 --env narch=${narch} --platform linux/${ARCH} ${image} bash -c '[[ "$(uname -m)" == "${narch}" ]] || false'
     [ "$status" -eq 0 ]
 }

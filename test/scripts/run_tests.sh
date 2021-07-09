@@ -14,7 +14,7 @@ for test in $(find $test_path -iname "[0-9]*-*.bats" | sort); do
       continue
   fi
   if [[ "${test}" == *samples* ]] && [[ "${ARCH}" != "x86_64" ]]; then
-      # FIXME: Samples tests on multi-arch    
+      # FIXME: Samples tests on multi-arch
       echo "Skipping test '${test}' on architecture ${ARCH}"
       continue
   fi

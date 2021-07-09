@@ -16,7 +16,7 @@ function setup() {
     # There can be only one...
     # If a wrong dependency version is selected for a different cuda version, it will pull in other packages and install to a
     # different cuda version. We only want one cuda version in the images
-    docker pull ${image}
+    docker pull --platform linux/${ARCH} ${image}
     local num=2
 
     #
@@ -31,6 +31,6 @@ function setup() {
     fi
 
     debug "num = ${num}"
-    docker_run --rm --gpus 0 ${image} bash -c "[[ \$(ls -l /usr/local/ | grep cuda | wc -l) == ${num} ]] || false"
+    docker_run --rm --gpus 0 --platform linux/${ARCH} ${image} bash -c "[[ \$(ls -l /usr/local/ | grep cuda | wc -l) == ${num} ]] || false"
     [ "$status" -eq 0 ]
 }
