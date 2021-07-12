@@ -512,9 +512,11 @@ class ManagerTrigger(Manager):
         if self.trigger_override:
             log.info("Using trigger override!")
             # check for illegal characters
-            if not re.search(r"^(?:[cuda]+[\d\.]*,?)+$", self.trigger_override):
+            if not re.search(
+                r"^(?:[cuda]+[\d\.]*(?:[_a-z0-9]*)?,?)+$", self.trigger_override
+            ):
                 raise Exception(
-                    "Regex match for trigger override failed! Allowed format is 'cuda<version>[,...]' ex: 'cuda11.0.3'"
+                    "Regex match for trigger override failed! Allowed format is 'cuda<version>(_<distro_with_version>)[,...]' ex: 'cuda11.0.3' or 'cuda10.2_centos8`"
                 )
             pipeline = self.trigger_override
         else:
