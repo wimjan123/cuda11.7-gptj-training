@@ -648,10 +648,6 @@ class ManagerTrigger(Manager):
         if self.l4t:
             payload[f"variables[L4T]"] = "true"
         payload[f"variables[TRIGGER]"] = "true"
-        #  payload[f"variables[OS]"] = f"{self.distro}{self.distro_version}"
-        #  payload[f"variables[OS_NAME]"] = self.distro
-        #  payload[f"variables[OS_VERSION]"] = self.distro_version
-        #  payload[f"variables[ARCH]"] = self.arch
         payload[f"variables[RELEASE_LABEL]"] = self.release_label
         payload[f"variables[IMAGE_TAG_SUFFIX]"] = f"-{self.candidate_number}"
         payload[f"variables[CANDIDATE_URL]"] = self.candidate_url
