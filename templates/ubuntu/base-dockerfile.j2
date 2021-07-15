@@ -1,4 +1,52 @@
-FROM {{ cuda.base_image }}
+FROM {{ cuda.base_image }} as base
+
+FROM base as base-amd64
+
+ENV NVARCH "x86_64"
+{% if "requires" in cuda.x86_64 %}
+ENV NVIDIA_REQUIRE_CUDA "cuda>=11.4 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=440,driver<441 driver>=450"
+{% endif %}
+ENV NV_CUDA_CUDART_VERSION {{ cuda.x86_64.components.cudart.version }}
+
+{% if cuda.x86_64.use_ml_repo %}
+ENV NV_ML_REPO_ENABLED 1
+ENV NV_ML_REPO_URL {{ cuda.ml_repo_url }}/${NVARCH}
+
+{% endif %}
+{% if "arm64" in cuda %}
+FROM base as base-arm64
+
+ENV NVARCH "sbsa"
+{% if "requires" in cuda.arm64 %}
+ENV NVIDIA_REQUIRE_CUDA "cuda>=11.4"
+{% endif %}
+ENV NV_CUDA_CUDART_VERSION {{ cuda.arm64.components.cudart.version }}
+
+{% if cuda.arm64.use_ml_repo %}
+ENV NV_ML_REPO_ENABLED 1
+ENV NV_ML_REPO_URL {{ cuda.ml_repo_url }}/${NVARCH}
+
+{% endif %}
+{% endif -%}
+{% if "ppc64le" in cuda %}
+FROM base as base-ppc64le
+
+ENV NVARCH "ppc64el"
+{% if "requires" in cuda.ppc64le %}
+ENV NVIDIA_REQUIRE_CUDA "cuda>=11.4"
+{% endif %}
+ENV NV_CUDA_CUDART_VERSION {{ cuda.ppc64le.components.cudart.version }}
+
+{% if cuda.ppc64le.use_ml_repo %}
+ENV NV_ML_REPO_ENABLED 1
+ENV NV_ML_REPO_URL {{ cuda.ml_repo_url }}/${NVARCH}
+
+{% endif %}
+{% endif -%}
+
+FROM base-${TARGETARCH}
+
+ARG TARGETARCH
 
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 
@@ -11,34 +59,28 @@ ENV NVIDIA_REQUIRE_JETPACK_HOST_MOUNTS ${NVIDIA_REQUIRE_JETPACK_HOST_MOUNTS}
 RUN apt-get update && apt-get install -y --no-install-recommends \
 {% if cuda.os.version in ["18.04", "20.04"] %}
     gnupg2 curl ca-certificates && \
-    curl -fsSL {{ cuda.repo_url }}/7fa2af80.pub | apt-key add - && \
-    echo "deb {{ cuda.repo_url }} /" > /etc/apt/sources.list.d/cuda.list && \
-    {% if cuda.use_ml_repo %}
-    echo "deb {{ cuda.ml_repo_url }} /" > /etc/apt/sources.list.d/nvidia-ml.list && \
-    {% endif %}
+    curl -fsSL {{ cuda.repo_url }}/${NVARCH}/7fa2af80.pub | apt-key add - && \
+    echo "deb {{ cuda.repo_url }}/${NVARCH} /" > /etc/apt/sources.list.d/cuda.list && \
+    if [ ! -z ${NV_ML_REPO_ENABLED} ]; then echo "deb ${NV_ML_REPO_URL} /" > /etc/apt/sources.list.d/nvidia-ml.list; fi && \
     apt-get purge --autoremove -y curl \
 {% elif cuda.os.version == "16.04" %}
     ca-certificates apt-transport-https gnupg-curl && \
     NVIDIA_GPGKEY_SUM=d1be581509378368edeec8c1eb2958702feedf3bc3d17011adbf24efacce4ab5 && \
     NVIDIA_GPGKEY_FPR=ae09fe4bbd223a84b2ccfce3f60f4b3d7fa2af80 && \
-    apt-key adv --fetch-keys {{ cuda.repo_url }}/7fa2af80.pub && \
+    apt-key adv --fetch-keys {{ cuda.repo_url }}/${NVARCH}/7fa2af80.pub && \
     apt-key adv --export --no-emit-version -a $NVIDIA_GPGKEY_FPR | tail -n +5 > cudasign.pub && \
     echo "$NVIDIA_GPGKEY_SUM  cudasign.pub" | sha256sum -c --strict - && rm cudasign.pub && \
-    echo "deb {{ cuda.repo_url }} /" > /etc/apt/sources.list.d/cuda.list && \
-    {% if cuda.use_ml_repo %}
-    echo "deb {{ cuda.ml_repo_url }} /" > /etc/apt/sources.list.d/nvidia-ml.list && \
-    {% endif %}
+    echo "deb {{ cuda.repo_url }}/${NVARCH} /" > /etc/apt/sources.list.d/cuda.list && \
+    if [ ! -z ${NV_ML_REPO_ENABLED} ]; then echo "deb {{ cuda.ml_repo_url }}/${NVARCH} /" > /etc/apt/sources.list.d/nvidia-ml.list; fi && \
     apt-get purge --auto-remove -y gnupg-curl \
 {% endif %}
     && rm -rf /var/lib/apt/lists/*
 
 ENV CUDA_VERSION {{ cuda.version.release_label }}
 
-{% set cuda_cudart_component_version = cuda.version.major + "-" + cuda.version.minor + "=" + cuda.components.cudart.version -%}
-
 # For libraries in the cuda-compat-* package: https://docs.nvidia.com/cuda/eula/index.html#attachment-a
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    cuda-cudart-{{ cuda_cudart_component_version }} \
+    cuda-cudart-{{ cuda.version.major }}-{{ cuda.version.minor }}=${NV_CUDA_CUDART_VERSION} \
 {% if cuda.arch != "arm64" %}
     cuda-compat-{{ cuda.version.major }}-{{ cuda.version.minor }} \
 {% endif %}
@@ -57,6 +99,3 @@ COPY NGC-DL-CONTAINER-LICENSE /
 # nvidia-container-runtime
 ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
-{% if "requires" in cuda %}
-ENV NVIDIA_REQUIRE_CUDA "{{ cuda.requires }}"
-{% endif %}

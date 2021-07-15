@@ -5,7 +5,7 @@ load helpers
 image="${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}"
 
 function setup() {
-    docker pull ${image}
+    docker pull --platform linux/${ARCH} ${image}
     check_runtime
 }
 

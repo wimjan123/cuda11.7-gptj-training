@@ -5,7 +5,7 @@ load helpers
 image="${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}"
 
 function setup() {
-    docker pull ${image}
+    docker pull --platform linux/${ARCH} ${image}
     check_runtime
 }
 
@@ -20,6 +20,6 @@ function setup() {
     if printf '%s' "${unsupported[@]}" | grep -q "${CUDA_VERSION}"; then
         skip "NVIDIA_REQUIRE_CUDA not supported for this CUDA version"
     fi
-    docker_run --rm --gpus 0 ${image} bash -c "printenv | grep -q 'brand=tesla'"
+    docker_run --rm --gpus 0 --platform linux/${ARCH} ${image} bash -c "printenv | grep -q 'brand=tesla'"
     [ "$status" -eq 0 ]
 }

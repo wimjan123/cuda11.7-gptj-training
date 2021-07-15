@@ -40,11 +40,11 @@ before_script:
     fi
   - 'echo "TRIGGER: ${KITMAKER}"'
   - 'echo "KITMAKER: ${KITMAKER}"'
-  - 'echo "ARCH: $ARCH"'
   - 'echo "IMAGE_NAME: $IMAGE_NAME"'
   - 'echo "OS: $OS"'
   - 'echo "OS_VERSION: $OS_VERSION"'
   - 'echo "OS_NAME: $OS_NAME"'
+  - 'echo "ARCH: $ARCH"'
   - 'echo "CUDA_VERSION: $CUDA_VERSION"'
   - 'echo "RELEASE_LABEL: $RELEASE_LABEL"' # used by kitmaker and cuda versions >= 11.2
   - 'echo "CUDNN_VERSION: $CUDNN_VERSION"'
@@ -64,7 +64,7 @@ stages:
   - scan
   - deploy
   - cleanup_success
-  - cleanup_failed
+  - cleanup_failure
 
 # builds the gitlab-cuda-builder image
 prepare:
@@ -99,18 +99,16 @@ prepare:
         export TAG_DEVEL=" -t ${IMAGE_NAME}:${CUDA_VERSION}-devel ";
         export CUDA_TAGS="${CUDA_VERSION}-runtime ${CUDA_VERSION}-devel ";
       fi
-    - if [[ -z $DIST_BASE_PATH ]]; then
-        export DIST_BASE_PATH="dist/${OS}/${CUDA_VERSION}/${ARCH}";
-      else
-        export DIST_BASE_PATH="${DIST_BASE_PATH}/${OS}-${ARCH}";
-      fi
+    - export DIST_BASE_PATH="${DIST_BASE_PATH}/${OS}";
+    - export PLATFORM_ARG=`printf '%s ' '--platform'; for var in $(echo $ARCHES | sed "s/,/ /g"); do printf 'linux/%s,' "$var"; done | sed 's/,*$//g'`
+    - 'echo "PLATFORM_ARG: ${PLATFORM_ARG}"'
     # COPY the NGC DEEP LEARNING CONTAINER LICENSE
-    - cp -v ./NGC-DL-CONTAINER-LICENSE "${DIST_BASE_PATH}/runtime"
-    - run_cmd retry 3 10 docker buildx create --use --platform linux/${ARCH} --driver-opt image=moby/buildkit:v0.8.1 --name cuda-${ARCH}
-    - run_cmd retry 3 10 docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}" ${TAG_RUNTIME} "${DIST_BASE_PATH}/runtime"
+    - run_cmd cp -v ./NGC-DL-CONTAINER-LICENSE "${DIST_BASE_PATH}/runtime"
+    - run_cmd retry 3 10 docker buildx create --use ${PLATFORM_ARG} --driver-opt image=moby/buildkit:v0.8.1 --name cuda
+    - run_cmd retry 3 10 docker buildx build --pull --push ${PLATFORM_ARG} -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}" ${TAG_RUNTIME} "${DIST_BASE_PATH}/runtime"
                           --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain
                           --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}
-    - run_cmd retry 3 10 docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}" ${TAG_DEVEL} "${DIST_BASE_PATH}/devel"
+    - run_cmd retry 3 10 docker buildx build --pull --push ${PLATFORM_ARG} -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}" ${TAG_DEVEL} "${DIST_BASE_PATH}/devel"
                           --build-arg "IMAGE_NAME=${IMAGE_NAME}"
                           --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain
                           --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}
@@ -134,71 +132,80 @@ prepare:
         export TAG_DEVEL=" -t ${IMAGE_NAME}:${CUDA_VERSION}-devel${IMAGE_TAG_SUFFIX} "
         export CUDA_TAGS="${CUDA_VERSION}-base${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-runtime${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-devel${IMAGE_TAG_SUFFIX} "
       fi
-      if [[ -z $DIST_BASE_PATH ]]; then
-        export DIST_BASE_PATH="dist/${OS}/${CUDA_VERSION}/${ARCH}"
-      else
-        export DIST_BASE_PATH="${DIST_BASE_PATH}/${OS}-${ARCH}"
-      fi
+      export DIST_BASE_PATH="${DIST_BASE_PATH}/${OS}"
       if [ ! -z $KITMAKER ] && [ ! -z $TRIGGER ]; then
-          export DIST_BASE_PATH="kitpick"
+          export DIST_BASE_PATH="kitpick/${OS}"
           rm -rf kitpick || true
-          mkdir -p kitpick || true
-          find kitpick/
-          NEW_CANDIDATE_URL="${CANDIDATE_URL}"
-          [[ "${CANDIDATE_URL}" != */ ]] && NEW_CANDIDATE_URL="${CANDIDATE_URL}/"
-          if ! retry 3 10 wget --progress=dot:giga --recursive --directory-prefix="rekt" --reject="index.html*" --no-parent ${NEW_CANDIDATE_URL}; then
+          run_cmd mkdir -p kitpick/${OS}/{devel,runtime,base}
+
+          NEW_CANDIDATE_URL="${CANDIDATE_URL}/${OS}"
+          # Ensure the url ends with a slash! This prevents wget from getting everything (and bringing apache to its knees)
+          [[ "${NEW_CANDIDATE_URL}" != */ ]] && NEW_CANDIDATE_URL="${NEW_CANDIDATE_URL}/"
+          echo "NEW_CANDIDATE_URL: ${NEW_CANDIDATE_URL}"
+
+          if ! retry 3 10 run_cmd wget --no-verbose --recursive --directory-prefix="kitpick_dl" --reject="index.html*" --no-parent ${NEW_CANDIDATE_URL}; then
               echo "Could not download files from '${CANDIDATE_URL}'!!"
-              kitmaker_webhook_failed
+              # kitmaker_webhook_failed
+              exit 1
           fi
-          cp -R rekt/${CANDIDATE_URL#"http://"}/{base,devel,runtime} kitpick/
-          echo "Contents of kitpick/"
-          find kitpick/
+
+          run_cmd cp -R kitpick_dl/${NEW_CANDIDATE_URL#"http://"}/{base,devel,runtime} ${DIST_BASE_PATH}/
+          echo "Contents of ${DIST_BASE_PATH}/"
+          find ${DIST_BASE_PATH}/
       fi
+      export PLATFORM_ARG=`printf '%s ' '--platform'; for var in $(echo $ARCHES | sed "s/,/ /g"); do printf 'linux/%s,' "$var"; done | sed 's/,*$//g'`
+      echo "PLATFORM_ARG: ${PLATFORM_ARG}"
       echo "DIST_BASE_PATH: ${DIST_BASE_PATH}"
       echo "TAG_BASE: ${TAG_BASE}"
       echo "TAG_RUNTIME: ${TAG_RUNTIME}"
       echo "TAG_DEVEL: ${TAG_DEVEL}"
       # COPY the NGC DEEP LEARNING CONTAINER LICENSE
-      cp -v ./NGC-DL-CONTAINER-LICENSE "${DIST_BASE_PATH}/base"
+      run_cmd cp -v ./NGC-DL-CONTAINER-LICENSE "${DIST_BASE_PATH}/base"
       # --driver-opt flag is needed to workaround https://github.com/docker/buildx/issues/386
-      if ! run_cmd retry 3 10 docker buildx create --use --platform linux/${ARCH} --driver-opt image=moby/buildkit:v0.8.1 --name cuda-${ARCH}; then
+      if ! run_cmd retry 3 10 docker buildx create --use ${PLATFORM_ARG} --driver-opt image=moby/buildkit:v0.8.1 --name cuda; then
           echo "Failed creating buildx instance!"
-          kitmaker_webhook_failed
+          # kitmaker_webhook_failed
+          exit 1
       fi
       echo "####################################################################"
       echo "BASE"
       echo "####################################################################"
-      if ! run_cmd retry 3 10 docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_BASE} "${DIST_BASE_PATH}/base" \
+      if ! run_cmd retry 3 10 docker buildx build --pull --push ${PLATFORM_ARG} -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_BASE} "${DIST_BASE_PATH}/base" \
                             --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain \
                             --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX}; then
           echo "Failed building the base image!"
-          kitmaker_webhook_failed
+          # kitmaker_webhook_failed
+          exit 1
       fi
       echo "####################################################################"
       echo "RUNTIME"
       echo "####################################################################"
-      if ! run_cmd retry 3 10 docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_RUNTIME} \
+      if ! run_cmd retry 3 10 docker buildx build --pull --push ${PLATFORM_ARG} -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_RUNTIME} \
                             --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/runtime" \
                             --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain \
                             --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}; then
           echo "Failed building the runtime image!"
-          kitmaker_webhook_failed
+          # kitmaker_webhook_failed
+          exit 1
       fi
       echo "####################################################################"
       echo "DEVEL"
       echo "####################################################################"
-      if ! run_cmd retry 3 10 docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_DEVEL} \
+      if ! run_cmd retry 3 10 docker buildx build --pull --push ${PLATFORM_ARG} -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_DEVEL} \
                             --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel" \
                             --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain \
                             --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}; then
           echo "Failed building the devel image!"
-          kitmaker_webhook_failed
+          # kitmaker_webhook_failed
+          exit 1
       fi
       echo "CUDA_TAGS=\"${CUDA_TAGS} ${CUDA_VERSION}-base-${OS}${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}\"" >> tags.env
       cat tags.env
   artifacts:
     reports:
       dotenv: tags.env
+    {# paths: #}
+      {# - cmd_output #}
 
 .cudnn_template: &cudnn_definition
   image: {{ gitlab_builder_image }}
@@ -206,11 +213,7 @@ prepare:
   script:
     - |
       # no set +e necessary here since we don't use this yet for kitmaker builds
-      if [[ -z $DIST_BASE_PATH ]]; then
-          DIST_BASE_PATH="dist/${OS}/${CUDA_VERSION}/${ARCH}";
-      else
-          DIST_BASE_PATH="${DIST_BASE_PATH}/${OS}-${ARCH}";
-      fi
+      DIST_BASE_PATH="${DIST_BASE_PATH}/${OS}";
       if [ ! -z $KITMAKER ] && [ ! -z $TRIGGER ]; then
           export DIST_BASE_PATH="kitpick"
           rm -rf kitpick || true
@@ -218,11 +221,12 @@ prepare:
           find kitpick/
           NEW_CANDIDATE_URL="${CANDIDATE_URL}"
           [[ "${CANDIDATE_URL}" != */ ]] && NEW_CANDIDATE_URL="${CANDIDATE_URL}/"
-          if ! retry 3 10 wget --progress=dot:giga --recursive --directory-prefix="rekt" --reject="index.html*" --no-parent ${NEW_CANDIDATE_URL}; then
+          if ! retry 3 10 wget --progress=dot:giga --recursive --directory-prefix="kitpick_dl" --reject="index.html*" --no-parent ${NEW_CANDIDATE_URL}; then
               echo "Could not download files from '${CANDIDATE_URL}'!!"
-              kitmaker_webhook_failed
+              # kitmaker_webhook_failed
+              exit 1
           fi
-          cp -R rekt/${CANDIDATE_URL#"http://"}/{base,devel,runtime} kitpick/
+          run_cmd cp -R kitpick_dl/${CANDIDATE_URL#"http://"}/{base,devel,runtime} kitpick/
           echo "Contents of kitpick/"
           find kitpick/
           export CUDNN_VERSION="cudnn$(grep -r "CUDNN_VERSION" kitpick/ | head -n 1 | cut -f 3 -d" " | tr -d '[:space:]' | cut -c 1)"
@@ -234,29 +238,34 @@ prepare:
           TAG_CUDNN_DEVEL=" -t ${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel${IMAGE_TAG_SUFFIX} ";
           export CUDA_EXTRA_TAGS="${CUDA_EXTRA_TAGS} ${CUDA_VERSION}-${CUDNN_VERSION}-runtime${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-${CUDNN_VERSION}-devel${IMAGE_TAG_SUFFIX}";
       fi
-      if ! run_cmd retry 3 10 docker buildx create --use --platform linux/${ARCH} --driver-opt image=moby/buildkit:v0.8.1 --name cuda-${ARCH}; then
+      export PLATFORM_ARG=`printf '%s ' '--platform'; for var in $(echo $ARCHES | sed "s/,/ /g"); do printf 'linux/%s,' "$var"; done | sed 's/,*$//g'`
+      echo "PLATFORM_ARG: ${PLATFORM_ARG}"
+      if ! run_cmd retry 3 10 docker buildx create --use ${PLATFORM_ARG} --driver-opt image=moby/buildkit:v0.8.1 --name cuda; then
           echo "Failed creating buildx instance!"
-          kitmaker_webhook_failed
+          # kitmaker_webhook_failed
+          exit 1
       fi
       echo "####################################################################"
       echo "CUDNN RUNTIME"
       echo "####################################################################"
-      if ! run_cmd retry 3 10 docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_RUNTIME} \
+      if ! run_cmd retry 3 10 docker buildx build --pull --push ${PLATFORM_ARG} -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_RUNTIME} \
                   --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/runtime/${CUDNN_VERSION}" \
                   --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain \
                   --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-runtime-${OS}${IMAGE_TAG_SUFFIX}; then
           echo "Failed building the cudnn runtime image!"
-          kitmaker_webhook_failed
+          # kitmaker_webhook_failed
+          exit 1
       fi
       echo "####################################################################"
       echo "CUDNN DEVEL"
       echo "####################################################################"
-      if ! run_cmd retry 3 10 docker buildx build --pull --push --platform linux/${ARCH} -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_DEVEL} \
+      if ! run_cmd retry 3 10 docker buildx build --pull --push ${PLATFORM_ARG} -t "${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}" ${TAG_CUDNN_DEVEL} \
                   --build-arg "IMAGE_NAME=${IMAGE_NAME}" "${DIST_BASE_PATH}/devel/${CUDNN_VERSION}" \
                   --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain \
                   --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-${CUDNN_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}; then
           echo "Failed building the cudnn devel image!"
-          kitmaker_webhook_failed
+          # kitmaker_webhook_failed
+          exit 1
       fi
       # this is not a great way to pass information between stages, but it is currently the only way
       echo "CUDA_TAGS=${CUDA_TAGS}" > cudnn_tags.env
@@ -266,6 +275,8 @@ prepare:
   artifacts:
     reports:
       dotenv: cudnn_tags.env
+    {# paths: #}
+    {#   - cmd_output #}
 
 .test_template: &test_definition
   image: {{ gitlab_builder_image }}
@@ -275,6 +286,7 @@ prepare:
   script:
     - |
       set +e
+      {# docker run --rm --gpus 0 --platform linux/arm64 gitlab-master.nvidia.com:5005/cuda-installer/cuda:11.3.1-devel-centos8 uname -m #}
       image=${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
       rmicmd="docker rmi -f ${image}"
       # prunecmd="docker image prune --filter=dangling=true -f"
@@ -333,41 +345,44 @@ prepare:
       # How gitlab handles errors: https://gitlab.com/gitlab-org/gitlab-runner/-/issues/25394
       # prevent exit codes from killing the pipeline completely, errors must now be handled manually
       set +e
+      if [[ -z ${TAG_MANIFEST_PATH} ]]; then export TAG_MANIFEST_PATH=TAG_MANIFEST; fi
       for tag in $(env | grep 'CUDA.*_TAGS' | cut -f2 -d=); do
           {# [[ $tag == "\"\"" ]] && continue; #}
-          echo ${tag//\"} >> TAG_MANIFEST
+          echo ${tag//\"} >> ${TAG_MANIFEST_PATH}
       done
-      echo ">>> BEGIN TAG_MANIFEST <<<"
-      cat TAG_MANIFEST
-      echo ">>> END TAG_MANIFEST <<<"
+      echo ">>> BEGIN ${TAG_MANIFEST_PATH} <<<"
+      cat ${TAG_MANIFEST_PATH}
+      echo ">>> END ${TAG_MANIFEST_PATH} <<<"
       if [ ! -z $KITMAKER ] && [ ! -z $TRIGGER ]; then
-          manifest_file="manifest-${OS_NAME}-${OS_VERSION}.yml"
+          manifest_file="manifest.yml"
           if  [ ! -z $L4T ]; then
               manifest_file="manifest-l4t.yml"
           fi
-          if ! retry 3 10 wget --progress=dot:giga --directory-prefix="kitpick" --reject="index.html*" --no-parent ${CANDIDATE_URL}/${manifest_file}; then
+          if ! retry 3 10 wget --no-verbose --directory-prefix="kitpick" --reject="index.html*" --no-parent ${CANDIDATE_URL}/${manifest_file}; then
               echo "Could not download files from '${CANDIDATE_URL}'!!"
-              kitmaker_webhook_failed
+              # kitmaker_webhook_failed
+              exit 1
           fi
           export MANIFEST="kitpick/${manifest_file}";
       fi
       if ! run_cmd retry 3 10 python manager.py ${MANIFEST:+`echo "--manifest ${MANIFEST}"`} push \
-              --tag-manifest TAG_MANIFEST \
+              --tag-manifest ${TAG_MANIFEST_PATH} \
               --image-name "${IMAGE_NAME}" \
               --os-name "${OS_NAME}" \
               --os-version "${OS_VERSION}" \
               --cuda-version "${CUDA_VERSION}" \
-              --arch "${ARCH}" \
               ${PIPELINE_NAME:+`echo "--pipeline-name ${PIPELINE_NAME}"`} \
               ${IMAGE_TAG_SUFFIX:+`echo "--tag-suffix ${IMAGE_TAG_SUFFIX}"`} ${NO_PUSH:+"-n"}; then
           echo "Error pushing images!"
-          kitmaker_webhook_failed
+          # kitmaker_webhook_failed
+          exit 1
       fi
-      cat $MANIFEST | grep "${ARCH}.*urm.nvidia.com" | cut -f2 -d: | head -n 1 | xargs >> TAG_MANIFEST
-      kitmaker_cleanup_webhook_success
+      cat $MANIFEST | grep ".*urm.nvidia.com\/" | cut -f2 -d: | head -n 1 | xargs >> ${TAG_MANIFEST_PATH}
+      # kitmaker_cleanup_webhook_success
   artifacts:
     paths:
-      - TAG_MANIFEST
+      - ${TAG_MANIFEST_PATH}
+      {# - cmd_output #}
 
 trigger:
   image: {{ gitlab_builder_image }}
@@ -385,261 +400,261 @@ trigger:
     {# - if: '$TRIGGER == null' #}
     - if: '$TRIGGER_OVERRIDE'
 
+{# .kitmaker_l4t_only: &kitmaker_l4t_only #}
+{#   variables: #}
+{#     <<: *kitmaker_variables #}
+{#   rules: #}
+{#     - if: '$TRIGGER == "true" && $KITMAKER == "true" && $L4T == "true"' #}
+{#       when: on_success #}
+
+{# FIXME: Get this data from the global config #}
+{% set kitmaker_distro_data = [
+  {"distro": "ubuntu", "version": "20.04", "arches": ["x86_64", "arm64"]},
+  {"distro": "ubuntu", "version": "18.04", "arches": ["x86_64", "arm64"]},
+  {"distro": "centos", "version": "8", "arches": ["x86_64", "arm64", "ppc64le"]},
+  {"distro": "centos", "version": "7", "arches": ["x86_64"]},
+  {"distro": "ubi", "version": "8", "arches": ["x86_64", "arm64", "ppc64le"]},
+  {"distro": "ubi", "version": "7", "arches": ["x86_64"]},
+] %}
+
+{% for data in  kitmaker_distro_data %}
+  {% set kitmaker_distro = data["distro"] + data["version"] %}
+  {% set kitmaker_distro_clean = data["distro"] + data["version"].replace(".", "_") %}
 # Need to pass these from the trigger
-.kitmaker_variables: &kitmaker_variables
-  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/${ARCH}"
+.kitmaker_{{ kitmaker_distro_clean }}_variables: &kitmaker_{{ kitmaker_distro_clean }}_variables
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
+  OS: "{{ data["distro"] }}{{ data["version"] }}"
+  OS_NAME: "{{ data["distro"] }}"
+  OS_VERSION: "{{ data["version"] }}"
+  ARCHES: "{{ data["arches"] | join(", ") }}"
   # CI_DEBUG_TRACE: "true"
 
-.kitmaker_only: &kitmaker_only
+.kitmaker_{{ kitmaker_distro_clean }}_only: &kitmaker_{{ kitmaker_distro_clean }}_only
+  image: {{ gitlab_builder_image }}
   variables:
-    <<: *kitmaker_variables
+    <<: *kitmaker_{{ kitmaker_distro_clean }}_variables
+    TAG_MANIFEST_PATH: "tag_manifest_{{ kitmaker_distro_clean }}"
   rules:
     - if: '$TRIGGER == "true" && $KITMAKER == "true"'
       when: on_success
 
-.kitmaker_l4t_only: &kitmaker_l4t_only
-  variables:
-    <<: *kitmaker_variables
-  rules:
-    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $L4T == "true"'
-      when: on_success
-
-kitmaker_base:
+kitmaker_{{ kitmaker_distro }}_base:
   <<: *cuda_base_definition
-  <<: *kitmaker_only
+  <<: *kitmaker_{{ kitmaker_distro_clean }}_only
   # Need to build container images on a multi-arch capable machine
   <<: *tags_definition_multiarch
 
-# L4T only, will be removed!
-kitmaker_cudnn:
-  <<: *cudnn_definition
-  <<: *kitmaker_l4t_only
-  # Need to build container images on a multi-arch capable machine
-  <<: *tags_definition_multiarch
-  artifacts:
-    reports:
-      dotenv: cudnn_tags.env
-
-kitmaker_deploy:
+kitmaker_{{ kitmaker_distro }}_deploy:
   <<: *deploy_definition
-  <<: *kitmaker_only
+  <<: *kitmaker_{{ kitmaker_distro_clean }}_only
   <<: *tags_definition
   needs:
-    - job: kitmaker_base
+    - job: kitmaker_{{ kitmaker_distro }}_base
       artifacts: true
-    - job: kitmaker_cudnn
-      optional: true
+    {# - job: kitmaker_cudnn #}
+    {#   optional: true #}
+  artifacts:
+    paths:
+      - tag_manifest_{{ kitmaker_distro_clean }}
+
+{% endfor %}
+
+kitmaker_success:
+  stage: cleanup_success
+  image: {{ gitlab_builder_image }}
+  <<: *tags_definition
+  rules:
+    - if: '$TRIGGER == "true" && $KITMAKER == "true"'
+      when: on_success
+  needs:
+{% set stahp = { 'flag': True } %}
+{% for data in  kitmaker_distro_data %}
+  {% set kitmaker_distro = data["distro"] + data["version"] %}
+  {% set kitmaker_distro_clean = data["distro"] + data["version"].replace(".", "_") %}
+    - job: kitmaker_{{ kitmaker_distro }}_deploy
+    {% if stahp.flag %}
+      artifacts: true
+      {% do stahp.update({'flag':False}) %}
+    {% endif %}
+{% endfor %}
+  script:
+    - |
+      kitmaker_cleanup_webhook_success
+
+kitmaker_failure:
+  stage: cleanup_failure
+  image: {{ gitlab_builder_image }}
+  <<: *tags_definition
+  rules:
+    - if: '$TRIGGER == "true" && $KITMAKER == "true"'
+      when: on_failure
+  needs:
+{% set stahp = { 'flag': True } %}
+{% for data in  kitmaker_distro_data %}
+  {% set kitmaker_distro = data["distro"] + data["version"] %}
+  {% set kitmaker_distro_clean = data["distro"] + data["version"].replace(".", "_") %}
+    - job: kitmaker_{{ kitmaker_distro }}_deploy
+    {% if stahp.flag %}
+      artifacts: true
+      {% do stahp.update({'flag':False}) %}
+    {% endif %}
+{% endfor %}
+  script:
+    - |
+      kitmaker_webhook_failed
+
+
+    {# - job: kitmaker_cudnn #}
+    {#   optional: true #}
+{# # L4T only, will be removed! #}
+{# kitmaker_cudnn: #}
+{#   <<: *cudnn_definition #}
+{#   <<: *kitmaker_l4t_only #}
+{#   # Need to build container images on a multi-arch capable machine #}
+{#   <<: *tags_definition_multiarch #}
+{#   artifacts: #}
+{#     reports: #}
+{#       dotenv: cudnn_tags.env #}
 
 {% for cuda_version in cuda if not cuda_version.startswith("manifest") %}
 {% for pipeline in cuda[cuda_version] %}
-{% for distro in cuda[cuda_version][pipeline] %}
-{% for arch in cuda[cuda_version][pipeline][distro]["arches"] -%}
+{% for distro in cuda[cuda_version][pipeline]["distros"] %}
 
-{% set cuda_version_yaml_safe = cuda[cuda_version][pipeline]["yaml_safe"] %}
-{% set distro_yaml_safe = cuda[cuda_version][pipeline][distro]["yaml_safe"] -%}
-{% set image_tag_suffix = cuda[cuda_version][pipeline][distro]["image_tag_suffix"] -%}
+{% set cuda_version_yaml_safe = cuda[cuda_version][pipeline]["cuda_version_yaml_safe"] %}
+{% set distro_yaml_safe = cuda[cuda_version][pipeline]["distros"][distro]["yaml_safe"] -%}
+{% set image_tag_suffix = cuda[cuda_version][pipeline]["distros"][distro]["image_tag_suffix"] -%}
 {% set pipeline_name_us = "_" + pipeline if pipeline != "default" else "" -%}
 {% set pipeline_name_hyp = "-" + pipeline if pipeline != "default" else "" -%}
 
-.{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_variables: &{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_variables
-  ARCH: "{{ arch }}"
+.{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_variables: &{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_variables
   DIST_BASE_PATH: "{{ cuda[cuda_version][pipeline]["dist_base_path"] }}"
-  IMAGE_NAME: "{{ cuda[cuda_version][pipeline][distro]["image_name"][arch] }}"
+  IMAGE_NAME: "{{ cuda[cuda_version][pipeline]["image_name"] }}"
   MANIFEST: "{{ cuda.manifest_path }}"
+  ARCHES: "{{ cuda[cuda_version][pipeline]['distros'][distro]['arches'] | join(', ') }}"
   {% if image_tag_suffix %}
   IMAGE_TAG_SUFFIX: {{ image_tag_suffix }}
   {% endif %}
-  {% if cuda[cuda_version][pipeline][distro]["no_os_suffix"][arch] %}
+  {% if cuda[cuda_version][pipeline]["distros"][distro]["no_os_suffix"] %}
   NO_OS_SUFFIX: "true"
   {% endif %}
   OS: "{{ distro }}"
-  OS_NAME: "{{ cuda[cuda_version][pipeline][distro]["name"] }}"
-  OS_VERSION: "{{ cuda[cuda_version][pipeline][distro]["version"] }}"
+  OS_NAME: "{{ cuda[cuda_version][pipeline]["distros"][distro]["name"] }}"
+  OS_VERSION: "{{ cuda[cuda_version][pipeline]["distros"][distro]["version"] }}"
   CUDA_VERSION: "{{ cuda_version }}"
   {% if pipeline != "default" %}
   PIPELINE_NAME: "{{ pipeline }}"
   {% endif %}
 
-.{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only: &{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
-{% if arch == "x86_64" %}
-  <<: *tags_definition
-{% else %}
+.{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_only: &{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_only
   <<: *tags_definition_multiarch
-{% endif %}
   variables:
-    <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_variables
+    <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_variables
   rules:
-    - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true"'
+    - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }} == "true"'
     - if: '$all == "true"'
 
-{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ arch }}:
+{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}:
 {% if cuda_version == "8.0" %}
   <<: *cuda_definition_deprecated
 {% else %}
   <<: *cuda_base_definition
 {% endif %}
-  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
+  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_only
 
 {% set cudnn_stages = [] %}
-{% if cuda[cuda_version][pipeline][distro]["cudnn"] %}
-{% for cudnn in cuda[cuda_version][pipeline][distro]["cudnn"][arch] -%}
+{% if cuda[cuda_version][pipeline]["distros"][distro]["cudnn"] %}
+{# FIXME; build list of cudnn versions for each arch instead of just using the versions for x86_64 #}
+{% for cudnn in cuda[cuda_version][pipeline]["distros"][distro]["cudnn"]["x86_64"] -%}
 
-{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ cudnn }}-{{ arch }}:
+{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ cudnn }}:
   <<: *cudnn_definition
-  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
+  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_only
   # Variables overwritten here. Don't move this section.
   variables:
-    <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_variables
+    <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_variables
     CUDNN_VERSION: "{{ cudnn }}"
+    ARCHES: "{{ cuda[cuda_version][pipeline]['distros'][distro]['cudnn'] | join(', ') }}"
   needs:
-    - job: {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ arch }}
+    - job: {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}
       artifacts: true
 
 {% if pipeline and pipeline != "default" %}
-  {% do cudnn_stages.append(distro + "-v" + cuda_version + "-" + pipeline + "-" + cudnn + "-" + arch) %}
+  {% do cudnn_stages.append(distro + "-v" + cuda_version + "-" + pipeline + "-" + cudnn) %}
 {% else %}
-  {% do cudnn_stages.append(distro + "-v" + cuda_version + "-" + cudnn + "-" + arch) %}
+  {% do cudnn_stages.append(distro + "-v" + cuda_version + "-" + cudnn) %}
 {% endif %}
 {% endfor %}
 {% endif -%}
 
-{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-test-{{ arch }}:
-  needs: ["{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ arch }}"]
-  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
+{% for arch in cuda[cuda_version][pipeline]["distros"][distro]["arches"] -%}
+                                                                                                                                                                                                       {{
+distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-test-{{ arch }}:
+  needs: ["{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}"]
+  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_only
   <<: *test_definition
+  variables:
+    <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_variables
+    ARCH: "{{ arch }}"
   rules:
     - if: '$NO_TEST == "true"'
       when: never
-    - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true"'
+    - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }} == "true"'
     - if: '$all == "true"'
 
 {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-scan-{{ arch }}:
   <<: *scan_definition
-  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
+  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_only
   needs:
-    - job: {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ arch }}
+    - job: {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}
     - job: {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-test-{{ arch }}
+      optional: true
+  variables:
+    <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_variables
+    ARCH: "{{ arch }}"
   # Override rules from only definition
   rules:
     - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
       when: never
-    - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true"'
+    - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }} == "true"'
     - if: '$all == "true"'
 
-{# {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-scan-no-test-{{ arch }}: #}
-  {# <<: *scan_definition #}
-  {# <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only #}
-  {# # Override rules from only definition #}
-  {# needs: #}
-    {# - job: {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-{{ arch }} #}
-  {# rules: #}
-    {# - if: '$NO_SCAN == "true"' #}
-      {# when: never #}
-    {# - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true" && $NO_TEST == "true"' #}
+{% endfor %}
 
-{% set needs = [
-    "{}-v{}{}-{}".format(distro, cuda_version, pipeline_name_hyp, arch),
+{% set ns = namespace(needs = ["{}-v{}{}".format(distro, cuda_version, pipeline_name_hyp)]) %}
+{% for arch in cuda[cuda_version][pipeline]["distros"][distro]["arches"] -%}
+{% set ns.needs = ns.needs + [
     "{}-v{}{}-test-{}".format(distro, cuda_version, pipeline_name_hyp, arch),
-    "{}-v{}{}-scan-{}".format(distro, cuda_version, pipeline_name_hyp, arch),
-    "{}-v{}{}-scan-no-test-{}".format(distro, cuda_version, pipeline_name_hyp, arch),
-] %}
+    "{}-v{}{}-scan-{}".format(distro, cuda_version, pipeline_name_hyp, arch)] %}
+{% endfor %}
 {% if cudnn_stages %}
     {# {% set needs = [] %} #}
     {% for cudnn_stage in cudnn_stages %}
-        {% do needs.append(cudnn_stage) %}
+        {% do ns.needs.append(cudnn_stage) %}
     {% endfor %}
 {% endif -%}
 
-{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-deploy-{{ arch }}:
+{{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-deploy:
   <<: *deploy_definition
-  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only
+  <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_only
   # Override rules from only definition
   rules:
-    - if: '$NO_TEST == "true" || $NO_SCAN == "true"'
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
       when: never
-    - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true"'
+    - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }} == "true"'
     - if: '$all == "true"'
   needs:
   {# This silly workaround is needed because variables lose scope in a for loop #}
   {% set stahp = { 'flag': True } %}
-  {% for job in needs %}
-    {% if "-scan-no-test-" in job %}
-    {% else %}
+  {% for job in ns.needs %}
     - job: {{ job }}
-      {% if stahp.flag %}
+    {% if stahp.flag %}
       artifacts: true
-        {% do stahp.update({'flag':False}) %}
-      {% endif %}
+      {% do stahp.update({'flag':False}) %}
+    {% else %}
+      optional: true
     {% endif %}
   {% endfor %}
 
-{# # workaround for gitlab ci rules when NO_TEST and NO_SCAN are used... #}
-{# {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-deploy-{{ arch }}-no-test-no-scan: #}
-{#   <<: *deploy_definition #}
-{#   <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only #}
-{#   rules: #}
-{#     - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true" && $NO_TEST == "true" && $NO_SCAN == "true"' #}
-{#   needs: #}
-{#   [> This silly workaround is needed because variables lose scope in a for loop <] #}
-{#   {% set stahp = { 'flag': True } %} #}
-{#   {% for job in needs %} #}
-{#     {% if "-test-" in job %} #}
-{#     {% elif "-scan-" + arch in job %} #}
-{#     {% else %} #}
-{#     - job: {{ job }} #}
-{#       {% if stahp.flag %} #}
-{#       artifacts: true #}
-{#         {% do stahp.update({'flag':False}) %} #}
-{#       {% endif %} #}
-{#     {% endif %} #}
-{#   {% endfor %} #}
-
-{# # workaround for gitlab ci rules when NO_TEST is used... #}
-{# {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-deploy-{{ arch }}-no-test: #}
-{#   <<: *deploy_definition #}
-{#   <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only #}
-{#   rules: #}
-{#     - if: '$NO_SCAN == "true"' #}
-{#       when: never #}
-{#     - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true" && $NO_TEST == "true"' #}
-{#   needs: #}
-{#   [> This silly workaround is needed because variables lose scope in a for loop <] #}
-{#   {% set stahp = { 'flag': True } %} #}
-{#   {% for job in needs %} #}
-{#     {% if not "-scan-no-test-" in job and "-test-" in job %} #}
-{#     {% elif not "-scan-no-test-" in job and "-scan-" in job %} #}
-{#     {% else %} #}
-{#     - job: {{ job }} #}
-{#       {% if stahp.flag %} #}
-{#       artifacts: true #}
-{#         {% do stahp.update({'flag':False}) %} #}
-{#       {% endif %} #}
-{#     {% endif %} #}
-{#   {% endfor %} #}
-
-{# # workaround for gitlab ci rules when NO_SCAN is used... #}
-{# {{ distro }}-v{{ cuda_version }}{{ pipeline_name_hyp }}-deploy-{{ arch }}-no-scan: #}
-{#   <<: *deploy_definition #}
-{#   <<: *{{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }}_only #}
-{#   rules: #}
-{#     - if: '$NO_TEST == "true"' #}
-{#       when: never #}
-{#     - if: '${{ distro_yaml_safe }}_{{ cuda_version_yaml_safe }}{{ pipeline_name_us }}_{{ arch }} == "true" && $NO_SCAN == "true"' #}
-{#   needs: #}
-{#   [> This silly workaround is needed because variables lose scope in a for loop <] #}
-{#   {% set stahp = { 'flag': True } %} #}
-{#   {% for job in needs %} #}
-{#     {% if "-scan-" in job %} #}
-{#     {% else %} #}
-{#     - job: {{ job }} #}
-{#       {% if stahp.flag %} #}
-{#       artifacts: true #}
-{#         {% do stahp.update({'flag':False}) %} #}
-{#       {% endif %} #}
-{#     {% endif %} #}
-{#   {% endfor %} #}
-
 {% endfor -%}
-{% endfor %}
 {% endfor %}
 {% endfor %}

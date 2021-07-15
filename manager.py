@@ -71,6 +71,12 @@ HTTP_RETRY_WAIT_SECS = 30
 SUPPORTED_DISTRO_LIST = ["ubuntu", "ubi", "centos"]
 
 
+class UnknownCudaRCDistro(Exception):
+    """An exception that is raised when a match connot be made against a distro from Shipit global.json"""
+
+    pass
+
+
 class RequestsRetry(Exception):
     """An exception to handle retries for requests http gets"""
 
@@ -229,9 +235,7 @@ class Manager(cli.Application):
             if can_skip:
                 return
             # raise glom.PathAccessError
-            log.error(
-                "Exception occurred in get_data. Check if one or more required parameters are missing?"
-            )
+            log.error(f'get_data path: "{path}" not found!')
         else:
             return data
 
@@ -410,7 +414,7 @@ class ManagerTrigger(Manager):
 
         For example:
 
-            - if: '$ubuntu20_04_11_1_x86_64 == "true"'
+            - if: '$ubuntu20_04_11_3_1 == "true"'
 
         Every pipeline has this variable defined, and that is used with the gitlab trigger api to trigger explicit
         pipelines.
@@ -425,13 +429,6 @@ class ManagerTrigger(Manager):
             )
             #  log.debug(f"distro_list_by_cuda_version: {distro_list_by_cuda_version}")
 
-        #  log.debug(
-        #      "version: '%s' distro: '%s' distro_version: '%s' arch: '%s'"
-        #      % (cuda_version, distro or "any", distro_version or "any", arch or "any")
-        #  )
-
-        if not arch:
-            arch = "(x86_64|arm64|ppc64le)"
         if not cuda_version:
             cuda_version = "(\d{1,2}_\d{1,2}_?\d?)"
         if not distro:
@@ -449,7 +446,7 @@ class ManagerTrigger(Manager):
         # Full match regex without known cuda version and distro and distro version in separate groups
         #  ^\s+- if: '\$((ubuntu\d{2}_\d{2})?(?(2)|([a-z]*\d))_(\d{1,2}_\d{1,2}_?\d?)_(x86_64|arm64|ppc64le))\s+==\s.true.'$
 
-        rgx_temp = fr"^\s+- if: '\$({distro}_{cuda_version}_{arch})\s+==\s.true.'$"
+        rgx_temp = fr"^\s+- if: '\$({distro}_{cuda_version})\s+==\s.true.'$"
         #  log.debug(f"regex_matcher: {rgx_temp}")
         rgx = re.compile(rgx_temp)
         ci_vars = []
@@ -651,10 +648,6 @@ class ManagerTrigger(Manager):
         if self.l4t:
             payload[f"variables[L4T]"] = "true"
         payload[f"variables[TRIGGER]"] = "true"
-        payload[f"variables[OS]"] = f"{self.distro}{self.distro_version}"
-        payload[f"variables[OS_NAME]"] = self.distro
-        payload[f"variables[OS_VERSION]"] = self.distro_version
-        payload[f"variables[ARCH]"] = self.arch
         payload[f"variables[RELEASE_LABEL]"] = self.release_label
         payload[f"variables[IMAGE_TAG_SUFFIX]"] = f"-{self.candidate_number}"
         payload[f"variables[CANDIDATE_URL]"] = self.candidate_url
@@ -683,10 +676,7 @@ class ManagerTrigger(Manager):
                 [
                     not i
                     for i in [
-                        self.arch,
                         self.release_label,
-                        self.distro,
-                        self.distro_version,
                         self.candidate_number,
                         self.candidate_url,
                         self.webhook_url,
@@ -696,7 +686,7 @@ class ManagerTrigger(Manager):
             ):
                 # Plumbum doesn't allow this check
                 log.error(
-                    """Missing arguments (one or all): ["--arch", "--cuda-version", "--os-name", "--os-version", "--candidate-number"]"""
+                    """Missing arguments (one or all): ["--release_label", "--candidate-number", "--candidate_url", "--webhook-url", "--branch"]"""
                 )
                 sys.exit(1)
             log.debug("Triggering gitlab kitmaker pipeline using shipit source")
@@ -784,12 +774,14 @@ class ManagerContainerPush(Manager):
     repo_creds = {}
 
     def setup_repos(self):
-        distro_push_repos = self.get_data(
-            self.parent.manifest,
-            self.key,
-            f"{self.distro}{self.distro_version}",
-            "push_repos",
-        )
+        # 09:43 Sat Jul 10 2021: jesusa: Disabled at the distro level because it has historically not been used.
+        #  distro_push_repos = self.get_data(
+        #      self.parent.manifest,
+        #      self.key,
+        #      f"{self.distro}{self.distro_version}",
+        #      "push_repos",
+        #  )
+        push_repos = self.get_data(self.parent.manifest, self.key, "push_repos")
         excluded_repos = self.get_data(
             self.parent.manifest,
             self.key,
@@ -799,7 +791,11 @@ class ManagerContainerPush(Manager):
             can_skip=True,
         )
 
-        for repo, metadata in self.parent.manifest["push_repos"].items():
+        #  __import__("pprint").pprint(self.parent.manifest)
+        #  __import__("pprint").pprint(push_repos)
+        #  print(self.key)
+        #  sys.exit(1)
+        for repo, metadata in push_repos.items():
             if "gitlab-master" in repo:
                 # Images have already been pushed to gitlab by this point
                 log.debug(f"Skipping push to {repo}")
@@ -807,22 +803,22 @@ class ManagerContainerPush(Manager):
             if metadata.get("only_if", False) and not os.getenv(metadata["only_if"]):
                 log.info("repo: '%s' only_if requirement not satisfied", repo)
                 continue
-            if distro_push_repos and repo not in distro_push_repos:
+            if push_repos and repo not in push_repos:
                 log.info("repo: '%s' is excluded for this image", repo)
                 continue
             if excluded_repos and repo in excluded_repos:
                 log.info("repo: '%s' is excluded for this image", repo)
                 continue
-            if self.arch not in metadata["image_names"]:
-                log.debug(f"{repo} does not contain an entry for arch: {self.arch}")
-                continue
+            #  if self.arch not in metadata["image_name"]:
+            #      log.debug(f"{repo} does not contain an entry for arch: {self.arch}")
+            #      continue
             user = os.getenv(metadata["user"])
             if not user:
                 user = metadata["user"]
             passwd = os.getenv(metadata["pass"])
             if not passwd:
                 passwd = metadata["pass"]
-            registry = metadata["image_names"][self.arch]
+            registry = metadata["image_name"]
             self.repo_creds[registry] = {"user": user, "pass": passwd}
             self.repos.append(registry)
         if not self.repos:
@@ -854,6 +850,7 @@ class ManagerContainerPush(Manager):
                     "skopeo",
                     (
                         "copy",
+                        "--all",
                         "--src-creds",
                         "{}:{}".format("gitlab-ci-token", os.getenv("CI_JOB_TOKEN")),
                         "--dest-creds",
@@ -1016,19 +1013,19 @@ class ManagerGenerate(Manager):
     release_label = cli.SwitchAttr(
         "--release-label",
         str,
-        excludes=["--all", "--readme", "--tags"],
+        excludes=["--readme", "--tags"],
         group="Targeted",
         help="The cuda version to use. Example: '11.2.0'",
         default=None,
     )
 
-    arch = cli.SwitchAttr(
-        "--arch",
-        cli.Set("x86_64", "ppc64le", "arm64", case_sensitive=False),
-        excludes=["--all", "--readme", "--tags"],
-        group="Targeted",
-        help="Generate container scripts for a particular architecture.",
-    )
+    #  arch = cli.SwitchAttr(
+    #      "--arch",
+    #      cli.Set("x86_64", "ppc64le", "arm64", case_sensitive=False),
+    #      excludes=["--all", "--readme", "--tags"],
+    #      group="Targeted",
+    #      help="Generate container scripts for a particular architecture.",
+    #  )
 
     pipeline_name = cli.SwitchAttr(
         "--pipeline-name",
@@ -1076,9 +1073,9 @@ class ManagerGenerate(Manager):
                 ls.append(k)
         return ls
 
-    def cudnn_versions(self):
+    def cudnn_versions(self, arch):
         obj = []
-        for k, v in self.cuda["components"].items():
+        for k, v in self.cuda[arch]["components"].items():
             if k.startswith("cudnn") and v:
                 obj.append(k)
         return obj
@@ -1089,7 +1086,7 @@ class ManagerGenerate(Manager):
             return match
 
     # extracts arbitrary keys and inserts them into the templating context
-    def extract_keys(self, val):
+    def extract_keys(self, val, arch=None):
         rgx = re.compile(r"^v\d+\.\d")
         for k, v in val.items():
             if rgx.match(k):
@@ -1106,83 +1103,109 @@ class ManagerGenerate(Manager):
                 ),
             ]:
                 continue
-            self.cuda[k] = v
+            if arch:
+                self.cuda[arch][k] = v
+            else:
+                self.cuda[k] = v
 
     # For cudnn templates, we need a custom template context
     def output_cudnn_template(self, cudnn_version_name, input_template, output_path):
-        cudnn_manifest = self.cuda["components"][cudnn_version_name]
-        if "source" in cudnn_manifest:
-            cudnn_manifest["basename"] = os.path.basename(cudnn_manifest["source"])
-            cudnn_manifest["dev"]["basename"] = os.path.basename(
-                cudnn_manifest["dev"]["source"]
-            )
-
         new_ctx = {
-            "cudnn": self.cuda["components"][cudnn_version_name],
-            "arch": self.arch,
+            "cudnn": self.cuda["cudnn"],
             "version": self.cuda["version"],
             "image_tag_suffix": self.cuda["image_tag_suffix"],
             "os": self.cuda["os"],
         }
+        for arch in self.arches:
+            cudnn_manifest = self.cuda[arch]["components"][cudnn_version_name]
+            if cudnn_manifest:
+                if "source" in cudnn_manifest:
+                    cudnn_manifest["basename"] = os.path.basename(
+                        cudnn_manifest["source"]
+                    )
+                    cudnn_manifest["dev"]["basename"] = os.path.basename(
+                        cudnn_manifest["dev"]["source"]
+                    )
+                new_ctx[arch] = {}
+                new_ctx[arch]["cudnn"] = cudnn_manifest
+
+        #  __import__("pprint").pprint(new_ctx)
         log.debug("cudnn template context: %s", new_ctx)
+        #  sys.exit()
         self.output_template(
             input_template=input_template, output_path=output_path, ctx=new_ctx
         )
 
     def output_template(self, input_template, output_path, ctx=None):
         ctx = ctx if ctx is not None else self.cuda
-        with open(input_template) as f:
-            log.debug("Processing template %s", input_template)
-            new_output_path = pathlib.Path(output_path)
-            extension = ".j2"
-            name = input_template.name
-            if "dockerfile" in input_template.name.lower():
-                new_filename = "Dockerfile"
-            elif ".jinja" in str(input_template):
-                extension = ".jinja"
-                new_filename = (
-                    name[: -len(extension)] if name.endswith(extension) else name
-                )
-            else:
-                new_filename = (
-                    name[len("base-") : -len(extension)]
-                    if name.startswith("base-") and name.endswith(extension)
-                    else name
-                )
-            template = self.template_env.from_string(f.read())
-            if not new_output_path.exists():
-                log.debug(f"Creating {new_output_path}")
-                new_output_path.mkdir(parents=True)
-            log.info(f"Writing {new_output_path}/{new_filename}")
-            with open(f"{new_output_path}/{new_filename}", "w") as f2:
-                f2.write(template.render(cuda=ctx))
+        #  print(output_path)
+        #  raise
+
+        def write_template(arch=None):
+            with open(input_template) as f:
+                log.debug("Processing template %s", input_template)
+                new_output_path = pathlib.Path(output_path)
+                extension = ".j2"
+                name = input_template.name
+                if "dockerfile" in input_template.name.lower():
+                    new_filename = "Dockerfile"
+                elif ".jinja" in str(input_template):
+                    extension = ".jinja"
+                    new_filename = (
+                        name[: -len(extension)] if name.endswith(extension) else name
+                    )
+                else:
+                    new_filename = (
+                        name[len("base-") : -len(extension)]
+                        if name.startswith("base-") and name.endswith(extension)
+                        else name
+                    )
+                if arch:
+                    new_filename += f"-{arch}"
+                template = self.template_env.from_string(f.read())
+                if not new_output_path.exists():
+                    log.debug(f"Creating {new_output_path}")
+                    new_output_path.mkdir(parents=True)
+                log.info(f"Writing {new_output_path}/{new_filename}")
+                with open(f"{new_output_path}/{new_filename}", "w") as f2:
+                    f2.write(template.render(cuda=ctx))
+                #  sys.exit(1)
+
+        if any(f in input_template.as_posix() for f in ["cuda.repo", "ml.repo"]):
+            for arch in self.arches:
+                ctx["target_arch"] = arch
+                if "arm64" in arch:
+                    ctx["target_arch"] = "sbsa"
+                #  output_path =
+                write_template(arch)
+        else:
+            write_template()
 
     def prepare_context(self):
         # checks the cudnn components and ensures at least one is installed from the public "machine-learning" repo
-        def use_ml_repo():
+        def use_ml_repo(arch):
             use_ml_repo = False
             # First check the manifest to see if a ml repo url is specified
-            log.debug(
-                f"self.key: {self.key} distro: {self.distro}{self.distro_version} arch: {self.arch}"
-            )
+            #  log.debug(
+            #      f"self.key: {self.key} distro: {self.distro}{self.distro_version} arch: {arch}"
+            #  )
             ml_repo_url = self.get_data(
                 self.parent.manifest,
                 self.key,
                 f"{self.distro}{self.distro_version}",
-                self.arch,
                 "ml_repo_url",
                 can_skip=True,
             )
             if not ml_repo_url:
                 log.warning(
-                    f"ml_repo_url not set for {self.key}.{self.distro}{self.distro_version}.{self.arch} in manifest"
+                    f"ml_repo_url not set for {self.key}.{self.distro}{self.distro_version}.{arch} in manifest"
                 )
                 return False
             use_ml_repo = True
             # if a cudnn component contains "source", then it is installed from a different source than the public machine
             # learning repo
             # If any of the cudnn components lack the source key, then the ML repo should be used
-            for comp, val in self.cuda["components"].items():
+            for comp, val in self.cuda[arch]["components"].items():
                 if next(
                     (True for mlcomp in ["cudnn", "nccl"] if mlcomp in comp), False
                 ):
@@ -1208,68 +1231,73 @@ class ManagerGenerate(Manager):
         if not self.image_tag_suffix:
             self.image_tag_suffix = ""
 
-        # Only set in version < 11.0
-        build_version = self.get_data(
-            conf,
-            self.key,
-            f"{self.distro}{self.distro_version}",
-            self.arch,
-            "components",
-            "build_version",
-            can_skip=True,
-        )
-        legacy_release_label = None
-        if build_version:
-            legacy_release_label = f"{self.cuda_version}.{build_version}"
-        log.debug(f"build_version: {build_version}")
-
         # The templating context. This data structure is used to fill the templates.
         self.cuda = {
             "flavor": self.flavor,
-            "use_ml_repo": False,
             "version": {
-                "release_label": self.cuda_version
-                if self.cuda_version_is_release_label
-                else (self.release_label or legacy_release_label),
+                "release_label": self.cuda_version,
+                #  if self.cuda_version_is_release_label
+                #  else (self.release_label or legacy_release_label),
                 "major": major,
                 "minor": minor,
                 "major_minor": f"{major}.{minor}",
             },
+            "arches": self.arches,
             "os": {"distro": self.distro, "version": self.distro_version},
-            "arch": self.arch,
             "image_tag_suffix": self.image_tag_suffix,
-            "components": self.get_data(
-                conf,
-                self.key,
-                f"{self.distro}{self.distro_version}",
-                self.arch,
-                "components",
-            ),
         }
-        self.cuda["use_ml_repo"] = use_ml_repo()
 
-        # Users of manifest.yaml are allowed to set arbitrary keys for inclusion in the templates
-        # and the discovered keys are injected into the template context.
-        # We only checks at three levels in the manifest
         self.extract_keys(
             self.get_data(conf, self.key, f"{self.distro}{self.distro_version}",)
         )
-        self.extract_keys(
-            self.get_data(
-                conf, self.key, f"{self.distro}{self.distro_version}", self.arch,
+
+        for arch in self.arches:
+            self.cuda[arch] = {}
+            # Only set in version < 11.0
+            self.cuda[arch]["build_version"] = self.get_data(
+                conf,
+                self.key,
+                f"{self.distro}{self.distro_version}",
+                arch,
+                "components",
+                "build_version",
+                can_skip=True,
             )
-        )
+            self.cuda[arch]["components"] = self.get_data(
+                conf,
+                self.key,
+                f"{self.distro}{self.distro_version}",
+                arch,
+                "components",
+            )
+            self.cuda[arch]["use_ml_repo"] = use_ml_repo(arch)
+            self.extract_keys(
+                self.get_data(
+                    conf, self.key, f"{self.distro}{self.distro_version}", arch,
+                ),
+                arch=arch,
+            )
+
+        legacy_release_label = None
+        #  if build_version:
+        #      legacy_release_label = f"{self.cuda_version}.{build_version}"
+        #  log.debug(f"build_version: {build_version}")
+
         log.debug("template context %s" % (self.cuda))
+        #  __import__("pprint").pprint(self.cuda)
         #  sys.exit(1)
 
     def generate_cudnn_scripts(self, base_image, input_template):
-        for pkg in self.cudnn_versions():
-            self.cuda["components"][pkg]["target"] = base_image
-            self.output_cudnn_template(
-                cudnn_version_name=pkg,
-                input_template=pathlib.Path(input_template),
-                output_path=pathlib.Path(f"{self.output_path}/{base_image}/{pkg}"),
-            )
+        for arch in self.arches:
+            for pkg in self.cudnn_versions(arch):
+                if not "cudnn" in self.cuda:
+                    self.cuda["cudnn"] = {}
+                self.cuda["cudnn"]["target"] = base_image
+                self.output_cudnn_template(
+                    cudnn_version_name=pkg,
+                    input_template=pathlib.Path(input_template),
+                    output_path=pathlib.Path(f"{self.output_path}/{base_image}/{pkg}"),
+                )
 
     # CUDA 8 uses a deprecated image layout
     def generate_containerscripts_cuda_8(self):
@@ -1329,8 +1357,13 @@ class ManagerGenerate(Manager):
                 log.info(f"have template: {filename}")
                 if "dockerfile" in filename.name.lower():
                     continue
-                #  log.debug("Checking %s", filename)
-                if not self.cuda["use_ml_repo"] and "nvidia-ml" in str(filename):
+                log.debug("Checking %s", filename)
+                #  __import__("pprint").pprint(self.cuda)
+                #  sys.exit(1)
+                # x86_64 is hard coded here because if it is set there, it is most like set for all arches
+                if not self.cuda["x86_64"]["use_ml_repo"] and "nvidia-ml" in str(
+                    filename
+                ):
                     log.warning("Not setting ml-repo!")
                     continue
                 if any(f in filename.name for f in [".j2", ".jinja"]):
@@ -1340,8 +1373,6 @@ class ManagerGenerate(Manager):
             if "base" not in img:
                 self.generate_cudnn_scripts(img, cudnn_template_path)
 
-    # FIXME: Probably a much nicer way to do this with GLOM...
-    # FIXME: Turn off black auto format for this function...
     # fmt: off
     def generate_gitlab_pipelines(self):
 
@@ -1372,7 +1403,7 @@ class ManagerGenerate(Manager):
             if cuda_version not in ctx:
                 ctx[cuda_version] = {}
             ctx[cuda_version][pipeline_name] = {}
-            ctx[cuda_version][pipeline_name]["yaml_safe"] = cuda_version.replace(".", "_")
+            ctx[cuda_version][pipeline_name]["cuda_version_yaml_safe"] = cuda_version.replace(".", "_")
 
             key = f"cuda_v{cuda_version}"
             if pipeline_name and pipeline_name != "default":
@@ -1390,45 +1421,43 @@ class ManagerGenerate(Manager):
 
                 #  log.debug("distro: '%s'" % distro)
                 #  log.debug("pipeline_name: '%s'" % pipeline_name)
-                ctx[cuda_version][pipeline_name][distro] = {}
-                ctx[cuda_version][pipeline_name][distro]["name"] = dm.group('name')
-                ctx[cuda_version][pipeline_name][distro]["version"] = dm.group('version')
-                ctx[cuda_version][pipeline_name][distro]["yaml_safe"] = distro.replace(".", "_")
+                if not "distros" in ctx[cuda_version][pipeline_name]:
+                    ctx[cuda_version][pipeline_name]["distros"] = {}
+                ctx[cuda_version][pipeline_name]["distros"][distro] = {}
+                ctx[cuda_version][pipeline_name]["distros"][distro]["name"] = dm.group('name')
+                ctx[cuda_version][pipeline_name]["distros"][distro]["version"] = dm.group('version')
+                ctx[cuda_version][pipeline_name]["distros"][distro]["yaml_safe"] = distro.replace(".", "_")
                 image_tag_suffix = self.get_data(manifest, key, distro, "image_tag_suffix", can_skip=True)
-                ctx[cuda_version][pipeline_name][distro]["image_tag_suffix"] = ""
-                ctx[cuda_version][pipeline_name][distro]["image_name"] = {}
+                ctx[cuda_version][pipeline_name]["distros"][distro]["image_tag_suffix"] = ""
 
                 if image_tag_suffix:
-                    ctx[cuda_version][pipeline_name][distro]["image_tag_suffix"] = image_tag_suffix
+                    ctx[cuda_version][pipeline_name]["distros"][distro]["image_tag_suffix"] = image_tag_suffix
 
-                ctx[cuda_version][pipeline_name][distro]["arches"] = []
+                ctx[cuda_version][pipeline_name]["distros"][distro]["arches"] = []
 
                 for arch, _ in manifest[key][distro].items():
                     if arch not in ["arm64", "ppc64le", "x86_64"]:
                         continue
 
                     #  log.debug("arch: '%s'" % arch)
-                    no_os_suffix = self.get_data(manifest, key, distro, arch, "no_os_suffix", can_skip=True)
-                    latest = self.get_data(manifest, key, distro, arch, "latest", can_skip=True)
-                    ctx[cuda_version][pipeline_name][distro]["image_name"][arch] = self.get_data(manifest, key, distro, arch, "image_name")
+                    no_os_suffix = self.get_data(manifest, key, distro, "no_os_suffix", can_skip=True)
+                    ctx[cuda_version][pipeline_name]["image_name"] = self.get_data(manifest, key, "image_name")
 
-                    if "latest" not in ctx[cuda_version][pipeline_name][distro]:
-                        ctx[cuda_version][pipeline_name][distro]["latest"] = {}
+                    if "no_os_suffix" not in ctx[cuda_version][pipeline_name]["distros"][distro]:
+                        ctx[cuda_version][pipeline_name]["distros"][distro]["no_os_suffix"] = {}
 
-                    ctx[cuda_version][pipeline_name][distro]["latest"][arch] = (True if latest else False)
+                    ctx[cuda_version][pipeline_name]["distros"][distro]["no_os_suffix"] = (True if no_os_suffix else False)
+                    ctx[cuda_version][pipeline_name]["distros"][distro]["arches"].append(arch)
 
-                    if "no_os_suffix" not in ctx[cuda_version][pipeline_name][distro]:
-                        ctx[cuda_version][pipeline_name][distro]["no_os_suffix"] = {}
+                    if "cudnn" not in ctx[cuda_version][pipeline_name]["distros"][distro]:
+                        ctx[cuda_version][pipeline_name]["distros"][distro]["cudnn"] = {}
+                    cudnn_comps = get_cudnn_components(key, distro, arch)
+                    if cudnn_comps:
+                        ctx[cuda_version][pipeline_name]["distros"][distro]["cudnn"][arch] = cudnn_comps
 
-                    ctx[cuda_version][pipeline_name][distro]["no_os_suffix"][arch] = (True if no_os_suffix else False)
-                    ctx[cuda_version][pipeline_name][distro]["arches"].append(arch)
-
-                    if "cudnn" not in ctx[cuda_version][pipeline_name][distro]:
-                        ctx[cuda_version][pipeline_name][distro]["cudnn"] = {}
-
-                    ctx[cuda_version][pipeline_name][distro]["cudnn"][arch] = get_cudnn_components(key, distro, arch)
-
-        # log.debug(f"ci pipline context: {ctx}")
+        #  __import__('pprint').pprint(ctx)
+        #  log.debug(f"ci pipline context: {ctx}")
+        #  sys.exit(1)
 
         input_template = pathlib.Path("templates/gitlab/gitlab-ci.yml.jinja")
         with open(input_template) as f:
@@ -1437,7 +1466,7 @@ class ManagerGenerate(Manager):
             template = self.template_env.from_string(f.read())
             with open(output_path, "w") as f2:
                 f2.write(template.render(cuda=ctx))
-        #  sys.exit(1)
+            #  sys.exit(1)
 
     def generate_readmes(self):
 
@@ -1658,6 +1687,7 @@ class ManagerGenerate(Manager):
 
     # Returns a list of packages used in the templates
     def template_packages(self):
+        # 21:31 Tue Jul 13 2021 FIXME (jesusa): this func feels like a hack
         log.info(f"current directory: {os.getcwd()}")
         temp_dir = "ubuntu"
         if any(distro in self.distro for distro in ["centos", "ubi"]):
@@ -1672,19 +1702,20 @@ class ManagerGenerate(Manager):
                 "*.j2",
                 "-exec",
                 "grep",
-                "^{%.*set\ .*_component_version",
+                "^ENV\ NV_.*_VERSION\ .*$",
                 "{}",
                 ";",
             ]
-            | cut["-f", "3", "-d", " "]
-            | sort
+            | cut["-f", "2", "-d", " "]
+            | sort["-u"]
         )
         log.debug(f"command: {cmd}")
         # When docker:stable (alpine) has python 3.9...
         #  return [x.removesuffix("_component_version") for x in cmd().splitlines()]
         return [
-            x[: -len("_component_version")] if x.endswith("_component_version") else x
+            x[3 : -len("_VERSION")].lower()
             for x in cmd().splitlines()
+            if "_VERSION" in x and not "CUDA_LIB" in x
         ]
 
     def pkg_rel_from_package_name(self, name, version):
@@ -1736,16 +1767,16 @@ class ManagerGenerate(Manager):
         if any(x in repo_distro for x in ["ubi", "centos"]):
             repo_distro = "rhel"
         clean_distro = "{}{}".format(repo_distro, self.distro_version.replace(".", ""))
-        arch = self.arch
-        if "ubuntu" in repo_distro and arch == "ppc64le":
-            arch = "ppc64el"
-        elif arch == "arm64":
-            arch = "sbsa"
-        suffix = f"{clean_distro}/{arch}"
-        if "tegra" in self.product_name:
-            arch = "arm64"
-            suffix = f"l4t/{arch}"
-        return f"http://cuda-internal.nvidia.com/release-candidates/kitpicks/{self.product_name}/{self.release_label}/{self.candidate_number}/repos/{suffix}"
+        #  arch = self.arch
+        #  if "ubuntu" in repo_distro and arch == "ppc64le":
+        #      arch = "ppc64el"
+        #  elif arch == "arm64":
+        #      arch = "sbsa"
+        #  suffix = f"{clean_distro}/{arch}"
+        #  if "tegra" in self.product_name:
+        #      arch = "arm64"
+        #      suffix = f"l4t/{arch}"
+        return f"http://cuda-internal.nvidia.com/release-candidates/kitpicks/{self.product_name}/{self.release_label}/{self.candidate_number}/repos/{clean_distro}"
 
     def latest_l4t_base_image(self):
         l4t_base_image = "nvcr.io/nvidian/nvidia-l4t-base"
@@ -1781,105 +1812,185 @@ class ManagerGenerate(Manager):
         return f"{l4t_base_image}:{sorted(tag_list2, reverse=True)[0]}"
 
     def shipit_manifest(self):
+        # 22:31 Tue Jul 13 2021 FIXME: (jesusa) this function is way too long to be considered good practice in python
         log.debug("Building the shipit manifest")
         gjson = self.get_shipit_global_json()
         self.product_name = gjson["product_name"]
         self.candidate_number = gjson["cand_number"]
-        #  self.release_label = gjson["rel_label"]
         log.info(f"Product Name: '{self.product_name}'")
         log.info(f"Candidate Number: '{self.candidate_number}'")
         log.info(f"Release label: {self.release_label}")
 
-        platform = f"{self.distro}{self.distro_version}"
-        if "tegra" in self.product_name:
-            platform = "l4t"
-            if not self.cudnn_json_path:
-                log.error("Argument `--cudnn-json-path` is not set!")
-                sys.exit(1)
-        self.set_output_path(platform)
+        def supported_distros(distros):
+            sdistros = []
+            for distro in distros:
+                if "wsl" in distro or (
+                    "rhel" not in distro
+                    and not any(f in distro for f in SUPPORTED_DISTRO_LIST)
+                ):
+                    continue
+                if "rhel" in distro:
+                    sdistros.append("ubi" + distro[len(distro) - 1 :])
+                    sdistros.append("centos" + distro[len(distro) - 1 :])
+                else:
+                    sdistros.append(distro)
+            return sdistros
 
-        sjson = self.get_shipit_funnel_json()
-
-        pkgs = self.template_packages()
-        log.debug(f"template packages: {pkgs}")
-        components = self.shipit_components(sjson, pkgs)
-
-        # TEMP WAR: populate cudnn component for L4T
-        if "l4t" in platform:
-            cudnn_comp = {
-                "cudnn8": {
-                    "version": "",
-                    "source": "",
-                    "dev": {"source": "", "md5sum": ""},
-                }
-            }
-            #  print(self.cudnn_json_path)
-            with open(pathlib.Path(self.cudnn_json_path), "r") as f:
-                cudnn = json.loads(f.read())
-            for x in cudnn:
-                artpath = f"https://urm.nvidia.com/artifactory/{x['repo']}/{x['path']}/{x['name']}"
-                if "arm64" in x["name"]:
-                    if "-dev_" in x["name"]:
-                        #  cudnn_comp["cudnn8"]["dev"]["version"] = x["version"]
-                        cudnn_comp["cudnn8"]["dev"]["source"] = artpath
-                        cudnn_comp["cudnn8"]["dev"]["md5sum"] = x["actual_md5"]
+        def nested_gjson_data(data):
+            for k, v in data.items():
+                if isinstance(v, dict):
+                    for pair in nested_gjson_data(v):
+                        yield (k, *pair)
+                else:
+                    if "distros" in k:
+                        yield ([v])
                     else:
-                        cudnn_comp["cudnn8"]["version"] = x["version"]
-                        cudnn_comp["cudnn8"]["source"] = artpath
-                        cudnn_comp["cudnn8"]["md5sum"] = x["actual_md5"]
-            if cudnn_comp:
-                #  print(cudnn_comp)
-                components.update(cudnn_comp)
+                        yield (k, v)
 
-        image_name = (
-            "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
-        )
-        template_path = "templates/ubuntu"
-        if "ubuntu" not in self.distro:
-            template_path = "templates/redhat"
-        #  if all(x in self.product_name for x in ["tegra", "10-2"]):
-        #      template_path = "templates/ubuntu/legacy"
+        reldata = {}
+        for plat, distros in gjson["targets"].items():
+            if "windows" in plat:
+                continue
+            os, arch = plat.split("-")
+            if "sbsa" in arch:
+                arch = "arm64"
+            if not os in reldata:
+                reldata[os] = {}
+            if not arch in reldata[os]:
+                reldata[os][arch] = {}
+            reldata[os][arch]["distros"] = supported_distros(distros)
 
-        if not "x86_64" in self.arch:
-            image_name = f"gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda-{self.arch}"
-        base_image = f"{self.distro}:{self.distro_version}"
-        if "ubi" in self.distro:
-            base_image = (
-                f"registry.access.redhat.com/ubi{self.distro_version}/ubi:latest"
-            )
-        requires = ""
+        if self.dist_base_path.exists:
+            log.warning(f"Removing path '{self.dist_base_path}'")
+            rm["-rf", self.dist_base_path]()
+        self.dist_base_path.mkdir(parents=True, exist_ok=False)
+        self.output_manifest_path = pathlib.Path(f"{self.dist_base_path}/manifest.yml")
 
-        key = "push_repos"
-        if "tegra" in self.product_name:
-            key = "l4t_push_repos"
-        prepos = self._load_rc_push_repos_manifest_yaml()[key]
-        auth_registries(prepos)
-
-        if "tegra" in self.product_name:
-            base_image = self.latest_l4t_base_image()
-            requires = "cuda>=10.2"
-            image_name = f"gitlab-master.nvidia.com:5005/cuda-installer/cuda/l4t-cuda"
-
+        release_key = f"cuda_v{self.release_label}"
         self.parent.manifest = {
-            f"cuda_v{self.release_label}": {
+            release_key: {
                 "dist_base_path": self.dist_base_path.as_posix(),
-                f"{self.distro}{self.distro_version}": {
-                    "template_path": template_path,
-                    "base_image": base_image,
-                    "push_repos": ["artifactory"],
-                    "repo_url": self.kitpick_repo_url(gjson),
-                    "image_tag_suffix": f"-{gjson['cand_number']}",
-                    f"{self.arch}": {
-                        "image_name": image_name,
-                        "requires": requires,
-                        "components": components,
-                    },
-                },
+                "push_repos": ["artifactory"],
             }
         }
-        self.parent.manifest.update({"push_repos": prepos})
+
+        for platform in nested_gjson_data(reldata):
+            #  print(platform)
+            os = platform[0]
+            self.arch = platform[1]
+            distros = platform[2]
+            log.debug(f"os: '{os}' arch: '{self.arch}' distros: {distros}")
+            for distro in distros:
+                rgx = re.search(r"(\D*)(\d*)", distro)
+                if rgx:
+                    self.distro = rgx.group(1)
+                    self.distro_version = rgx.group(2).replace("04", ".04")
+                else:
+                    raise UnknownCudaRCDistro("Distro '{distro}' has an unknown format")
+
+                platform = f"{self.distro}{self.distro_version}"
+                if "tegra" in self.product_name:
+                    platform = "l4t"
+                    if not self.cudnn_json_path:
+                        log.error("Argument `--cudnn-json-path` is not set!")
+                        sys.exit(1)
+
+                #  print(platform)
+                #  continue
+                #  self.set_output_path(platform)
+
+                #  if delete and self.dist_base_path.exists:
+                #      #  raise
+                #      log.warning(f"Removing path '{self.dist_base_path}'")
+                #      rm["-rf", self.dist_base_path]()
+                #  platform = f"{target}-{self.arch}"
+                if "tegra" in self.product_name:
+                    platform = f"{platform}-cuda"
+                self.output_path = pathlib.Path(f"{self.dist_base_path}/{platform}")
+
+                sjson = self.get_shipit_funnel_json()
+
+                pkgs = self.template_packages()
+
+                log.debug(f"template packages: {pkgs}")
+                components = self.shipit_components(sjson, pkgs)
+
+                # TEMP WAR: populate cudnn component for L4T
+                if "l4t" in platform:
+                    cudnn_comp = {
+                        "cudnn8": {
+                            "version": "",
+                            "source": "",
+                            "dev": {"source": "", "md5sum": ""},
+                        }
+                    }
+                    #  print(self.cudnn_json_path)
+                    with open(pathlib.Path(self.cudnn_json_path), "r") as f:
+                        cudnn = json.loads(f.read())
+                    for x in cudnn:
+                        artpath = f"https://urm.nvidia.com/artifactory/{x['repo']}/{x['path']}/{x['name']}"
+                        if "arm64" in x["name"]:
+                            if "-dev_" in x["name"]:
+                                #  cudnn_comp["cudnn8"]["dev"]["version"] = x["version"]
+                                cudnn_comp["cudnn8"]["dev"]["source"] = artpath
+                                cudnn_comp["cudnn8"]["dev"]["md5sum"] = x["actual_md5"]
+                            else:
+                                cudnn_comp["cudnn8"]["version"] = x["version"]
+                                cudnn_comp["cudnn8"]["source"] = artpath
+                                cudnn_comp["cudnn8"]["md5sum"] = x["actual_md5"]
+                    if cudnn_comp:
+                        #  print(cudnn_comp)
+                        components.update(cudnn_comp)
+
+                image_name = "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
+                template_path = "templates/ubuntu"
+                if "ubuntu" not in self.distro:
+                    template_path = "templates/redhat"
+                #  if all(x in self.product_name for x in ["tegra", "10-2"]):
+                #      template_path = "templates/ubuntu/legacy"
+
+                #  if not "x86_64" in self.arch:
+                #      image_name = f"gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
+                base_image = f"{self.distro}:{self.distro_version}"
+                if "ubi" in self.distro:
+                    base_image = f"registry.access.redhat.com/ubi{self.distro_version}/ubi:latest"
+                requires = ""
+
+                key = "push_repos"
+                if "tegra" in self.product_name:
+                    key = "l4t_push_repos"
+                prepos = self._load_rc_push_repos_manifest_yaml()[key]
+                auth_registries(prepos)
+
+                if "tegra" in self.product_name:
+                    base_image = self.latest_l4t_base_image()
+                    requires = "cuda>=10.2"
+                    image_name = (
+                        f"gitlab-master.nvidia.com:5005/cuda-installer/cuda/l4t-cuda"
+                    )
+
+                manifest = self.parent.manifest[release_key]
+                manifest["image_name"] = image_name
+                if not platform in manifest:
+                    manifest[platform] = {
+                        "base_image": base_image,
+                        "image_tag_suffix": f"-{gjson['cand_number']}",
+                        "template_path": template_path,
+                        "repo_url": self.kitpick_repo_url(gjson),
+                    }
+
+                manifest[platform][f"{self.arch}"] = {
+                    "requires": requires,
+                    "components": components,
+                }
+
+        #  sys.exit(1)
+        manifest.update({"push_repos": prepos})
+        self.parent.manifest[release_key] = manifest
         log.info(f"Writing shipit manifest: {self.output_manifest_path}")
         self.write_shipit_manifest(self.parent.manifest)
+        #  __import__("pprint").pprint(self.parent.manifest)
+        #  sys.exit(1)
 
     def write_shipit_manifest(self, manifest):
         yaml_str = yaml.dump(manifest)
@@ -1887,25 +1998,11 @@ class ManagerGenerate(Manager):
             f.write(yaml_str)
 
     def set_output_path(self, target):
-        self.output_path = pathlib.Path(f"{self.dist_base_path}/{target}-{self.arch}")
-        if self.parent.shipit_uuid:
-            if self.dist_base_path.exists:
-                log.debug(f"Removing path '{self.dist_base_path}'")
-                rm["-rf", self.dist_base_path]()
-            platform = f"{target}-{self.arch}"
-            os = f"{self.distro}-{self.distro_version}"
-            if "tegra" in self.product_name:
-                platform = f"{target}-cuda"
-                os = "l4t"
-            self.output_path = pathlib.Path(f"{self.dist_base_path}/{platform}")
-            self.output_manifest_path = pathlib.Path(
-                f"{self.dist_base_path}/{platform}/manifest-{os}.yml"
-            )
-            log.debug(f"output_manifest_path: {self.output_manifest_path}")
+        self.output_path = pathlib.Path(f"{self.dist_base_path}/{target}")
 
-        if self.output_path.exists:
-            log.debug(f"Removing {self.output_path}")
-            rm["-rf", self.output_path]()
+        #  if delete and self.output_path.exists:
+        #      log.warning(f"Removing {self.output_path}")
+        #      rm["-rf", self.output_path]()
 
         log.debug(f"self.output_path: '{self.output_path}' target: '{target}'")
         log.debug(f"Creating {self.output_path}")
@@ -1915,11 +2012,12 @@ class ManagerGenerate(Manager):
         log.debug("Generating all container scripts!")
         rgx = re.compile(
             # use regex101.com to debug with gitlab-ci.yml as the search text
-            r"^(?P<distro>[a-zA-Z]*)(?P<distro_version>[\d\.]*)-v(?P<cuda_version>[\d\.]*)(?:-(?!cudnn|test|scan|deploy)(?P<pipeline_name>\w+))?-(?P<arch>arm64|ppc64le|x86_64)"
+            r"^(?P<distro>[a-zA-Z]*)(?P<distro_version>[\d\.]*)-v(?P<cuda_version>[\d\.]*)(?:-(?!cudnn|test|scan|deploy)(?P<pipeline_name>\w+))?"
         )
 
         for ci_job, _ in self.parent.ci.items():
             if (match := rgx.match(ci_job)) is None:
+                #  log.debug("continuing")
                 continue
             #  print(match.groups())
             #  continue
@@ -1929,7 +2027,7 @@ class ManagerGenerate(Manager):
             if self.cuda_version.count(".") > 1:
                 self.cuda_version_is_release_label = True
             self.pipeline_name = match.group("pipeline_name")
-            self.arch = match.group("arch")
+            #  self.arch = match.group("arch")
 
             log.debug("ci_job: '%s'" % ci_job)
 
@@ -1946,13 +2044,12 @@ class ManagerGenerate(Manager):
 
             log.debug("dist_base_path: %s" % (self.dist_base_path))
             log.debug(
-                "Generating distro: '%s' distro_version: '%s' cuda_version: '%s' release_label: '%s' arch: '%s'"
+                "Generating distro: '%s' distro_version: '%s' cuda_version: '%s' release_label: '%s' "
                 % (
                     self.distro,
                     self.distro_version,
                     self.cuda_version,
                     self.release_label,
-                    self.arch,
                 )
             )
             self.targeted()
@@ -1960,56 +2057,87 @@ class ManagerGenerate(Manager):
 
         if not self.dist_base_path:
             log.error("dist_base_path not set!")
+            sys.exit(1)
 
-        #  sys.exit()
+    def target_all_kitmaker(self):
+        log.debug("Generating all container scripts! (for kitmaker)")
+
+        key = f"cuda_v{self.release_label}"
+        self.cuda_version = self.release_label
+        #  self.pipeline_name = "default"
+        for k, v in self.parent.manifest[key].items():
+            if any(x in k for x in SUPPORTED_DISTRO_LIST):
+                log.debug(f"Working on {k}")
+                rgx = re.search(r"(\D*)([\d\.]*)", k)
+                self.distro = rgx.group(1)
+                self.distro_version = rgx.group(2)
+                self.cuda_version_is_release_label = True
+
+                #  self.dist_base_path = pathlib.Path(
+                #      self.parent.get_data(self.parent.manifest, key, "dist_base_path")
+                #  )
+
+                #  log.debug("dist_base_path: %s" % (self.dist_base_path))
+                log.debug(
+                    "Generating distro: '%s' distro_version: '%s' cuda_version: '%s' release_label: '%s' "
+                    % (
+                        self.distro,
+                        self.distro_version,
+                        self.cuda_version,
+                        self.release_label,
+                    )
+                )
+                self.targeted()
+                self.cuda_version_is_release_label = False
 
     def targeted(self):
-        arches = []
-        if not self.arch:
-            arches = self.supported_arch_list()
-        else:
-            arches = [self.arch]
-        for arch in arches:
-            self.arch = arch
-            if not self.generate_all:
-                # FIXME: No need to go through this again if coming from target_all
-                log.debug(
-                    "Have distro: '%s' version: '%s' arch: '%s' cuda: '%s' pipeline: '%s'",
-                    self.distro,
-                    self.distro_version,
-                    self.arch,
-                    self.cuda_version or self.release_label,
-                    self.pipeline_name,
-                )
-                self.key = f"cuda_v{self.release_label}"
-                if not self.release_label and self.cuda_version:
-                    self.key = f"cuda_v{self.cuda_version}"
-                if self.pipeline_name and self.pipeline_name != "default":
-                    self.key = f"cuda_v{self.release_label}_{self.pipeline_name}"
+        self.key = f"cuda_v{self.release_label}"
+        if not self.release_label and self.cuda_version:
+            self.key = f"cuda_v{self.cuda_version}"
+        if self.pipeline_name and self.pipeline_name != "default":
+            self.key = f"cuda_v{self.release_label}_{self.pipeline_name}"
+        log.debug(f"self.key: {self.key}")
+        self.arches = self.supported_arch_list()
+        log.debug(f"self.arches: {self.arches}")
 
-            self.dist_base_path = pathlib.Path(
-                self.parent.get_data(
-                    self.parent.manifest, self.key, "dist_base_path", can_skip=False,
-                )
+        #  for arch in self.supported_arch_list():
+        #      if not self.generate_all:
+        #          # FIXME: No need to go through this again if coming from target_all
+        #          log.debug(
+        #              "Have distro: '%s' version: '%s' arch: '%s' cuda: '%s' pipeline: '%s'",
+        #              self.distro,
+        #              self.distro_version,
+        #              arch,
+        #              self.cuda_version or self.release_label,
+        #              self.pipeline_name,
+        #          )
+
+        self.dist_base_path = pathlib.Path(
+            self.parent.get_data(
+                self.parent.manifest, self.key, "dist_base_path", can_skip=False,
             )
-            if not self.output_manifest_path:
-                self.set_output_path(f"{self.distro}{self.distro_version}")
-            self.prepare_context()
+        )
+        log.debug(f"self.dist_base_path: {self.dist_base_path}")
+        #  if not self.output_manifest_path:
+        self.set_output_path(f"{self.distro}{self.distro_version}")
+        log.debug(f"self.output_manifest_path: {self.output_manifest_path}")
 
-            if self.cuda_version == "8.0":
-                self.generate_containerscripts_cuda_8()
-            else:
-                self.generate_containerscripts()
+        self.prepare_context()
+
+        #  if self.cuda_version == "8.0":
+        #      self.generate_containerscripts_cuda_8()
+        #  else:
+        self.generate_containerscripts()
 
     def main(self):
         if self.parent.shipit_uuid:
             log.debug("Have shippit source, generating manifest and scripts")
             self.dist_base_path = pathlib.Path("kitpick")
             self.shipit_manifest()
-            self.targeted()
+            self.target_all_kitmaker()
         else:
             if (
-                self.generate_all
+                (self.generate_all and not self.parent.shipit_uuid)
                 or self.generate_ci
                 or self.generate_readme
                 or self.generate_tags

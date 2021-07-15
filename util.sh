@@ -25,14 +25,17 @@ retry() {
 
 kitmaker_cleanup_webhook_success() {
     if [ ! -z $KITMAKER ] && [ ! -z $TRIGGER ]; then
-        [[ ! -f TAG_MANIFEST ]] && exit 0  # Only call the success webhook in the deploy stage
+        for tag_file in $(find . -iname "tag_manifest_*"); do
+            cat ${tag_file} | grep -v nvidia.com >> UBER_TAG_MANIFEST
+            cat ${tag_file} | grep nvidia.com >> image_name
+        done
         echo "Preparing success json in kitmaker_cleanup_webhook_success()"
-        echo ">>> BEGIN TAG_MANIFEST <<<"
-        cat TAG_MANIFEST
-        echo ">>> BEGIN TAG_MANIFEST <<<"
-        export a_image_name=$(awk '/./{line=$0} END{print line}' TAG_MANIFEST) # get the artifactory repo name
-        sed -i '$ d' TAG_MANIFEST # delete the last line containing the artifactory repo
-        export json_data="{\"status\": \"success\", \"CI_PIPELINE_ID\": \"${CI_PIPELINE_ID}\", \"CI_JOB_ID\": \"${CI_JOB_ID}\", \"CI_COMMIT_SHORT_SHA\": \"${CI_COMMIT_SHORT_SHA}\", \"gitlab_pipeline_url\": \"${CI_PIPELINE_URL}\", \"image_name\": \"${a_image_name}\", \"tags\": $(cat TAG_MANIFEST | jq -R . | jq -s . | jq 'map(select(length > 0))' | jq -c .)}"
+        echo ">>> BEGIN UBER_TAG_MANIFEST <<<"
+        cat UBER_TAG_MANIFEST
+        echo ">>> END UBER_TAG_MANIFEST <<<"
+        export a_image_name=$(awk '/./{line=$0} END{print line}' image_name) # get the artifactory repo name
+        # sed -i '$ d' UBER_TAG_MANIFEST # delete the last line containing the artifactory repo
+        export json_data="{\"status\": \"success\", \"CI_PIPELINE_ID\": \"${CI_PIPELINE_ID}\", \"CI_JOB_ID\": \"${CI_JOB_ID}\", \"CI_COMMIT_SHORT_SHA\": \"${CI_COMMIT_SHORT_SHA}\", \"gitlab_pipeline_url\": \"${CI_PIPELINE_URL}\", \"image_name\": \"${a_image_name}\", \"tags\": $(cat UBER_TAG_MANIFEST | jq -R . | jq -s . | jq 'map(select(length > 0))' | jq -c .)}"
         echo curl -v -H "Content-Type: application/json" -d "${json_data}" "${WEBHOOK_URL}"
         curl -v -H "Content-Type: application/json" -d "${json_data}" "${WEBHOOK_URL}"
     fi
@@ -40,29 +43,32 @@ kitmaker_cleanup_webhook_success() {
 
 kitmaker_webhook_failed() {
     if [ ! -z $KITMAKER ] && [ ! -z $TRIGGER ]; then
-        if cat cmd_output | grep -q "error\|Error\|ERROR\|FAILED"; then
+        # if cat cmd_output | grep -q "error\|Error\|ERROR\|FAILED"; then
             # echo curl -v -H "Content-Type: application/json" -d "${json_data}" ${WEBHOOK_URL}
             # json_data="{\"status\": \"failed\", \"CI_PIPELINE_ID\": \"${CI_PIPELINE_ID}\", \"CI_JOB_ID\": \"${CI_JOB_ID}\", \ \"CI_COMMIT_SHORT_SHA\": \"${CI_COMMIT_SHORT_SHA}\", \"gitlab_pipeline_url\": \"${CI_PIPELINE_URL}\", \"cmd_output\": \"$(cat cmd_output)\"}"
 
-            json_data=$(jq -n --arg status "failed" \
-                --arg pipeline_id "${CI_PIPELINE_ID}" \
-                --arg job_id "${CI_JOB_ID}" \
-                --arg ci_commit "${CI_COMMIT_SHORT_SHA}" \
-                --arg pipeline_url "${CI_PIPELINE_URL}" \
-                --arg cmd_output "$(cat cmd_output)" \
-                '{status: $status, pipeline_id: $pipeline_id, job_id: $job_id, ci_commit: $ci_commit, pipeline_url: $pipeline_url, cmd_output: $cmd_output}')
+        json_data=$(jq -n --arg status "failed" \
+            --arg pipeline_id "${CI_PIPELINE_ID}" \
+            --arg job_id "${CI_JOB_ID}" \
+            --arg ci_commit "${CI_COMMIT_SHORT_SHA}" \
+            --arg pipeline_url "${CI_PIPELINE_URL}" \
+            '{status: $status, pipeline_id: $pipeline_id, job_id: $job_id, ci_commit: $ci_commit, pipeline_url: $pipeline_url}')
 
-            echo "json_data: $(echo ${json_data} | jq)"
+                # FIXME: It is very helpful to show the error output in jenkins, but gitlab does not make it easy to get this
+                # if a stage fails....
+                # --arg cmd_output "$(cat cmd_output)" \
+                # '{status: $status, pipeline_id: $pipeline_id, job_id: $job_id, ci_commit: $ci_commit, pipeline_url: $pipeline_url, cmd_output: $cmd_output}')
 
-            curl -H "Content-Type: application/json" -d "${json_data}" ${WEBHOOK_URL}
-
-            exit 1
-        elif cat cmd_output | grep -q "DONE"; then
-            echo "Seems the last 'run_cmd' command succeeded! Not calling webhook."
-        fi
+        echo "json_data: $(echo ${json_data} | jq)"
+        curl -H "Content-Type: application/json" -d "${json_data}" ${WEBHOOK_URL}
+        # exit 1
+        # elif cat cmd_output | grep -q "DONE"; then
+        #     echo "Seems the last 'run_cmd' command succeeded! Not calling webhook."
+        # fi
     fi
     # If this function is called, it should always fail
-    exit 1
+    # ...but not in the new multi-arch configuration. Keeping this for when we fix error reporting
+    # exit 1
 }
 
 run_cmd() {
@@ -70,7 +76,8 @@ run_cmd() {
     printf "%s " "${@}"
     printf "\n\n"
     printf "===== Output: \n\n"
-    echo -e "$@" | source /dev/stdin 2>&1 | tee cmd_output
+    # echo -e "$@" | source /dev/stdin 2>&1 | tee cmd_output
+    echo -e "$@" | source /dev/stdin 2>&1
     run_cmd_return=$?
     echo
     printf "===== Command returned: %s\n\n" "${run_cmd_return}"
