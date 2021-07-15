@@ -4,6 +4,7 @@ FROM ${IMAGE_NAME}:{{ cuda.version.release_label }}-base-{{ cuda.os.distro }}{{ 
 ENV NV_LIBCUBLAS_PACKAGE_NAME "libcublas-{{ cuda.version.major }}-{{ cuda.version.minor }}"
 ENV NV_CUDA_LIB_VERSION "{{ cuda.version.release_label + "-1" }}"
 
+{% if "x86_64" in cuda %}
 FROM base as base-amd64
 
 ENV NV_NVTX_VERSION "{{ cuda.x86_64.components.nvtx.version }}"
@@ -24,6 +25,7 @@ ENV NV_LIBNCCL_PACKAGE_NAME "libnccl2"
 
 {% endif -%}
 
+{% endif %}
 {% if "arm64" in cuda %}
 FROM base as base-arm64
 

@@ -1,5 +1,6 @@
 FROM {{ cuda.base_image }} as base
 
+{% if "x86_64" in cuda %}
 FROM base as base-amd64
 
 ENV NVARCH "x86_64"
@@ -12,6 +13,7 @@ ENV NV_CUDA_CUDART_VERSION {{ cuda.x86_64.components.cudart.version }}
 ENV NV_ML_REPO_ENABLED 1
 ENV NV_ML_REPO_URL {{ cuda.ml_repo_url }}/${NVARCH}
 
+{% endif %}
 {% endif %}
 {% if "arm64" in cuda %}
 FROM base as base-arm64

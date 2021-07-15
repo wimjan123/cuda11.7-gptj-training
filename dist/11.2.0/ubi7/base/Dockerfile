@@ -4,7 +4,7 @@ FROM base as base-amd64
 
 ENV NVARCH "x86_64"
 ENV NVIDIA_REQUIRE_CUDA "cuda>=11.2 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=440,driver<441 driver>=450"
-ENV NV_CUDA_RUNTIME_VERSION "11.2.72-1"
+ENV NV_CUDA_CUDART_VERSION "11.2.72-1"
 
 COPY cuda.repo-x86_64 /etc/yum.repos.d/cuda.repo
 COPY nvidia-ml.repo-x86_64 /etc/yum.repos.d/nvidia-ml.repo
@@ -25,7 +25,7 @@ ENV CUDA_VERSION 11.2.0
 
 # For libraries in the cuda-compat-* package: https://docs.nvidia.com/cuda/eula/index.html#attachment-a
 RUN yum upgrade -y && yum install -y \
-    cuda-cudart-11-2-${NV_CUDA_RUNTIME_VERSION} \
+    cuda-cudart-11-2-${NV_CUDA_CUDART_VERSION} \
     cuda-compat-11-2 \
     && ln -s cuda-11.2 /usr/local/cuda \
     && yum clean all \

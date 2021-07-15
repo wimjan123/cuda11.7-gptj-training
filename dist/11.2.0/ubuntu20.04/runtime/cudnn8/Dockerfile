@@ -3,16 +3,16 @@ FROM ${IMAGE_NAME}:11.2.0-runtime-ubuntu20.04 as base
 
 FROM base as base-amd64
 
-ENV CUDNN_VERSION 8.1.1.33
+ENV NV_CUDNN_VERSION 8.1.1.33
 
-ENV NV_CUDNN_PACKAGE "libcudnn8=$CUDNN_VERSION-1+cuda11.2"
+ENV NV_CUDNN_PACKAGE "libcudnn8=$NV_CUDNN_VERSION-1+cuda11.2"
 ENV NV_CUDNN_PACKAGE_NAME "libcudnn8"
 
 FROM base as base-arm64
 
-ENV CUDNN_VERSION 8.1.1.33
+ENV NV_CUDNN_VERSION 8.1.1.33
 
-ENV NV_CUDNN_PACKAGE "libcudnn8=$CUDNN_VERSION-1+cuda11.2"
+ENV NV_CUDNN_PACKAGE "libcudnn8=$NV_CUDNN_VERSION-1+cuda11.2"
 ENV NV_CUDNN_PACKAGE_NAME "libcudnn8"
 
 FROM base-${TARGETARCH}
@@ -20,7 +20,7 @@ FROM base-${TARGETARCH}
 ARG TARGETARCH
 
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
-LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
+LABEL com.nvidia.cudnn.version="${NV_CUDNN_VERSION}"
 
 
 

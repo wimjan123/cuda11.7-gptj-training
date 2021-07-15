@@ -6,11 +6,11 @@ ENV NV_LIBCUBLAS_PACKAGE_NAME_DEV "libcublas-dev-11-1"
 
 FROM base as base-amd64
 
-ENV NV_CUDA_RUNTIME_VERSION_DEV "11.1.74-1"
-ENV NV_NVML_VERSION_DEV "11.1.74-1"
-ENV NV_LIBCUSPARSE_VERSION_DEV "11.3.0.10-1"
-ENV NV_LIBNPP_VERSION_DEV "11.1.2.301-1"
-ENV NV_LIBCUBLAS_VERSION_DEV "11.3.0.106-1"
+ENV NV_CUDA_CUDART_DEV_VERSION "11.1.74-1"
+ENV NV_NVML_DEV_VERSION "11.1.74-1"
+ENV NV_LIBCUSPARSE_DEV_VERSION "11.3.0.10-1"
+ENV NV_LIBNPP_DEV_VERSION "11.1.2.301-1"
+ENV NV_LIBCUBLAS_DEV_VERSION "11.3.0.106-1"
 
 ENV NCCL_VERSION 2.7.8
 ENV NV_LIBNCCL_PACKAGE_DEV "libnccl-dev=2.7.8-1+cuda11.1"
@@ -23,15 +23,15 @@ ARG TARGETARCH
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    cuda-cudart-dev-11-1=${NV_CUDA_RUNTIME_VERSION_DEV} \
+    cuda-cudart-dev-11-1=${NV_CUDA_CUDART_DEV_VERSION} \
     cuda-command-line-tools-11-1=${NV_CUDA_LIB_VERSION} \
     cuda-minimal-build-11-1=${NV_CUDA_LIB_VERSION} \
     cuda-libraries-dev-11-1=${NV_CUDA_LIB_VERSION} \
-    cuda-nvml-dev-11-1=${NV_NVML_VERSION_DEV} \
-    libnpp-dev-11-1=${NV_LIBNPP_VERSION_DEV} \
-    libcusparse-dev-11-1=${NV_LIBCUSPARSE_VERSION_DEV} \
+    cuda-nvml-dev-11-1=${NV_NVML_DEV_VERSION} \
+    libnpp-dev-11-1=${NV_LIBNPP_DEV_VERSION} \
+    libcusparse-dev-11-1=${NV_LIBCUSPARSE_DEV_VERSION} \
     ${NV_LIBNCCL_PACKAGE_DEV} \
-    ${NV_LIBCUBLAS_PACKAGE_NAME_DEV}=${NV_LIBCUBLAS_VERSION_DEV} \
+    ${NV_LIBCUBLAS_PACKAGE_NAME_DEV}=${NV_LIBCUBLAS_DEV_VERSION} \
     && rm -rf /var/lib/apt/lists/*
 
 # apt from auto upgrading the cublas package. See https://gitlab.com/nvidia/container-images/cuda/-/issues/88

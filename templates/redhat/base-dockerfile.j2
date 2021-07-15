@@ -1,5 +1,6 @@
 FROM {{ cuda.base_image }} as base
 
+{% if "x86_64" in cuda %}
 FROM base as base-amd64
 
 ENV NVARCH "x86_64"
@@ -13,6 +14,7 @@ COPY cuda.repo-x86_64 /etc/yum.repos.d/cuda.repo
 COPY nvidia-ml.repo-x86_64 /etc/yum.repos.d/nvidia-ml.repo
 {% endif %}
 
+{% endif %}
 {% if "arm64" in cuda %}
 FROM base as base-arm64
 

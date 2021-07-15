@@ -3,8 +3,8 @@ FROM ${IMAGE_NAME}:11.1.1-devel-ubi7 as base
 
 FROM base as base-amd64
 
-ENV CUDNN_VERSION 8.0.5.39-1
-ENV NV_CUDNN_PACKAGE libcudnn8-devel-${CUDNN_VERSION}.cuda11.1
+ENV NV_CUDNN_VERSION 8.0.5.39-1
+ENV NV_CUDNN_PACKAGE libcudnn8-devel-${NV_CUDNN_VERSION}.cuda11.1
 
 FROM base-${TARGETARCH}
 
@@ -12,7 +12,7 @@ ARG TARGETARCH
 
 LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 
-LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
+LABEL com.nvidia.cudnn.version="${NV_CUDNN_VERSION}"
 
 
 

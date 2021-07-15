@@ -1360,10 +1360,9 @@ class ManagerGenerate(Manager):
                 log.debug("Checking %s", filename)
                 #  __import__("pprint").pprint(self.cuda)
                 #  sys.exit(1)
-                # x86_64 is hard coded here because if it is set there, it is most like set for all arches
-                if not self.cuda["x86_64"]["use_ml_repo"] and "nvidia-ml" in str(
-                    filename
-                ):
+                if not self.cuda[self.cuda["arches"][0]][
+                    "use_ml_repo"
+                ] and "nvidia-ml" in str(filename):
                     log.warning("Not setting ml-repo!")
                     continue
                 if any(f in filename.name for f in [".j2", ".jinja"]):
@@ -1999,11 +1998,9 @@ class ManagerGenerate(Manager):
 
     def set_output_path(self, target):
         self.output_path = pathlib.Path(f"{self.dist_base_path}/{target}")
-
-        #  if delete and self.output_path.exists:
-        #      log.warning(f"Removing {self.output_path}")
-        #      rm["-rf", self.output_path]()
-
+        if not self.parent.shipit_uuid and self.output_path.exists:
+            log.warning(f"Removing {self.output_path}")
+            rm["-rf", self.output_path]()
         log.debug(f"self.output_path: '{self.output_path}' target: '{target}'")
         log.debug(f"Creating {self.output_path}")
         self.output_path.mkdir(parents=True, exist_ok=False)

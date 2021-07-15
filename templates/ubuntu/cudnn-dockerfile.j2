@@ -1,6 +1,7 @@
 ARG IMAGE_NAME
 FROM ${IMAGE_NAME}:{{ cuda.version.release_label }}-{{ cuda.cudnn.target }}-{{ cuda.os.distro }}{{ cuda.os.version }}{{ cuda.image_tag_suffix }} as base
 
+{% if "x86_64" in cuda %}
 FROM base as base-amd64
 
 {# {% set cudnn_version = cuda.cudnn.version %} #}
@@ -17,6 +18,7 @@ ENV NV_CUDNN_PACKAGE_DEV "libcudnn{{ cuda.x86_64.cudnn.version[0] }}-dev=$NV_CUD
 {% endif %}
 ENV NV_CUDNN_PACKAGE_NAME "libcudnn{{ cuda.x86_64.cudnn.version[0] }}"
 
+{% endif %}
 {% if "arm64" in cuda %}
 FROM base as base-arm64
 
