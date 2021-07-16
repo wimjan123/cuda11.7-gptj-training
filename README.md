@@ -9,6 +9,25 @@ Container images are available from:
 
 ## Announcement
 
+### Multi-arch image manifests are now LIVE for all supported CUDA container image versions
+
+It is now possible to build CUDA container images for all supported architectures using Docker
+Buildkit in one step. See the example script below.
+
+The deprecated image names `nvidia/cuda-arm64` and `nvidia/cuda-ppc64le` will remain available, but no longer supported.
+
+The following product pages still exist but will no longer be supported:
+
+* https://hub.docker.com/r/nvidia/cuda-ppc64le
+* https://hub.docker.com/r/nvidia/cuda-arm64
+
+The following gitlab repositories will be archived:
+
+* https://gitlab.com/nvidia/container-images/cuda-ppc64le
+* https://gitlab.com/nvidia/container-images/cuda-arm64
+
+### Deprecated: "latest" tag
+
 The "latest" tag for CUDA, CUDAGL, and OPENGL images has been deprecated on NGC and Docker Hub.
 
 With the removal of the latest tag, the following use case will result in the "manifest unknown"
@@ -38,22 +57,27 @@ The `LD_LIBRARY_PATH` is set inside the container to legacy nvidia-docker v1 pat
 
 The container image scripts are archived in the `dist/` directory and are available for all supported distros and cuda versions.
 
-Here is an example on how to build an image set for ubuntu20.04 and CUDA 11.0,
+Here is an example on how to build an multi-arch container image for UBI8 and CUDA 11.4.1,
 
 ```bash
 #/bin/bash
 
-export IMAGE_NAME="nvidia/cuda"
-export CUDA_VERSION="11.0"
-export OS="ubuntu20.04"
-export ARCH=`uname -m`
+#
+# This script requires buildkit: https://docs.docker.com/buildx/working-with-buildx/
+#
+IMAGE_NAME="nvcr.io/nvidia/cuda"
+CUDA_VERSION="11.4.1"
+OS="ubi8"
+ARCHES="x86_64, arm64, ppc64le"
+PLATFORM_ARG=`printf '%s ' '--platform'; for var in $(echo $ARCHES | sed "s/,/ /g"); do printf 'linux/%s,' "$var"; done | sed 's/,*$//g'`
 
-cp NGC-DL-CONTAINER-LICENSE dist/${CUDA_VERSION}/${OS}-${ARCH}/base/
-docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}" "dist/${CUDA_VERSION}/${OS}-${ARCH}/base"
-docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}" --build-arg "IMAGE_NAME=${IMAGE_NAME}" "dist/${CUDA_VERSION}/${OS}-${ARCH}/runtime"
-docker build -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}" --build-arg "IMAGE_NAME=${IMAGE_NAME}" "dist/${CUDA_VERSION}/${OS}-${ARCH}/devel"
+cp NGC-DL-CONTAINER-LICENSE dist/${CUDA_VERSION}/${OS}/base/
+
+docker buildx build --load ${PLATFORM_ARG} -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}" "dist/${CUDA_VERSION}/${OS}/base"
+docker buildx build --load ${PLATFORM_ARG} -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}" --build-arg "IMAGE_NAME=${IMAGE_NAME}" "dist/${CUDA_VERSION}/${OS}/runtime"
+docker buildx build --load ${PLATFORM_ARG} -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}" --build-arg "IMAGE_NAME=${IMAGE_NAME}" "dist/${CUDA_VERSION}/${OS}/devel"
 ```
 
 ## Cuda Container Image Automation
 
-The [dev.md](https://gitlab.com/nvidia/container-images/cuda/blob/master/doc/dev.md) document provides details on how the gitlab pipelines work and how to control, modify, or debug them.
+The [README_CICD.md](https://gitlab.com/nvidia/container-images/cuda/blob/master/README_CICD.md) document provides details on how the gitlab pipelines work and how to control, modify, or debug them.

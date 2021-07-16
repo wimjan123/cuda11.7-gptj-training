@@ -74,6 +74,8 @@ prepare:
 {% set gitlab_builder_image = "gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder" %}
     IMAGE_NAME: "{{ gitlab_builder_image }}"
   script:
+    - echo ">>>> PYPROJECT.TOML >>>>"
+    - cat pyproject.toml
     - docker build -t {{ gitlab_builder_image }} --cache-from {{ gitlab_builder_image }} .
     - docker push {{ gitlab_builder_image }}
   tags:
@@ -204,8 +206,6 @@ prepare:
   artifacts:
     reports:
       dotenv: tags.env
-    {# paths: #}
-      {# - cmd_output #}
 
 .cudnn_template: &cudnn_definition
   image: {{ gitlab_builder_image }}
@@ -215,19 +215,20 @@ prepare:
       # no set +e necessary here since we don't use this yet for kitmaker builds
       DIST_BASE_PATH="${DIST_BASE_PATH}/${OS}";
       if [ ! -z $KITMAKER ] && [ ! -z $TRIGGER ]; then
-          export DIST_BASE_PATH="kitpick"
+          export DIST_BASE_PATH="kitpick/${OS}"
           rm -rf kitpick || true
-          mkdir -p kitpick || true
-          find kitpick/
-          NEW_CANDIDATE_URL="${CANDIDATE_URL}"
-          [[ "${CANDIDATE_URL}" != */ ]] && NEW_CANDIDATE_URL="${CANDIDATE_URL}/"
-          if ! retry 3 10 wget --progress=dot:giga --recursive --directory-prefix="kitpick_dl" --reject="index.html*" --no-parent ${NEW_CANDIDATE_URL}; then
+          run_cmd mkdir -p kitpick/${OS}/{devel,runtime,base}
+          NEW_CANDIDATE_URL="${CANDIDATE_URL}/${OS}"
+          # Ensure the url ends with a slash! This prevents wget from getting everything (and bringing apache to its knees)
+          [[ "${CANDIDATE_URL}" != */ ]] && NEW_CANDIDATE_URL="${NEW_CANDIDATE_URL}/"
+          echo "NEW_CANDIDATE_URL: ${NEW_CANDIDATE_URL}"
+          if ! retry 3 10 run_cmd wget --no-verbose --recursive --directory-prefix="kitpick_dl" --reject="index.html*" --no-parent ${NEW_CANDIDATE_URL}; then
               echo "Could not download files from '${CANDIDATE_URL}'!!"
               # kitmaker_webhook_failed
               exit 1
           fi
-          run_cmd cp -R kitpick_dl/${CANDIDATE_URL#"http://"}/{base,devel,runtime} kitpick/
-          echo "Contents of kitpick/"
+          run_cmd cp -R kitpick_dl/${NEW_CANDIDATE_URL#"http://"}/{base,devel,runtime} ${DIST_BASE_PATH}/
+          echo "Contents of ${DIST_BASE_PATH}/"
           find kitpick/
           export CUDNN_VERSION="cudnn$(grep -r "CUDNN_VERSION" kitpick/ | head -n 1 | cut -f 3 -d" " | tr -d '[:space:]' | cut -c 1)"
       fi
@@ -275,8 +276,6 @@ prepare:
   artifacts:
     reports:
       dotenv: cudnn_tags.env
-    {# paths: #}
-    {#   - cmd_output #}
 
 .test_template: &test_definition
   image: {{ gitlab_builder_image }}
@@ -286,7 +285,6 @@ prepare:
   script:
     - |
       set +e
-      {# docker run --rm --gpus 0 --platform linux/arm64 gitlab-master.nvidia.com:5005/cuda-installer/cuda:11.3.1-devel-centos8 uname -m #}
       image=${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
       rmicmd="docker rmi -f ${image}"
       # prunecmd="docker image prune --filter=dangling=true -f"
@@ -355,9 +353,9 @@ prepare:
       echo ">>> END ${TAG_MANIFEST_PATH} <<<"
       if [ ! -z $KITMAKER ] && [ ! -z $TRIGGER ]; then
           manifest_file="manifest.yml"
-          if  [ ! -z $L4T ]; then
-              manifest_file="manifest-l4t.yml"
-          fi
+          {# if  [ ! -z $FLAVOR ] && [ "$FLAVOR" =~ "l4t" ]; then #}
+          {#     manifest_file="manifest-l4t.yml" #}
+          {# fi #}
           if ! retry 3 10 wget --no-verbose --directory-prefix="kitpick" --reject="index.html*" --no-parent ${CANDIDATE_URL}/${manifest_file}; then
               echo "Could not download files from '${CANDIDATE_URL}'!!"
               # kitmaker_webhook_failed
@@ -365,11 +363,17 @@ prepare:
           fi
           export MANIFEST="kitpick/${manifest_file}";
       fi
+      run_cmd skopeo --version
+      if [[ "${CI_DEFAULT_BRANCH}" != "${CI_COMMIT_BRANCH}" ]]; then
+          echo -e "\e[31m\e[1m>>>> WARNING <<<<\e[0m"
+          echo -e "\e[31m\e[1m>>>> Push uses protected variables and the current branch (${CI_COMMIT_BRANCH}) IS NOT the default branch! (${CI_DEFAULT_BRANCH}) Failures may occur! <<<<\e[0m"
+          echo -e "\e[31m\e[1m>>>> WARNING <<<<\e[0m"
+      fi
       if ! run_cmd retry 3 10 python manager.py ${MANIFEST:+`echo "--manifest ${MANIFEST}"`} push \
               --tag-manifest ${TAG_MANIFEST_PATH} \
               --image-name "${IMAGE_NAME}" \
               --os-name "${OS_NAME}" \
-              --os-version "${OS_VERSION}" \
+              ${OS_VERSION:+`echo "--os-version ${OS_VERSION}"`} \
               --cuda-version "${CUDA_VERSION}" \
               ${PIPELINE_NAME:+`echo "--pipeline-name ${PIPELINE_NAME}"`} \
               ${IMAGE_TAG_SUFFIX:+`echo "--tag-suffix ${IMAGE_TAG_SUFFIX}"`} ${NO_PUSH:+"-n"}; then
@@ -382,7 +386,6 @@ prepare:
   artifacts:
     paths:
       - ${TAG_MANIFEST_PATH}
-      {# - cmd_output #}
 
 trigger:
   image: {{ gitlab_builder_image }}
@@ -397,15 +400,7 @@ trigger:
     - 'echo "COMMAND: $CMD"'
     - $CMD
   rules:
-    {# - if: '$TRIGGER == null' #}
     - if: '$TRIGGER_OVERRIDE'
-
-{# .kitmaker_l4t_only: &kitmaker_l4t_only #}
-{#   variables: #}
-{#     <<: *kitmaker_variables #}
-{#   rules: #}
-{#     - if: '$TRIGGER == "true" && $KITMAKER == "true" && $L4T == "true"' #}
-{#       when: on_success #}
 
 {# FIXME: Get this data from the global config #}
 {% set kitmaker_distro_data = [
@@ -415,18 +410,30 @@ trigger:
   {"distro": "centos", "version": "7", "arches": ["x86_64"]},
   {"distro": "ubi", "version": "8", "arches": ["x86_64", "arm64", "ppc64le"]},
   {"distro": "ubi", "version": "7", "arches": ["x86_64"]},
+  {"distro": "l4t-cuda", "version": "", "arches": ["arm64"], "flavor": "l4t", "image_name": "gitlab-master.nvidia.com:5005/cuda-installer/cuda/l4t-cuda"},
 ] %}
 
 {% for data in  kitmaker_distro_data %}
-  {% set kitmaker_distro = data["distro"] + data["version"] %}
-  {% set kitmaker_distro_clean = data["distro"] + data["version"].replace(".", "_") %}
+    {% set kitmaker_distro = data["distro"] + data["version"] %}
+    {% set kitmaker_distro_clean = data["distro"] + data["version"].replace(".", "_") %}
+    {% if "flavor" in data %}
+        {% set flavor = data["flavor"] + "_" %}
+        {% set kitmaker_distro_clean = data["distro"].replace("-", "_") + data["version"].replace(".", "_") + "_" + data["flavor"] %}
+    {% endif %}
 # Need to pass these from the trigger
 .kitmaker_{{ kitmaker_distro_clean }}_variables: &kitmaker_{{ kitmaker_distro_clean }}_variables
+    {% if "image_name" in data %}
+  IMAGE_NAME: "{{ data["image_name"] }}"
+    {% else %}
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
+    {% endif %}
   OS: "{{ data["distro"] }}{{ data["version"] }}"
   OS_NAME: "{{ data["distro"] }}"
   OS_VERSION: "{{ data["version"] }}"
   ARCHES: "{{ data["arches"] | join(", ") }}"
+    {% if "flavor" in data %}
+  FLAVOR: "{{ data["flavor"] }}"
+    {% endif %}
   # CI_DEBUG_TRACE: "true"
 
 .kitmaker_{{ kitmaker_distro_clean }}_only: &kitmaker_{{ kitmaker_distro_clean }}_only
@@ -435,27 +442,69 @@ trigger:
     <<: *kitmaker_{{ kitmaker_distro_clean }}_variables
     TAG_MANIFEST_PATH: "tag_manifest_{{ kitmaker_distro_clean }}"
   rules:
-    - if: '$TRIGGER == "true" && $KITMAKER == "true"'
-      when: on_success
+    {% if "l4t" in flavor %}
+    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "l4t"'
+    {% else %}
+    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "default"'
+    {% endif %}
+    - if: ${{kitmaker_distro_clean | upper }} == "true"
 
-kitmaker_{{ kitmaker_distro }}_base:
+kitmaker_{{ kitmaker_distro }}_{{ flavor }}base:
   <<: *cuda_base_definition
   <<: *kitmaker_{{ kitmaker_distro_clean }}_only
   # Need to build container images on a multi-arch capable machine
   <<: *tags_definition_multiarch
+{% if "flavor" in data and data["flavor"] == "l4t" %}
 
-kitmaker_{{ kitmaker_distro }}_deploy:
+# L4T only, will be removed eventually!
+kitmaker_{{ kitmaker_distro }}_{{ flavor }}cudnn:
+  <<: *cudnn_definition
+  <<: *kitmaker_{{ kitmaker_distro_clean }}_only
+  # Need to build container images on a multi-arch capable machine
+  <<: *tags_definition_multiarch
+  artifacts:
+    reports:
+      dotenv: cudnn_tags.env
+{% endif %}
+
+kitmaker_{{ kitmaker_distro }}_{{ flavor }}deploy:
   <<: *deploy_definition
   <<: *kitmaker_{{ kitmaker_distro_clean }}_only
   <<: *tags_definition
   needs:
-    - job: kitmaker_{{ kitmaker_distro }}_base
+    - job: kitmaker_{{ kitmaker_distro }}_{{ flavor }}base
       artifacts: true
-    {# - job: kitmaker_cudnn #}
-    {#   optional: true #}
+    {% if "flavor" in data and data["flavor"] == "l4t" %}
+    - job: kitmaker_{{ kitmaker_distro }}_{{ flavor }}cudnn
+      optional: true
+    {% endif %}
   artifacts:
     paths:
       - tag_manifest_{{ kitmaker_distro_clean }}
+
+{% if "flavor" in data and data["flavor"] == "l4t" %}
+kitmaker_{{ flavor }}success:
+  stage: cleanup_success
+  image: {{ gitlab_builder_image }}
+  <<: *tags_definition
+  rules:
+    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "l4t"'
+      when: on_success
+  script:
+    - |
+      kitmaker_cleanup_webhook_success
+
+kitmaker_{{ flavor }}failure:
+  stage: cleanup_failure
+  image: {{ gitlab_builder_image }}
+  <<: *tags_definition
+  rules:
+    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "l4t"'
+      when: on_failure
+  script:
+    - |
+      kitmaker_webhook_failed
+{% endif %}
 
 {% endfor %}
 
@@ -464,14 +513,17 @@ kitmaker_success:
   image: {{ gitlab_builder_image }}
   <<: *tags_definition
   rules:
-    - if: '$TRIGGER == "true" && $KITMAKER == "true"'
+    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "default"'
       when: on_success
   needs:
 {% set stahp = { 'flag': True } %}
 {% for data in  kitmaker_distro_data %}
+    {% if "flavor" in data %}
+        {% continue %}
+    {% endif %}
   {% set kitmaker_distro = data["distro"] + data["version"] %}
   {% set kitmaker_distro_clean = data["distro"] + data["version"].replace(".", "_") %}
-    - job: kitmaker_{{ kitmaker_distro }}_deploy
+    - job: kitmaker_{{ kitmaker_distro }}_{{ flavor }}deploy
     {% if stahp.flag %}
       artifacts: true
       {% do stahp.update({'flag':False}) %}
@@ -486,11 +538,14 @@ kitmaker_failure:
   image: {{ gitlab_builder_image }}
   <<: *tags_definition
   rules:
-    - if: '$TRIGGER == "true" && $KITMAKER == "true"'
+    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "default"'
       when: on_failure
   needs:
 {% set stahp = { 'flag': True } %}
 {% for data in  kitmaker_distro_data %}
+    {% if "flavor" in data %}
+        {% continue %}
+    {% endif %}
   {% set kitmaker_distro = data["distro"] + data["version"] %}
   {% set kitmaker_distro_clean = data["distro"] + data["version"].replace(".", "_") %}
     - job: kitmaker_{{ kitmaker_distro }}_deploy
@@ -502,19 +557,6 @@ kitmaker_failure:
   script:
     - |
       kitmaker_webhook_failed
-
-
-    {# - job: kitmaker_cudnn #}
-    {#   optional: true #}
-{# # L4T only, will be removed! #}
-{# kitmaker_cudnn: #}
-{#   <<: *cudnn_definition #}
-{#   <<: *kitmaker_l4t_only #}
-{#   # Need to build container images on a multi-arch capable machine #}
-{#   <<: *tags_definition_multiarch #}
-{#   artifacts: #}
-{#     reports: #}
-{#       dotenv: cudnn_tags.env #}
 
 {% for cuda_version in cuda if not cuda_version.startswith("manifest") %}
 {% for pipeline in cuda[cuda_version] %}

@@ -1,5 +1,6 @@
 # Gitlab docker builder image
-FROM docker:stable
+# contemporary version of skopeo needed
+FROM docker:20.10
 
 ENV DOCKER_TLS_CERTDIR "/certs"
 

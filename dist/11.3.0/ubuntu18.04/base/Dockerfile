@@ -2,19 +2,19 @@ FROM ubuntu:18.04 as base
 
 FROM base as base-amd64
 
-ENV NVARCH "x86_64"
-ENV NVIDIA_REQUIRE_CUDA "cuda>=11.4 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=440,driver<441 driver>=450"
+ENV NVARCH x86_64
+ENV NVIDIA_REQUIRE_CUDA "cuda>=11.3 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=440,driver<441 driver>=450"
 ENV NV_CUDA_CUDART_VERSION 11.3.58-1
+ENV NV_CUDA_COMPAT_PACKAGE cuda-compat-11-3
 
 ENV NV_ML_REPO_ENABLED 1
 ENV NV_ML_REPO_URL https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/${NVARCH}
 
 FROM base as base-arm64
 
-ENV NVARCH "sbsa"
-ENV NVIDIA_REQUIRE_CUDA "cuda>=11.4"
+ENV NVARCH sbsa
+ENV NVIDIA_REQUIRE_CUDA "cuda>=11.3"
 ENV NV_CUDA_CUDART_VERSION 11.3.58-1
-
 ENV NV_ML_REPO_ENABLED 1
 ENV NV_ML_REPO_URL https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/${NVARCH}
 
@@ -37,7 +37,7 @@ ENV CUDA_VERSION 11.3.0
 # For libraries in the cuda-compat-* package: https://docs.nvidia.com/cuda/eula/index.html#attachment-a
 RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-cudart-11-3=${NV_CUDA_CUDART_VERSION} \
-    cuda-compat-11-3 \
+    ${NV_CUDA_COMPAT_PACKAGE} \
     && ln -s cuda-11.3 /usr/local/cuda && \
     rm -rf /var/lib/apt/lists/*
 
