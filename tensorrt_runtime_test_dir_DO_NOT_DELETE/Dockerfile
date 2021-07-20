@@ -13,7 +13,7 @@ FROM ${IMAGE_NAME}:10.2.460-cudnn8-runtime-ubuntu18.04-006 as builds
 RUN mkdir /builds
 WORKDIR /builds
 
-RUN wget https://urm.nvidia.com/artifactory/sw-gpu-cuda-installer-generic-local/packaging/rel-8.0/tensorrt/linux-aarch64/l4t/cuda-10.2/8.0.1.6/libnvinfer-samples_8.0.1-1+cuda10.2_all.deb
+RUN wget https://urm.nvidia.com/artifactory/sw-gpu-cuda-installer-generic-local/packaging/rel-8.0/tensorrt/linux-aarch64/l4t/cuda-10.2/8.0.1.6/libnvinfer-bin_8.0.1-1+cuda10.2_arm64.deb
 
 # WAR until kitmaker handles trt wheels
 RUN wget http://cuda-repo.nvidia.com/release-candidates/Libraries/TensorRT/v8.0/8.0.1.6-d2333911/10.2-r440/l4t-aarch64/tar/TensorRT-8.0.1.6.Ubuntu-18.04.aarch64-gnu.cuda-10.2.cudnn8.2.tar.gz
@@ -46,13 +46,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN --mount=from=builds,source=/builds,target=/builds \
     apt install -f \
-    libnvinfer-dev \
     libnvinfer8 \
     libnvinfer-plugin8 \
     libnvparsers8 \
     libnvonnxparsers8 \
     python3-libnvinfer \
-    /builds/libnvinfer-samples_8.0.1-1+cuda10.2_all.deb
+    /builds/libnvinfer-bin_8.0.1-1+cuda10.2_arm64.deb
+
+    # libnvinfer-dev \
 
 RUN rm -rf /var/lib/apt/lists/*
 
