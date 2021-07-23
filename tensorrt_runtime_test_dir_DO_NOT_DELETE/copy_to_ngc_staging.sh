@@ -1,7 +1,7 @@
 #!/bin/bash
 
 image_name="urm.nvidia.com/sw-gpu-cuda-installer-docker-local/cuda/l4t-cuda"
-image_name_ngc="ngc.nvidia.com/containers/ea-linux4tegra"
+image_name_ngc="nvcr.io/ea-linux4tegra"
 image_name_product="l4t-cuda"
 image_name_trt_product="l4t-tensorrt"
 
@@ -60,9 +60,8 @@ for tag in "${tags[@]}"; do
   elif [[ "${type}" =~ "devel" ]]; then
       continue
   elif [[ "${type}" =~ "base" ]]; then
-      cmd="${skopeo} docker://${image_name_ngc}:${image_name_product}-base:${cuda_version}${dlfw:+`echo -${dlfw}`}"
+      cmd="${skopeo} docker://${image_name_ngc}/${image_name_product}-base:${cuda_version}${dlfw:+`echo -${dlfw}`}"
   fi
   echo "Running command: '${cmd}'"
   ${cmd}
-  exit
 done
