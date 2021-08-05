@@ -618,7 +618,6 @@ class ManagerContainerPush(Manager):
             self.parent.manifest,
             self.key,
             f"{self.distro}{self.distro_version}",
-            self.arch,
             "exclude_repos",
             can_skip=True,
         )
