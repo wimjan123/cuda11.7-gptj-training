@@ -7,6 +7,8 @@ ENV NVIDIA_REQUIRE_CUDA cuda>=9.2
 ENV NV_CUDA_CUDART_VERSION 9.2.148-1
 
 COPY cuda.repo-x86_64 /etc/yum.repos.d/cuda.repo
+COPY nvidia-ml.repo-x86_64 /etc/yum.repos.d/nvidia-ml.repo
+
 
 FROM base as base-ppc64le
 
@@ -15,6 +17,7 @@ ENV NVIDIA_REQUIRE_CUDA cuda>=9.2
 ENV NV_CUDA_CUDART_VERSION 9.2.148-1
 
 COPY cuda.repo-ppc64le /etc/yum.repos.d/cuda.repo
+COPY nvidia-ml.repo-ppc64le /etc/yum.repos.d/nvidia-ml.repo
 
 FROM base-${TARGETARCH}
 

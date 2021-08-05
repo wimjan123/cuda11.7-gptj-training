@@ -2085,6 +2085,7 @@ cuda_v9.2:
     template_path: templates/redhat/legacy
     base_image: centos:7
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
+    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7
     x86_64:
       <<: *cuda9_2_requires
       components:
@@ -2103,6 +2104,7 @@ cuda_v9.2:
     template_path: templates/redhat/legacy
     base_image: registry.access.redhat.com/ubi7/ubi:latest
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
+    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7
     x86_64:
       <<: *cuda9_2_requires
       components:
