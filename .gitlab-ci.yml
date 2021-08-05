@@ -70,6 +70,8 @@ prepare:
   variables:
     IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder"
   script:
+    - echo ">>>> PYPROJECT.TOML >>>>"
+    - cat pyproject.toml
     - docker build -t gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder --cache-from gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder .
     - docker push gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
   tags:
@@ -209,19 +211,20 @@ prepare:
       # no set +e necessary here since we don't use this yet for kitmaker builds
       DIST_BASE_PATH="${DIST_BASE_PATH}/${OS}";
       if [ ! -z $KITMAKER ] && [ ! -z $TRIGGER ]; then
-          export DIST_BASE_PATH="kitpick"
+          export DIST_BASE_PATH="kitpick/${OS}"
           rm -rf kitpick || true
-          mkdir -p kitpick || true
-          find kitpick/
-          NEW_CANDIDATE_URL="${CANDIDATE_URL}"
-          [[ "${CANDIDATE_URL}" != */ ]] && NEW_CANDIDATE_URL="${CANDIDATE_URL}/"
-          if ! retry 3 10 wget --progress=dot:giga --recursive --directory-prefix="kitpick_dl" --reject="index.html*" --no-parent ${NEW_CANDIDATE_URL}; then
+          run_cmd mkdir -p kitpick/${OS}/{devel,runtime,base}
+          NEW_CANDIDATE_URL="${CANDIDATE_URL}/${OS}"
+          # Ensure the url ends with a slash! This prevents wget from getting everything (and bringing apache to its knees)
+          [[ "${CANDIDATE_URL}" != */ ]] && NEW_CANDIDATE_URL="${NEW_CANDIDATE_URL}/"
+          echo "NEW_CANDIDATE_URL: ${NEW_CANDIDATE_URL}"
+          if ! retry 3 10 run_cmd wget --no-verbose --recursive --directory-prefix="kitpick_dl" --reject="index.html*" --no-parent ${NEW_CANDIDATE_URL}; then
               echo "Could not download files from '${CANDIDATE_URL}'!!"
               # kitmaker_webhook_failed
               exit 1
           fi
-          run_cmd cp -R kitpick_dl/${CANDIDATE_URL#"http://"}/{base,devel,runtime} kitpick/
-          echo "Contents of kitpick/"
+          run_cmd cp -R kitpick_dl/${NEW_CANDIDATE_URL#"http://"}/{base,devel,runtime} ${DIST_BASE_PATH}/
+          echo "Contents of ${DIST_BASE_PATH}/"
           find kitpick/
           export CUDNN_VERSION="cudnn$(grep -r "CUDNN_VERSION" kitpick/ | head -n 1 | cut -f 3 -d" " | tr -d '[:space:]' | cut -c 1)"
       fi
@@ -345,9 +348,6 @@ prepare:
       echo ">>> END ${TAG_MANIFEST_PATH} <<<"
       if [ ! -z $KITMAKER ] && [ ! -z $TRIGGER ]; then
           manifest_file="manifest.yml"
-          if  [ ! -z $L4T ]; then
-              manifest_file="manifest-l4t.yml"
-          fi
           if ! retry 3 10 wget --no-verbose --directory-prefix="kitpick" --reject="index.html*" --no-parent ${CANDIDATE_URL}/${manifest_file}; then
               echo "Could not download files from '${CANDIDATE_URL}'!!"
               # kitmaker_webhook_failed
@@ -355,11 +355,17 @@ prepare:
           fi
           export MANIFEST="kitpick/${manifest_file}";
       fi
+      run_cmd skopeo --version
+      if [[ "${CI_DEFAULT_BRANCH}" != "${CI_COMMIT_BRANCH}" ]]; then
+          echo -e "\e[31m\e[1m>>>> WARNING <<<<\e[0m"
+          echo -e "\e[31m\e[1m>>>> Push uses protected variables and the current branch (${CI_COMMIT_BRANCH}) IS NOT the default branch! (${CI_DEFAULT_BRANCH}) Failures may occur! <<<<\e[0m"
+          echo -e "\e[31m\e[1m>>>> WARNING <<<<\e[0m"
+      fi
       if ! run_cmd retry 3 10 python manager.py ${MANIFEST:+`echo "--manifest ${MANIFEST}"`} push \
               --tag-manifest ${TAG_MANIFEST_PATH} \
               --image-name "${IMAGE_NAME}" \
               --os-name "${OS_NAME}" \
-              --os-version "${OS_VERSION}" \
+              ${OS_VERSION:+`echo "--os-version ${OS_VERSION}"`} \
               --cuda-version "${CUDA_VERSION}" \
               ${PIPELINE_NAME:+`echo "--pipeline-name ${PIPELINE_NAME}"`} \
               ${IMAGE_TAG_SUFFIX:+`echo "--tag-suffix ${IMAGE_TAG_SUFFIX}"`} ${NO_PUSH:+"-n"}; then
@@ -389,7 +395,6 @@ trigger:
     - if: '$TRIGGER_OVERRIDE'
 
 
-
 # Need to pass these from the trigger
 .kitmaker_ubuntu20_04_variables: &kitmaker_ubuntu20_04_variables
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
@@ -405,8 +410,8 @@ trigger:
     <<: *kitmaker_ubuntu20_04_variables
     TAG_MANIFEST_PATH: "tag_manifest_ubuntu20_04"
   rules:
-    - if: '$TRIGGER == "true" && $KITMAKER == "true"'
-      when: on_success
+    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "default"'
+    - if: $UBUNTU20_04 == "true"
 
 kitmaker_ubuntu20.04_base:
   <<: *cuda_base_definition
@@ -425,6 +430,7 @@ kitmaker_ubuntu20.04_deploy:
     paths:
       - tag_manifest_ubuntu20_04
 
+
 # Need to pass these from the trigger
 .kitmaker_ubuntu18_04_variables: &kitmaker_ubuntu18_04_variables
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
@@ -440,8 +446,8 @@ kitmaker_ubuntu20.04_deploy:
     <<: *kitmaker_ubuntu18_04_variables
     TAG_MANIFEST_PATH: "tag_manifest_ubuntu18_04"
   rules:
-    - if: '$TRIGGER == "true" && $KITMAKER == "true"'
-      when: on_success
+    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "default"'
+    - if: $UBUNTU18_04 == "true"
 
 kitmaker_ubuntu18.04_base:
   <<: *cuda_base_definition
@@ -460,6 +466,7 @@ kitmaker_ubuntu18.04_deploy:
     paths:
       - tag_manifest_ubuntu18_04
 
+
 # Need to pass these from the trigger
 .kitmaker_centos8_variables: &kitmaker_centos8_variables
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
@@ -475,8 +482,8 @@ kitmaker_ubuntu18.04_deploy:
     <<: *kitmaker_centos8_variables
     TAG_MANIFEST_PATH: "tag_manifest_centos8"
   rules:
-    - if: '$TRIGGER == "true" && $KITMAKER == "true"'
-      when: on_success
+    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "default"'
+    - if: $CENTOS8 == "true"
 
 kitmaker_centos8_base:
   <<: *cuda_base_definition
@@ -495,6 +502,7 @@ kitmaker_centos8_deploy:
     paths:
       - tag_manifest_centos8
 
+
 # Need to pass these from the trigger
 .kitmaker_centos7_variables: &kitmaker_centos7_variables
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
@@ -510,8 +518,8 @@ kitmaker_centos8_deploy:
     <<: *kitmaker_centos7_variables
     TAG_MANIFEST_PATH: "tag_manifest_centos7"
   rules:
-    - if: '$TRIGGER == "true" && $KITMAKER == "true"'
-      when: on_success
+    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "default"'
+    - if: $CENTOS7 == "true"
 
 kitmaker_centos7_base:
   <<: *cuda_base_definition
@@ -530,6 +538,7 @@ kitmaker_centos7_deploy:
     paths:
       - tag_manifest_centos7
 
+
 # Need to pass these from the trigger
 .kitmaker_ubi8_variables: &kitmaker_ubi8_variables
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
@@ -545,8 +554,8 @@ kitmaker_centos7_deploy:
     <<: *kitmaker_ubi8_variables
     TAG_MANIFEST_PATH: "tag_manifest_ubi8"
   rules:
-    - if: '$TRIGGER == "true" && $KITMAKER == "true"'
-      when: on_success
+    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "default"'
+    - if: $UBI8 == "true"
 
 kitmaker_ubi8_base:
   <<: *cuda_base_definition
@@ -565,6 +574,7 @@ kitmaker_ubi8_deploy:
     paths:
       - tag_manifest_ubi8
 
+
 # Need to pass these from the trigger
 .kitmaker_ubi7_variables: &kitmaker_ubi7_variables
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
@@ -580,8 +590,8 @@ kitmaker_ubi8_deploy:
     <<: *kitmaker_ubi7_variables
     TAG_MANIFEST_PATH: "tag_manifest_ubi7"
   rules:
-    - if: '$TRIGGER == "true" && $KITMAKER == "true"'
-      when: on_success
+    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "default"'
+    - if: $UBI7 == "true"
 
 kitmaker_ubi7_base:
   <<: *cuda_base_definition
@@ -601,12 +611,83 @@ kitmaker_ubi7_deploy:
       - tag_manifest_ubi7
 
 
+# Need to pass these from the trigger
+.kitmaker_l4t_cuda_l4t_variables: &kitmaker_l4t_cuda_l4t_variables
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/l4t-cuda"
+  OS: "l4t-cuda"
+  OS_NAME: "l4t-cuda"
+  OS_VERSION: ""
+  ARCHES: "arm64"
+  FLAVOR: "l4t"
+  # CI_DEBUG_TRACE: "true"
+
+.kitmaker_l4t_cuda_l4t_only: &kitmaker_l4t_cuda_l4t_only
+  image: gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
+  variables:
+    <<: *kitmaker_l4t_cuda_l4t_variables
+    TAG_MANIFEST_PATH: "tag_manifest_l4t_cuda_l4t"
+  rules:
+    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "l4t"'
+    - if: $L4T_CUDA_L4T == "true"
+
+kitmaker_l4t-cuda_l4t_base:
+  <<: *cuda_base_definition
+  <<: *kitmaker_l4t_cuda_l4t_only
+  # Need to build container images on a multi-arch capable machine
+  <<: *tags_definition_multiarch
+
+# L4T only, will be removed eventually!
+kitmaker_l4t-cuda_l4t_cudnn:
+  <<: *cudnn_definition
+  <<: *kitmaker_l4t_cuda_l4t_only
+  # Need to build container images on a multi-arch capable machine
+  <<: *tags_definition_multiarch
+  artifacts:
+    reports:
+      dotenv: cudnn_tags.env
+
+kitmaker_l4t-cuda_l4t_deploy:
+  <<: *deploy_definition
+  <<: *kitmaker_l4t_cuda_l4t_only
+  <<: *tags_definition
+  needs:
+    - job: kitmaker_l4t-cuda_l4t_base
+      artifacts: true
+    - job: kitmaker_l4t-cuda_l4t_cudnn
+      optional: true
+  artifacts:
+    paths:
+      - tag_manifest_l4t_cuda_l4t
+
+kitmaker_l4t_success:
+  stage: cleanup_success
+  image: gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
+  <<: *tags_definition
+  rules:
+    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "l4t"'
+      when: on_success
+  script:
+    - |
+      kitmaker_cleanup_webhook_success
+
+kitmaker_l4t_failure:
+  stage: cleanup_failure
+  image: gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
+  <<: *tags_definition
+  rules:
+    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "l4t"'
+      when: on_failure
+  script:
+    - |
+      kitmaker_webhook_failed
+
+
 kitmaker_success:
   stage: cleanup_success
   image: gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
   <<: *tags_definition
   rules:
-    - if: '$TRIGGER == "true" && $KITMAKER == "true"'
+    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "default"'
       when: on_success
   needs:
     - job: kitmaker_ubuntu20.04_deploy
@@ -625,7 +706,7 @@ kitmaker_failure:
   image: gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
   <<: *tags_definition
   rules:
-    - if: '$TRIGGER == "true" && $KITMAKER == "true"'
+    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "default"'
       when: on_failure
   needs:
     - job: kitmaker_ubuntu20.04_deploy
@@ -640,6 +721,704 @@ kitmaker_failure:
       kitmaker_webhook_failed
 
 
+.centos7_11_4_1_variables: &centos7_11_4_1_variables
+  DIST_BASE_PATH: "dist/11.4.1"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "x86_64"
+  OS: "centos7"
+  OS_NAME: "centos"
+  OS_VERSION: "7"
+  CUDA_VERSION: "11.4.1"
+
+.centos7_11_4_1_only: &centos7_11_4_1_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *centos7_11_4_1_variables
+  rules:
+    - if: '$centos7_11_4_1 == "true"'
+    - if: '$all == "true"'
+
+centos7-v11.4.1:
+  <<: *cuda_base_definition
+  <<: *centos7_11_4_1_only
+
+centos7-v11.4.1-test-x86_64:
+  needs: ["centos7-v11.4.1"]
+  <<: *centos7_11_4_1_only
+  <<: *test_definition
+  variables:
+    <<: *centos7_11_4_1_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$centos7_11_4_1 == "true"'
+    - if: '$all == "true"'
+
+centos7-v11.4.1-scan-x86_64:
+  <<: *scan_definition
+  <<: *centos7_11_4_1_only
+  needs:
+    - job: centos7-v11.4.1
+    - job: centos7-v11.4.1-test-x86_64
+      optional: true
+  variables:
+    <<: *centos7_11_4_1_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$centos7_11_4_1 == "true"'
+    - if: '$all == "true"'
+
+
+centos7-v11.4.1-deploy:
+  <<: *deploy_definition
+  <<: *centos7_11_4_1_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$centos7_11_4_1 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: centos7-v11.4.1
+      artifacts: true
+    - job: centos7-v11.4.1-test-x86_64
+      optional: true
+    - job: centos7-v11.4.1-scan-x86_64
+      optional: true
+
+
+.centos8_11_4_1_variables: &centos8_11_4_1_variables
+  DIST_BASE_PATH: "dist/11.4.1"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "arm64, ppc64le, x86_64"
+  OS: "centos8"
+  OS_NAME: "centos"
+  OS_VERSION: "8"
+  CUDA_VERSION: "11.4.1"
+
+.centos8_11_4_1_only: &centos8_11_4_1_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *centos8_11_4_1_variables
+  rules:
+    - if: '$centos8_11_4_1 == "true"'
+    - if: '$all == "true"'
+
+centos8-v11.4.1:
+  <<: *cuda_base_definition
+  <<: *centos8_11_4_1_only
+
+centos8-v11.4.1-cudnn8:
+  <<: *cudnn_definition
+  <<: *centos8_11_4_1_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos8_11_4_1_variables
+    CUDNN_VERSION: "cudnn8"
+    ARCHES: "arm64, ppc64le, x86_64"
+  needs:
+    - job: centos8-v11.4.1
+      artifacts: true
+
+centos8-v11.4.1-test-arm64:
+  needs: ["centos8-v11.4.1"]
+  <<: *centos8_11_4_1_only
+  <<: *test_definition
+  variables:
+    <<: *centos8_11_4_1_variables
+    ARCH: "arm64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$centos8_11_4_1 == "true"'
+    - if: '$all == "true"'
+
+centos8-v11.4.1-scan-arm64:
+  <<: *scan_definition
+  <<: *centos8_11_4_1_only
+  needs:
+    - job: centos8-v11.4.1
+    - job: centos8-v11.4.1-test-arm64
+      optional: true
+  variables:
+    <<: *centos8_11_4_1_variables
+    ARCH: "arm64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$centos8_11_4_1 == "true"'
+    - if: '$all == "true"'
+
+centos8-v11.4.1-test-ppc64le:
+  needs: ["centos8-v11.4.1"]
+  <<: *centos8_11_4_1_only
+  <<: *test_definition
+  variables:
+    <<: *centos8_11_4_1_variables
+    ARCH: "ppc64le"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$centos8_11_4_1 == "true"'
+    - if: '$all == "true"'
+
+centos8-v11.4.1-scan-ppc64le:
+  <<: *scan_definition
+  <<: *centos8_11_4_1_only
+  needs:
+    - job: centos8-v11.4.1
+    - job: centos8-v11.4.1-test-ppc64le
+      optional: true
+  variables:
+    <<: *centos8_11_4_1_variables
+    ARCH: "ppc64le"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$centos8_11_4_1 == "true"'
+    - if: '$all == "true"'
+
+centos8-v11.4.1-test-x86_64:
+  needs: ["centos8-v11.4.1"]
+  <<: *centos8_11_4_1_only
+  <<: *test_definition
+  variables:
+    <<: *centos8_11_4_1_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$centos8_11_4_1 == "true"'
+    - if: '$all == "true"'
+
+centos8-v11.4.1-scan-x86_64:
+  <<: *scan_definition
+  <<: *centos8_11_4_1_only
+  needs:
+    - job: centos8-v11.4.1
+    - job: centos8-v11.4.1-test-x86_64
+      optional: true
+  variables:
+    <<: *centos8_11_4_1_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$centos8_11_4_1 == "true"'
+    - if: '$all == "true"'
+
+
+centos8-v11.4.1-deploy:
+  <<: *deploy_definition
+  <<: *centos8_11_4_1_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$centos8_11_4_1 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: centos8-v11.4.1
+      artifacts: true
+    - job: centos8-v11.4.1-test-arm64
+      optional: true
+    - job: centos8-v11.4.1-scan-arm64
+      optional: true
+    - job: centos8-v11.4.1-test-ppc64le
+      optional: true
+    - job: centos8-v11.4.1-scan-ppc64le
+      optional: true
+    - job: centos8-v11.4.1-test-x86_64
+      optional: true
+    - job: centos8-v11.4.1-scan-x86_64
+      optional: true
+    - job: centos8-v11.4.1-cudnn8
+      optional: true
+
+
+.ubi7_11_4_1_variables: &ubi7_11_4_1_variables
+  DIST_BASE_PATH: "dist/11.4.1"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "x86_64"
+  OS: "ubi7"
+  OS_NAME: "ubi"
+  OS_VERSION: "7"
+  CUDA_VERSION: "11.4.1"
+
+.ubi7_11_4_1_only: &ubi7_11_4_1_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *ubi7_11_4_1_variables
+  rules:
+    - if: '$ubi7_11_4_1 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v11.4.1:
+  <<: *cuda_base_definition
+  <<: *ubi7_11_4_1_only
+
+ubi7-v11.4.1-cudnn8:
+  <<: *cudnn_definition
+  <<: *ubi7_11_4_1_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi7_11_4_1_variables
+    CUDNN_VERSION: "cudnn8"
+    ARCHES: "x86_64"
+  needs:
+    - job: ubi7-v11.4.1
+      artifacts: true
+
+ubi7-v11.4.1-test-x86_64:
+  needs: ["ubi7-v11.4.1"]
+  <<: *ubi7_11_4_1_only
+  <<: *test_definition
+  variables:
+    <<: *ubi7_11_4_1_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_11_4_1 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v11.4.1-scan-x86_64:
+  <<: *scan_definition
+  <<: *ubi7_11_4_1_only
+  needs:
+    - job: ubi7-v11.4.1
+    - job: ubi7-v11.4.1-test-x86_64
+      optional: true
+  variables:
+    <<: *ubi7_11_4_1_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_11_4_1 == "true"'
+    - if: '$all == "true"'
+
+
+ubi7-v11.4.1-deploy:
+  <<: *deploy_definition
+  <<: *ubi7_11_4_1_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$ubi7_11_4_1 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubi7-v11.4.1
+      artifacts: true
+    - job: ubi7-v11.4.1-test-x86_64
+      optional: true
+    - job: ubi7-v11.4.1-scan-x86_64
+      optional: true
+    - job: ubi7-v11.4.1-cudnn8
+      optional: true
+
+
+.ubi8_11_4_1_variables: &ubi8_11_4_1_variables
+  DIST_BASE_PATH: "dist/11.4.1"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "arm64, ppc64le, x86_64"
+  OS: "ubi8"
+  OS_NAME: "ubi"
+  OS_VERSION: "8"
+  CUDA_VERSION: "11.4.1"
+
+.ubi8_11_4_1_only: &ubi8_11_4_1_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *ubi8_11_4_1_variables
+  rules:
+    - if: '$ubi8_11_4_1 == "true"'
+    - if: '$all == "true"'
+
+ubi8-v11.4.1:
+  <<: *cuda_base_definition
+  <<: *ubi8_11_4_1_only
+
+ubi8-v11.4.1-cudnn8:
+  <<: *cudnn_definition
+  <<: *ubi8_11_4_1_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi8_11_4_1_variables
+    CUDNN_VERSION: "cudnn8"
+    ARCHES: "arm64, ppc64le, x86_64"
+  needs:
+    - job: ubi8-v11.4.1
+      artifacts: true
+
+ubi8-v11.4.1-test-arm64:
+  needs: ["ubi8-v11.4.1"]
+  <<: *ubi8_11_4_1_only
+  <<: *test_definition
+  variables:
+    <<: *ubi8_11_4_1_variables
+    ARCH: "arm64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubi8_11_4_1 == "true"'
+    - if: '$all == "true"'
+
+ubi8-v11.4.1-scan-arm64:
+  <<: *scan_definition
+  <<: *ubi8_11_4_1_only
+  needs:
+    - job: ubi8-v11.4.1
+    - job: ubi8-v11.4.1-test-arm64
+      optional: true
+  variables:
+    <<: *ubi8_11_4_1_variables
+    ARCH: "arm64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubi8_11_4_1 == "true"'
+    - if: '$all == "true"'
+
+ubi8-v11.4.1-test-ppc64le:
+  needs: ["ubi8-v11.4.1"]
+  <<: *ubi8_11_4_1_only
+  <<: *test_definition
+  variables:
+    <<: *ubi8_11_4_1_variables
+    ARCH: "ppc64le"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubi8_11_4_1 == "true"'
+    - if: '$all == "true"'
+
+ubi8-v11.4.1-scan-ppc64le:
+  <<: *scan_definition
+  <<: *ubi8_11_4_1_only
+  needs:
+    - job: ubi8-v11.4.1
+    - job: ubi8-v11.4.1-test-ppc64le
+      optional: true
+  variables:
+    <<: *ubi8_11_4_1_variables
+    ARCH: "ppc64le"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubi8_11_4_1 == "true"'
+    - if: '$all == "true"'
+
+ubi8-v11.4.1-test-x86_64:
+  needs: ["ubi8-v11.4.1"]
+  <<: *ubi8_11_4_1_only
+  <<: *test_definition
+  variables:
+    <<: *ubi8_11_4_1_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubi8_11_4_1 == "true"'
+    - if: '$all == "true"'
+
+ubi8-v11.4.1-scan-x86_64:
+  <<: *scan_definition
+  <<: *ubi8_11_4_1_only
+  needs:
+    - job: ubi8-v11.4.1
+    - job: ubi8-v11.4.1-test-x86_64
+      optional: true
+  variables:
+    <<: *ubi8_11_4_1_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubi8_11_4_1 == "true"'
+    - if: '$all == "true"'
+
+
+ubi8-v11.4.1-deploy:
+  <<: *deploy_definition
+  <<: *ubi8_11_4_1_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$ubi8_11_4_1 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubi8-v11.4.1
+      artifacts: true
+    - job: ubi8-v11.4.1-test-arm64
+      optional: true
+    - job: ubi8-v11.4.1-scan-arm64
+      optional: true
+    - job: ubi8-v11.4.1-test-ppc64le
+      optional: true
+    - job: ubi8-v11.4.1-scan-ppc64le
+      optional: true
+    - job: ubi8-v11.4.1-test-x86_64
+      optional: true
+    - job: ubi8-v11.4.1-scan-x86_64
+      optional: true
+    - job: ubi8-v11.4.1-cudnn8
+      optional: true
+
+
+.ubuntu18_04_11_4_1_variables: &ubuntu18_04_11_4_1_variables
+  DIST_BASE_PATH: "dist/11.4.1"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "arm64, x86_64"
+  OS: "ubuntu18.04"
+  OS_NAME: "ubuntu"
+  OS_VERSION: "18.04"
+  CUDA_VERSION: "11.4.1"
+
+.ubuntu18_04_11_4_1_only: &ubuntu18_04_11_4_1_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *ubuntu18_04_11_4_1_variables
+  rules:
+    - if: '$ubuntu18_04_11_4_1 == "true"'
+    - if: '$all == "true"'
+
+ubuntu18.04-v11.4.1:
+  <<: *cuda_base_definition
+  <<: *ubuntu18_04_11_4_1_only
+
+ubuntu18.04-v11.4.1-cudnn8:
+  <<: *cudnn_definition
+  <<: *ubuntu18_04_11_4_1_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu18_04_11_4_1_variables
+    CUDNN_VERSION: "cudnn8"
+    ARCHES: "x86_64"
+  needs:
+    - job: ubuntu18.04-v11.4.1
+      artifacts: true
+
+ubuntu18.04-v11.4.1-test-arm64:
+  needs: ["ubuntu18.04-v11.4.1"]
+  <<: *ubuntu18_04_11_4_1_only
+  <<: *test_definition
+  variables:
+    <<: *ubuntu18_04_11_4_1_variables
+    ARCH: "arm64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu18_04_11_4_1 == "true"'
+    - if: '$all == "true"'
+
+ubuntu18.04-v11.4.1-scan-arm64:
+  <<: *scan_definition
+  <<: *ubuntu18_04_11_4_1_only
+  needs:
+    - job: ubuntu18.04-v11.4.1
+    - job: ubuntu18.04-v11.4.1-test-arm64
+      optional: true
+  variables:
+    <<: *ubuntu18_04_11_4_1_variables
+    ARCH: "arm64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu18_04_11_4_1 == "true"'
+    - if: '$all == "true"'
+
+ubuntu18.04-v11.4.1-test-x86_64:
+  needs: ["ubuntu18.04-v11.4.1"]
+  <<: *ubuntu18_04_11_4_1_only
+  <<: *test_definition
+  variables:
+    <<: *ubuntu18_04_11_4_1_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu18_04_11_4_1 == "true"'
+    - if: '$all == "true"'
+
+ubuntu18.04-v11.4.1-scan-x86_64:
+  <<: *scan_definition
+  <<: *ubuntu18_04_11_4_1_only
+  needs:
+    - job: ubuntu18.04-v11.4.1
+    - job: ubuntu18.04-v11.4.1-test-x86_64
+      optional: true
+  variables:
+    <<: *ubuntu18_04_11_4_1_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu18_04_11_4_1 == "true"'
+    - if: '$all == "true"'
+
+
+ubuntu18.04-v11.4.1-deploy:
+  <<: *deploy_definition
+  <<: *ubuntu18_04_11_4_1_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$ubuntu18_04_11_4_1 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubuntu18.04-v11.4.1
+      artifacts: true
+    - job: ubuntu18.04-v11.4.1-test-arm64
+      optional: true
+    - job: ubuntu18.04-v11.4.1-scan-arm64
+      optional: true
+    - job: ubuntu18.04-v11.4.1-test-x86_64
+      optional: true
+    - job: ubuntu18.04-v11.4.1-scan-x86_64
+      optional: true
+    - job: ubuntu18.04-v11.4.1-cudnn8
+      optional: true
+
+
+.ubuntu20_04_11_4_1_variables: &ubuntu20_04_11_4_1_variables
+  DIST_BASE_PATH: "dist/11.4.1"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "arm64, x86_64"
+  OS: "ubuntu20.04"
+  OS_NAME: "ubuntu"
+  OS_VERSION: "20.04"
+  CUDA_VERSION: "11.4.1"
+
+.ubuntu20_04_11_4_1_only: &ubuntu20_04_11_4_1_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *ubuntu20_04_11_4_1_variables
+  rules:
+    - if: '$ubuntu20_04_11_4_1 == "true"'
+    - if: '$all == "true"'
+
+ubuntu20.04-v11.4.1:
+  <<: *cuda_base_definition
+  <<: *ubuntu20_04_11_4_1_only
+
+ubuntu20.04-v11.4.1-cudnn8:
+  <<: *cudnn_definition
+  <<: *ubuntu20_04_11_4_1_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu20_04_11_4_1_variables
+    CUDNN_VERSION: "cudnn8"
+    ARCHES: "arm64, x86_64"
+  needs:
+    - job: ubuntu20.04-v11.4.1
+      artifacts: true
+
+ubuntu20.04-v11.4.1-test-arm64:
+  needs: ["ubuntu20.04-v11.4.1"]
+  <<: *ubuntu20_04_11_4_1_only
+  <<: *test_definition
+  variables:
+    <<: *ubuntu20_04_11_4_1_variables
+    ARCH: "arm64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu20_04_11_4_1 == "true"'
+    - if: '$all == "true"'
+
+ubuntu20.04-v11.4.1-scan-arm64:
+  <<: *scan_definition
+  <<: *ubuntu20_04_11_4_1_only
+  needs:
+    - job: ubuntu20.04-v11.4.1
+    - job: ubuntu20.04-v11.4.1-test-arm64
+      optional: true
+  variables:
+    <<: *ubuntu20_04_11_4_1_variables
+    ARCH: "arm64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu20_04_11_4_1 == "true"'
+    - if: '$all == "true"'
+
+ubuntu20.04-v11.4.1-test-x86_64:
+  needs: ["ubuntu20.04-v11.4.1"]
+  <<: *ubuntu20_04_11_4_1_only
+  <<: *test_definition
+  variables:
+    <<: *ubuntu20_04_11_4_1_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu20_04_11_4_1 == "true"'
+    - if: '$all == "true"'
+
+ubuntu20.04-v11.4.1-scan-x86_64:
+  <<: *scan_definition
+  <<: *ubuntu20_04_11_4_1_only
+  needs:
+    - job: ubuntu20.04-v11.4.1
+    - job: ubuntu20.04-v11.4.1-test-x86_64
+      optional: true
+  variables:
+    <<: *ubuntu20_04_11_4_1_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu20_04_11_4_1 == "true"'
+    - if: '$all == "true"'
+
+
+ubuntu20.04-v11.4.1-deploy:
+  <<: *deploy_definition
+  <<: *ubuntu20_04_11_4_1_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$ubuntu20_04_11_4_1 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubuntu20.04-v11.4.1
+      artifacts: true
+    - job: ubuntu20.04-v11.4.1-test-arm64
+      optional: true
+    - job: ubuntu20.04-v11.4.1-scan-arm64
+      optional: true
+    - job: ubuntu20.04-v11.4.1-test-x86_64
+      optional: true
+    - job: ubuntu20.04-v11.4.1-scan-x86_64
+      optional: true
+    - job: ubuntu20.04-v11.4.1-cudnn8
+      optional: true
 
 
 .ubuntu20_04_11_4_0_variables: &ubuntu20_04_11_4_0_variables
@@ -663,6 +1442,18 @@ kitmaker_failure:
 ubuntu20.04-v11.4.0:
   <<: *cuda_base_definition
   <<: *ubuntu20_04_11_4_0_only
+
+ubuntu20.04-v11.4.0-cudnn8:
+  <<: *cudnn_definition
+  <<: *ubuntu20_04_11_4_0_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu20_04_11_4_0_variables
+    CUDNN_VERSION: "cudnn8"
+    ARCHES: "x86_64, arm64"
+  needs:
+    - job: ubuntu20.04-v11.4.0
+      artifacts: true
 
 ubuntu20.04-v11.4.0-test-x86_64:
   needs: ["ubuntu20.04-v11.4.0"]
@@ -745,6 +1536,8 @@ ubuntu20.04-v11.4.0-deploy:
       optional: true
     - job: ubuntu20.04-v11.4.0-scan-arm64
       optional: true
+    - job: ubuntu20.04-v11.4.0-cudnn8
+      optional: true
 
 
 .ubuntu18_04_11_4_0_variables: &ubuntu18_04_11_4_0_variables
@@ -768,6 +1561,18 @@ ubuntu20.04-v11.4.0-deploy:
 ubuntu18.04-v11.4.0:
   <<: *cuda_base_definition
   <<: *ubuntu18_04_11_4_0_only
+
+ubuntu18.04-v11.4.0-cudnn8:
+  <<: *cudnn_definition
+  <<: *ubuntu18_04_11_4_0_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu18_04_11_4_0_variables
+    CUDNN_VERSION: "cudnn8"
+    ARCHES: "x86_64"
+  needs:
+    - job: ubuntu18.04-v11.4.0
+      artifacts: true
 
 ubuntu18.04-v11.4.0-test-x86_64:
   needs: ["ubuntu18.04-v11.4.0"]
@@ -850,6 +1655,8 @@ ubuntu18.04-v11.4.0-deploy:
       optional: true
     - job: ubuntu18.04-v11.4.0-scan-arm64
       optional: true
+    - job: ubuntu18.04-v11.4.0-cudnn8
+      optional: true
 
 
 .centos8_11_4_0_variables: &centos8_11_4_0_variables
@@ -873,6 +1680,18 @@ ubuntu18.04-v11.4.0-deploy:
 centos8-v11.4.0:
   <<: *cuda_base_definition
   <<: *centos8_11_4_0_only
+
+centos8-v11.4.0-cudnn8:
+  <<: *cudnn_definition
+  <<: *centos8_11_4_0_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos8_11_4_0_variables
+    CUDNN_VERSION: "cudnn8"
+    ARCHES: "x86_64, ppc64le, arm64"
+  needs:
+    - job: centos8-v11.4.0
+      artifacts: true
 
 centos8-v11.4.0-test-x86_64:
   needs: ["centos8-v11.4.0"]
@@ -989,6 +1808,8 @@ centos8-v11.4.0-deploy:
       optional: true
     - job: centos8-v11.4.0-scan-arm64
       optional: true
+    - job: centos8-v11.4.0-cudnn8
+      optional: true
 
 
 .centos7_11_4_0_variables: &centos7_11_4_0_variables
@@ -1012,6 +1833,18 @@ centos8-v11.4.0-deploy:
 centos7-v11.4.0:
   <<: *cuda_base_definition
   <<: *centos7_11_4_0_only
+
+centos7-v11.4.0-cudnn8:
+  <<: *cudnn_definition
+  <<: *centos7_11_4_0_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos7_11_4_0_variables
+    CUDNN_VERSION: "cudnn8"
+    ARCHES: "x86_64"
+  needs:
+    - job: centos7-v11.4.0
+      artifacts: true
 
 centos7-v11.4.0-test-x86_64:
   needs: ["centos7-v11.4.0"]
@@ -1060,6 +1893,8 @@ centos7-v11.4.0-deploy:
       optional: true
     - job: centos7-v11.4.0-scan-x86_64
       optional: true
+    - job: centos7-v11.4.0-cudnn8
+      optional: true
 
 
 .ubi8_11_4_0_variables: &ubi8_11_4_0_variables
@@ -1083,6 +1918,18 @@ centos7-v11.4.0-deploy:
 ubi8-v11.4.0:
   <<: *cuda_base_definition
   <<: *ubi8_11_4_0_only
+
+ubi8-v11.4.0-cudnn8:
+  <<: *cudnn_definition
+  <<: *ubi8_11_4_0_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi8_11_4_0_variables
+    CUDNN_VERSION: "cudnn8"
+    ARCHES: "x86_64, ppc64le, arm64"
+  needs:
+    - job: ubi8-v11.4.0
+      artifacts: true
 
 ubi8-v11.4.0-test-x86_64:
   needs: ["ubi8-v11.4.0"]
@@ -1199,6 +2046,8 @@ ubi8-v11.4.0-deploy:
       optional: true
     - job: ubi8-v11.4.0-scan-arm64
       optional: true
+    - job: ubi8-v11.4.0-cudnn8
+      optional: true
 
 
 .ubi7_11_4_0_variables: &ubi7_11_4_0_variables
@@ -1222,6 +2071,18 @@ ubi8-v11.4.0-deploy:
 ubi7-v11.4.0:
   <<: *cuda_base_definition
   <<: *ubi7_11_4_0_only
+
+ubi7-v11.4.0-cudnn8:
+  <<: *cudnn_definition
+  <<: *ubi7_11_4_0_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi7_11_4_0_variables
+    CUDNN_VERSION: "cudnn8"
+    ARCHES: "x86_64"
+  needs:
+    - job: ubi7-v11.4.0
+      artifacts: true
 
 ubi7-v11.4.0-test-x86_64:
   needs: ["ubi7-v11.4.0"]
@@ -1269,6 +2130,8 @@ ubi7-v11.4.0-deploy:
     - job: ubi7-v11.4.0-test-x86_64
       optional: true
     - job: ubi7-v11.4.0-scan-x86_64
+      optional: true
+    - job: ubi7-v11.4.0-cudnn8
       optional: true
 
 
@@ -6862,5 +7725,3374 @@ ubi7-v11.0.3-deploy:
     - job: ubi7-v11.0.3-scan-x86_64
       optional: true
     - job: ubi7-v11.0.3-cudnn8
+      optional: true
+
+
+.ubuntu18_04_10_2_variables: &ubuntu18_04_10_2_variables
+  DIST_BASE_PATH: "dist/10.2"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "x86_64, ppc64le"
+  OS: "ubuntu18.04"
+  OS_NAME: "ubuntu"
+  OS_VERSION: "18.04"
+  CUDA_VERSION: "10.2"
+
+.ubuntu18_04_10_2_only: &ubuntu18_04_10_2_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *ubuntu18_04_10_2_variables
+  rules:
+    - if: '$ubuntu18_04_10_2 == "true"'
+    - if: '$all == "true"'
+
+ubuntu18.04-v10.2:
+  <<: *cuda_base_definition
+  <<: *ubuntu18_04_10_2_only
+
+ubuntu18.04-v10.2-cudnn8:
+  <<: *cudnn_definition
+  <<: *ubuntu18_04_10_2_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu18_04_10_2_variables
+    CUDNN_VERSION: "cudnn8"
+    ARCHES: "x86_64, ppc64le"
+  needs:
+    - job: ubuntu18.04-v10.2
+      artifacts: true
+
+ubuntu18.04-v10.2-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubuntu18_04_10_2_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu18_04_10_2_variables
+    CUDNN_VERSION: "cudnn7"
+    ARCHES: "x86_64, ppc64le"
+  needs:
+    - job: ubuntu18.04-v10.2
+      artifacts: true
+
+ubuntu18.04-v10.2-test-x86_64:
+  needs: ["ubuntu18.04-v10.2"]
+  <<: *ubuntu18_04_10_2_only
+  <<: *test_definition
+  variables:
+    <<: *ubuntu18_04_10_2_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu18_04_10_2 == "true"'
+    - if: '$all == "true"'
+
+ubuntu18.04-v10.2-scan-x86_64:
+  <<: *scan_definition
+  <<: *ubuntu18_04_10_2_only
+  needs:
+    - job: ubuntu18.04-v10.2
+    - job: ubuntu18.04-v10.2-test-x86_64
+      optional: true
+  variables:
+    <<: *ubuntu18_04_10_2_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu18_04_10_2 == "true"'
+    - if: '$all == "true"'
+
+ubuntu18.04-v10.2-test-ppc64le:
+  needs: ["ubuntu18.04-v10.2"]
+  <<: *ubuntu18_04_10_2_only
+  <<: *test_definition
+  variables:
+    <<: *ubuntu18_04_10_2_variables
+    ARCH: "ppc64le"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu18_04_10_2 == "true"'
+    - if: '$all == "true"'
+
+ubuntu18.04-v10.2-scan-ppc64le:
+  <<: *scan_definition
+  <<: *ubuntu18_04_10_2_only
+  needs:
+    - job: ubuntu18.04-v10.2
+    - job: ubuntu18.04-v10.2-test-ppc64le
+      optional: true
+  variables:
+    <<: *ubuntu18_04_10_2_variables
+    ARCH: "ppc64le"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu18_04_10_2 == "true"'
+    - if: '$all == "true"'
+
+
+ubuntu18.04-v10.2-deploy:
+  <<: *deploy_definition
+  <<: *ubuntu18_04_10_2_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$ubuntu18_04_10_2 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubuntu18.04-v10.2
+      artifacts: true
+    - job: ubuntu18.04-v10.2-test-x86_64
+      optional: true
+    - job: ubuntu18.04-v10.2-scan-x86_64
+      optional: true
+    - job: ubuntu18.04-v10.2-test-ppc64le
+      optional: true
+    - job: ubuntu18.04-v10.2-scan-ppc64le
+      optional: true
+    - job: ubuntu18.04-v10.2-cudnn8
+      optional: true
+    - job: ubuntu18.04-v10.2-cudnn7
+      optional: true
+
+
+.ubuntu16_04_10_2_variables: &ubuntu16_04_10_2_variables
+  DIST_BASE_PATH: "dist/10.2"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "x86_64"
+  OS: "ubuntu16.04"
+  OS_NAME: "ubuntu"
+  OS_VERSION: "16.04"
+  CUDA_VERSION: "10.2"
+
+.ubuntu16_04_10_2_only: &ubuntu16_04_10_2_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *ubuntu16_04_10_2_variables
+  rules:
+    - if: '$ubuntu16_04_10_2 == "true"'
+    - if: '$all == "true"'
+
+ubuntu16.04-v10.2:
+  <<: *cuda_base_definition
+  <<: *ubuntu16_04_10_2_only
+
+ubuntu16.04-v10.2-cudnn8:
+  <<: *cudnn_definition
+  <<: *ubuntu16_04_10_2_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu16_04_10_2_variables
+    CUDNN_VERSION: "cudnn8"
+    ARCHES: "x86_64"
+  needs:
+    - job: ubuntu16.04-v10.2
+      artifacts: true
+
+ubuntu16.04-v10.2-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubuntu16_04_10_2_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu16_04_10_2_variables
+    CUDNN_VERSION: "cudnn7"
+    ARCHES: "x86_64"
+  needs:
+    - job: ubuntu16.04-v10.2
+      artifacts: true
+
+ubuntu16.04-v10.2-test-x86_64:
+  needs: ["ubuntu16.04-v10.2"]
+  <<: *ubuntu16_04_10_2_only
+  <<: *test_definition
+  variables:
+    <<: *ubuntu16_04_10_2_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu16_04_10_2 == "true"'
+    - if: '$all == "true"'
+
+ubuntu16.04-v10.2-scan-x86_64:
+  <<: *scan_definition
+  <<: *ubuntu16_04_10_2_only
+  needs:
+    - job: ubuntu16.04-v10.2
+    - job: ubuntu16.04-v10.2-test-x86_64
+      optional: true
+  variables:
+    <<: *ubuntu16_04_10_2_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu16_04_10_2 == "true"'
+    - if: '$all == "true"'
+
+
+ubuntu16.04-v10.2-deploy:
+  <<: *deploy_definition
+  <<: *ubuntu16_04_10_2_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$ubuntu16_04_10_2 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubuntu16.04-v10.2
+      artifacts: true
+    - job: ubuntu16.04-v10.2-test-x86_64
+      optional: true
+    - job: ubuntu16.04-v10.2-scan-x86_64
+      optional: true
+    - job: ubuntu16.04-v10.2-cudnn8
+      optional: true
+    - job: ubuntu16.04-v10.2-cudnn7
+      optional: true
+
+
+.centos8_10_2_variables: &centos8_10_2_variables
+  DIST_BASE_PATH: "dist/10.2"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "x86_64"
+  OS: "centos8"
+  OS_NAME: "centos"
+  OS_VERSION: "8"
+  CUDA_VERSION: "10.2"
+
+.centos8_10_2_only: &centos8_10_2_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *centos8_10_2_variables
+  rules:
+    - if: '$centos8_10_2 == "true"'
+    - if: '$all == "true"'
+
+centos8-v10.2:
+  <<: *cuda_base_definition
+  <<: *centos8_10_2_only
+
+centos8-v10.2-cudnn8:
+  <<: *cudnn_definition
+  <<: *centos8_10_2_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos8_10_2_variables
+    CUDNN_VERSION: "cudnn8"
+    ARCHES: "x86_64"
+  needs:
+    - job: centos8-v10.2
+      artifacts: true
+
+centos8-v10.2-cudnn7:
+  <<: *cudnn_definition
+  <<: *centos8_10_2_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos8_10_2_variables
+    CUDNN_VERSION: "cudnn7"
+    ARCHES: "x86_64"
+  needs:
+    - job: centos8-v10.2
+      artifacts: true
+
+centos8-v10.2-test-x86_64:
+  needs: ["centos8-v10.2"]
+  <<: *centos8_10_2_only
+  <<: *test_definition
+  variables:
+    <<: *centos8_10_2_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$centos8_10_2 == "true"'
+    - if: '$all == "true"'
+
+centos8-v10.2-scan-x86_64:
+  <<: *scan_definition
+  <<: *centos8_10_2_only
+  needs:
+    - job: centos8-v10.2
+    - job: centos8-v10.2-test-x86_64
+      optional: true
+  variables:
+    <<: *centos8_10_2_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$centos8_10_2 == "true"'
+    - if: '$all == "true"'
+
+
+centos8-v10.2-deploy:
+  <<: *deploy_definition
+  <<: *centos8_10_2_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$centos8_10_2 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: centos8-v10.2
+      artifacts: true
+    - job: centos8-v10.2-test-x86_64
+      optional: true
+    - job: centos8-v10.2-scan-x86_64
+      optional: true
+    - job: centos8-v10.2-cudnn8
+      optional: true
+    - job: centos8-v10.2-cudnn7
+      optional: true
+
+
+.centos7_10_2_variables: &centos7_10_2_variables
+  DIST_BASE_PATH: "dist/10.2"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "x86_64, ppc64le"
+  OS: "centos7"
+  OS_NAME: "centos"
+  OS_VERSION: "7"
+  CUDA_VERSION: "10.2"
+
+.centos7_10_2_only: &centos7_10_2_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *centos7_10_2_variables
+  rules:
+    - if: '$centos7_10_2 == "true"'
+    - if: '$all == "true"'
+
+centos7-v10.2:
+  <<: *cuda_base_definition
+  <<: *centos7_10_2_only
+
+centos7-v10.2-cudnn8:
+  <<: *cudnn_definition
+  <<: *centos7_10_2_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos7_10_2_variables
+    CUDNN_VERSION: "cudnn8"
+    ARCHES: "x86_64, ppc64le"
+  needs:
+    - job: centos7-v10.2
+      artifacts: true
+
+centos7-v10.2-cudnn7:
+  <<: *cudnn_definition
+  <<: *centos7_10_2_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos7_10_2_variables
+    CUDNN_VERSION: "cudnn7"
+    ARCHES: "x86_64, ppc64le"
+  needs:
+    - job: centos7-v10.2
+      artifacts: true
+
+centos7-v10.2-test-x86_64:
+  needs: ["centos7-v10.2"]
+  <<: *centos7_10_2_only
+  <<: *test_definition
+  variables:
+    <<: *centos7_10_2_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$centos7_10_2 == "true"'
+    - if: '$all == "true"'
+
+centos7-v10.2-scan-x86_64:
+  <<: *scan_definition
+  <<: *centos7_10_2_only
+  needs:
+    - job: centos7-v10.2
+    - job: centos7-v10.2-test-x86_64
+      optional: true
+  variables:
+    <<: *centos7_10_2_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$centos7_10_2 == "true"'
+    - if: '$all == "true"'
+
+centos7-v10.2-test-ppc64le:
+  needs: ["centos7-v10.2"]
+  <<: *centos7_10_2_only
+  <<: *test_definition
+  variables:
+    <<: *centos7_10_2_variables
+    ARCH: "ppc64le"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$centos7_10_2 == "true"'
+    - if: '$all == "true"'
+
+centos7-v10.2-scan-ppc64le:
+  <<: *scan_definition
+  <<: *centos7_10_2_only
+  needs:
+    - job: centos7-v10.2
+    - job: centos7-v10.2-test-ppc64le
+      optional: true
+  variables:
+    <<: *centos7_10_2_variables
+    ARCH: "ppc64le"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$centos7_10_2 == "true"'
+    - if: '$all == "true"'
+
+
+centos7-v10.2-deploy:
+  <<: *deploy_definition
+  <<: *centos7_10_2_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$centos7_10_2 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: centos7-v10.2
+      artifacts: true
+    - job: centos7-v10.2-test-x86_64
+      optional: true
+    - job: centos7-v10.2-scan-x86_64
+      optional: true
+    - job: centos7-v10.2-test-ppc64le
+      optional: true
+    - job: centos7-v10.2-scan-ppc64le
+      optional: true
+    - job: centos7-v10.2-cudnn8
+      optional: true
+    - job: centos7-v10.2-cudnn7
+      optional: true
+
+
+.ubi8_10_2_variables: &ubi8_10_2_variables
+  DIST_BASE_PATH: "dist/10.2"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "x86_64"
+  OS: "ubi8"
+  OS_NAME: "ubi"
+  OS_VERSION: "8"
+  CUDA_VERSION: "10.2"
+
+.ubi8_10_2_only: &ubi8_10_2_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *ubi8_10_2_variables
+  rules:
+    - if: '$ubi8_10_2 == "true"'
+    - if: '$all == "true"'
+
+ubi8-v10.2:
+  <<: *cuda_base_definition
+  <<: *ubi8_10_2_only
+
+ubi8-v10.2-cudnn8:
+  <<: *cudnn_definition
+  <<: *ubi8_10_2_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi8_10_2_variables
+    CUDNN_VERSION: "cudnn8"
+    ARCHES: "x86_64"
+  needs:
+    - job: ubi8-v10.2
+      artifacts: true
+
+ubi8-v10.2-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubi8_10_2_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi8_10_2_variables
+    CUDNN_VERSION: "cudnn7"
+    ARCHES: "x86_64"
+  needs:
+    - job: ubi8-v10.2
+      artifacts: true
+
+ubi8-v10.2-test-x86_64:
+  needs: ["ubi8-v10.2"]
+  <<: *ubi8_10_2_only
+  <<: *test_definition
+  variables:
+    <<: *ubi8_10_2_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubi8_10_2 == "true"'
+    - if: '$all == "true"'
+
+ubi8-v10.2-scan-x86_64:
+  <<: *scan_definition
+  <<: *ubi8_10_2_only
+  needs:
+    - job: ubi8-v10.2
+    - job: ubi8-v10.2-test-x86_64
+      optional: true
+  variables:
+    <<: *ubi8_10_2_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubi8_10_2 == "true"'
+    - if: '$all == "true"'
+
+
+ubi8-v10.2-deploy:
+  <<: *deploy_definition
+  <<: *ubi8_10_2_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$ubi8_10_2 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubi8-v10.2
+      artifacts: true
+    - job: ubi8-v10.2-test-x86_64
+      optional: true
+    - job: ubi8-v10.2-scan-x86_64
+      optional: true
+    - job: ubi8-v10.2-cudnn8
+      optional: true
+    - job: ubi8-v10.2-cudnn7
+      optional: true
+
+
+.ubi7_10_2_variables: &ubi7_10_2_variables
+  DIST_BASE_PATH: "dist/10.2"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "x86_64, ppc64le"
+  OS: "ubi7"
+  OS_NAME: "ubi"
+  OS_VERSION: "7"
+  CUDA_VERSION: "10.2"
+
+.ubi7_10_2_only: &ubi7_10_2_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *ubi7_10_2_variables
+  rules:
+    - if: '$ubi7_10_2 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v10.2:
+  <<: *cuda_base_definition
+  <<: *ubi7_10_2_only
+
+ubi7-v10.2-cudnn8:
+  <<: *cudnn_definition
+  <<: *ubi7_10_2_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi7_10_2_variables
+    CUDNN_VERSION: "cudnn8"
+    ARCHES: "x86_64, ppc64le"
+  needs:
+    - job: ubi7-v10.2
+      artifacts: true
+
+ubi7-v10.2-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubi7_10_2_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi7_10_2_variables
+    CUDNN_VERSION: "cudnn7"
+    ARCHES: "x86_64, ppc64le"
+  needs:
+    - job: ubi7-v10.2
+      artifacts: true
+
+ubi7-v10.2-test-x86_64:
+  needs: ["ubi7-v10.2"]
+  <<: *ubi7_10_2_only
+  <<: *test_definition
+  variables:
+    <<: *ubi7_10_2_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_10_2 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v10.2-scan-x86_64:
+  <<: *scan_definition
+  <<: *ubi7_10_2_only
+  needs:
+    - job: ubi7-v10.2
+    - job: ubi7-v10.2-test-x86_64
+      optional: true
+  variables:
+    <<: *ubi7_10_2_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_10_2 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v10.2-test-ppc64le:
+  needs: ["ubi7-v10.2"]
+  <<: *ubi7_10_2_only
+  <<: *test_definition
+  variables:
+    <<: *ubi7_10_2_variables
+    ARCH: "ppc64le"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_10_2 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v10.2-scan-ppc64le:
+  <<: *scan_definition
+  <<: *ubi7_10_2_only
+  needs:
+    - job: ubi7-v10.2
+    - job: ubi7-v10.2-test-ppc64le
+      optional: true
+  variables:
+    <<: *ubi7_10_2_variables
+    ARCH: "ppc64le"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_10_2 == "true"'
+    - if: '$all == "true"'
+
+
+ubi7-v10.2-deploy:
+  <<: *deploy_definition
+  <<: *ubi7_10_2_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$ubi7_10_2 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubi7-v10.2
+      artifacts: true
+    - job: ubi7-v10.2-test-x86_64
+      optional: true
+    - job: ubi7-v10.2-scan-x86_64
+      optional: true
+    - job: ubi7-v10.2-test-ppc64le
+      optional: true
+    - job: ubi7-v10.2-scan-ppc64le
+      optional: true
+    - job: ubi7-v10.2-cudnn8
+      optional: true
+    - job: ubi7-v10.2-cudnn7
+      optional: true
+
+
+.ubuntu18_04_10_1_variables: &ubuntu18_04_10_1_variables
+  DIST_BASE_PATH: "dist/10.1"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "x86_64, ppc64le"
+  OS: "ubuntu18.04"
+  OS_NAME: "ubuntu"
+  OS_VERSION: "18.04"
+  CUDA_VERSION: "10.1"
+
+.ubuntu18_04_10_1_only: &ubuntu18_04_10_1_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *ubuntu18_04_10_1_variables
+  rules:
+    - if: '$ubuntu18_04_10_1 == "true"'
+    - if: '$all == "true"'
+
+ubuntu18.04-v10.1:
+  <<: *cuda_base_definition
+  <<: *ubuntu18_04_10_1_only
+
+ubuntu18.04-v10.1-cudnn8:
+  <<: *cudnn_definition
+  <<: *ubuntu18_04_10_1_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu18_04_10_1_variables
+    CUDNN_VERSION: "cudnn8"
+    ARCHES: "x86_64, ppc64le"
+  needs:
+    - job: ubuntu18.04-v10.1
+      artifacts: true
+
+ubuntu18.04-v10.1-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubuntu18_04_10_1_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu18_04_10_1_variables
+    CUDNN_VERSION: "cudnn7"
+    ARCHES: "x86_64, ppc64le"
+  needs:
+    - job: ubuntu18.04-v10.1
+      artifacts: true
+
+ubuntu18.04-v10.1-test-x86_64:
+  needs: ["ubuntu18.04-v10.1"]
+  <<: *ubuntu18_04_10_1_only
+  <<: *test_definition
+  variables:
+    <<: *ubuntu18_04_10_1_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu18_04_10_1 == "true"'
+    - if: '$all == "true"'
+
+ubuntu18.04-v10.1-scan-x86_64:
+  <<: *scan_definition
+  <<: *ubuntu18_04_10_1_only
+  needs:
+    - job: ubuntu18.04-v10.1
+    - job: ubuntu18.04-v10.1-test-x86_64
+      optional: true
+  variables:
+    <<: *ubuntu18_04_10_1_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu18_04_10_1 == "true"'
+    - if: '$all == "true"'
+
+ubuntu18.04-v10.1-test-ppc64le:
+  needs: ["ubuntu18.04-v10.1"]
+  <<: *ubuntu18_04_10_1_only
+  <<: *test_definition
+  variables:
+    <<: *ubuntu18_04_10_1_variables
+    ARCH: "ppc64le"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu18_04_10_1 == "true"'
+    - if: '$all == "true"'
+
+ubuntu18.04-v10.1-scan-ppc64le:
+  <<: *scan_definition
+  <<: *ubuntu18_04_10_1_only
+  needs:
+    - job: ubuntu18.04-v10.1
+    - job: ubuntu18.04-v10.1-test-ppc64le
+      optional: true
+  variables:
+    <<: *ubuntu18_04_10_1_variables
+    ARCH: "ppc64le"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu18_04_10_1 == "true"'
+    - if: '$all == "true"'
+
+
+ubuntu18.04-v10.1-deploy:
+  <<: *deploy_definition
+  <<: *ubuntu18_04_10_1_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$ubuntu18_04_10_1 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubuntu18.04-v10.1
+      artifacts: true
+    - job: ubuntu18.04-v10.1-test-x86_64
+      optional: true
+    - job: ubuntu18.04-v10.1-scan-x86_64
+      optional: true
+    - job: ubuntu18.04-v10.1-test-ppc64le
+      optional: true
+    - job: ubuntu18.04-v10.1-scan-ppc64le
+      optional: true
+    - job: ubuntu18.04-v10.1-cudnn8
+      optional: true
+    - job: ubuntu18.04-v10.1-cudnn7
+      optional: true
+
+
+.ubuntu16_04_10_1_variables: &ubuntu16_04_10_1_variables
+  DIST_BASE_PATH: "dist/10.1"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "x86_64"
+  OS: "ubuntu16.04"
+  OS_NAME: "ubuntu"
+  OS_VERSION: "16.04"
+  CUDA_VERSION: "10.1"
+
+.ubuntu16_04_10_1_only: &ubuntu16_04_10_1_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *ubuntu16_04_10_1_variables
+  rules:
+    - if: '$ubuntu16_04_10_1 == "true"'
+    - if: '$all == "true"'
+
+ubuntu16.04-v10.1:
+  <<: *cuda_base_definition
+  <<: *ubuntu16_04_10_1_only
+
+ubuntu16.04-v10.1-cudnn8:
+  <<: *cudnn_definition
+  <<: *ubuntu16_04_10_1_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu16_04_10_1_variables
+    CUDNN_VERSION: "cudnn8"
+    ARCHES: "x86_64"
+  needs:
+    - job: ubuntu16.04-v10.1
+      artifacts: true
+
+ubuntu16.04-v10.1-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubuntu16_04_10_1_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu16_04_10_1_variables
+    CUDNN_VERSION: "cudnn7"
+    ARCHES: "x86_64"
+  needs:
+    - job: ubuntu16.04-v10.1
+      artifacts: true
+
+ubuntu16.04-v10.1-test-x86_64:
+  needs: ["ubuntu16.04-v10.1"]
+  <<: *ubuntu16_04_10_1_only
+  <<: *test_definition
+  variables:
+    <<: *ubuntu16_04_10_1_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu16_04_10_1 == "true"'
+    - if: '$all == "true"'
+
+ubuntu16.04-v10.1-scan-x86_64:
+  <<: *scan_definition
+  <<: *ubuntu16_04_10_1_only
+  needs:
+    - job: ubuntu16.04-v10.1
+    - job: ubuntu16.04-v10.1-test-x86_64
+      optional: true
+  variables:
+    <<: *ubuntu16_04_10_1_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu16_04_10_1 == "true"'
+    - if: '$all == "true"'
+
+
+ubuntu16.04-v10.1-deploy:
+  <<: *deploy_definition
+  <<: *ubuntu16_04_10_1_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$ubuntu16_04_10_1 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubuntu16.04-v10.1
+      artifacts: true
+    - job: ubuntu16.04-v10.1-test-x86_64
+      optional: true
+    - job: ubuntu16.04-v10.1-scan-x86_64
+      optional: true
+    - job: ubuntu16.04-v10.1-cudnn8
+      optional: true
+    - job: ubuntu16.04-v10.1-cudnn7
+      optional: true
+
+
+.centos8_10_1_variables: &centos8_10_1_variables
+  DIST_BASE_PATH: "dist/10.1"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "x86_64"
+  OS: "centos8"
+  OS_NAME: "centos"
+  OS_VERSION: "8"
+  CUDA_VERSION: "10.1"
+
+.centos8_10_1_only: &centos8_10_1_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *centos8_10_1_variables
+  rules:
+    - if: '$centos8_10_1 == "true"'
+    - if: '$all == "true"'
+
+centos8-v10.1:
+  <<: *cuda_base_definition
+  <<: *centos8_10_1_only
+
+centos8-v10.1-cudnn7:
+  <<: *cudnn_definition
+  <<: *centos8_10_1_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos8_10_1_variables
+    CUDNN_VERSION: "cudnn7"
+    ARCHES: "x86_64"
+  needs:
+    - job: centos8-v10.1
+      artifacts: true
+
+centos8-v10.1-test-x86_64:
+  needs: ["centos8-v10.1"]
+  <<: *centos8_10_1_only
+  <<: *test_definition
+  variables:
+    <<: *centos8_10_1_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$centos8_10_1 == "true"'
+    - if: '$all == "true"'
+
+centos8-v10.1-scan-x86_64:
+  <<: *scan_definition
+  <<: *centos8_10_1_only
+  needs:
+    - job: centos8-v10.1
+    - job: centos8-v10.1-test-x86_64
+      optional: true
+  variables:
+    <<: *centos8_10_1_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$centos8_10_1 == "true"'
+    - if: '$all == "true"'
+
+
+centos8-v10.1-deploy:
+  <<: *deploy_definition
+  <<: *centos8_10_1_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$centos8_10_1 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: centos8-v10.1
+      artifacts: true
+    - job: centos8-v10.1-test-x86_64
+      optional: true
+    - job: centos8-v10.1-scan-x86_64
+      optional: true
+    - job: centos8-v10.1-cudnn7
+      optional: true
+
+
+.centos7_10_1_variables: &centos7_10_1_variables
+  DIST_BASE_PATH: "dist/10.1"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "x86_64, ppc64le"
+  OS: "centos7"
+  OS_NAME: "centos"
+  OS_VERSION: "7"
+  CUDA_VERSION: "10.1"
+
+.centos7_10_1_only: &centos7_10_1_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *centos7_10_1_variables
+  rules:
+    - if: '$centos7_10_1 == "true"'
+    - if: '$all == "true"'
+
+centos7-v10.1:
+  <<: *cuda_base_definition
+  <<: *centos7_10_1_only
+
+centos7-v10.1-cudnn8:
+  <<: *cudnn_definition
+  <<: *centos7_10_1_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos7_10_1_variables
+    CUDNN_VERSION: "cudnn8"
+    ARCHES: "x86_64, ppc64le"
+  needs:
+    - job: centos7-v10.1
+      artifacts: true
+
+centos7-v10.1-cudnn7:
+  <<: *cudnn_definition
+  <<: *centos7_10_1_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos7_10_1_variables
+    CUDNN_VERSION: "cudnn7"
+    ARCHES: "x86_64, ppc64le"
+  needs:
+    - job: centos7-v10.1
+      artifacts: true
+
+centos7-v10.1-test-x86_64:
+  needs: ["centos7-v10.1"]
+  <<: *centos7_10_1_only
+  <<: *test_definition
+  variables:
+    <<: *centos7_10_1_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$centos7_10_1 == "true"'
+    - if: '$all == "true"'
+
+centos7-v10.1-scan-x86_64:
+  <<: *scan_definition
+  <<: *centos7_10_1_only
+  needs:
+    - job: centos7-v10.1
+    - job: centos7-v10.1-test-x86_64
+      optional: true
+  variables:
+    <<: *centos7_10_1_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$centos7_10_1 == "true"'
+    - if: '$all == "true"'
+
+centos7-v10.1-test-ppc64le:
+  needs: ["centos7-v10.1"]
+  <<: *centos7_10_1_only
+  <<: *test_definition
+  variables:
+    <<: *centos7_10_1_variables
+    ARCH: "ppc64le"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$centos7_10_1 == "true"'
+    - if: '$all == "true"'
+
+centos7-v10.1-scan-ppc64le:
+  <<: *scan_definition
+  <<: *centos7_10_1_only
+  needs:
+    - job: centos7-v10.1
+    - job: centos7-v10.1-test-ppc64le
+      optional: true
+  variables:
+    <<: *centos7_10_1_variables
+    ARCH: "ppc64le"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$centos7_10_1 == "true"'
+    - if: '$all == "true"'
+
+
+centos7-v10.1-deploy:
+  <<: *deploy_definition
+  <<: *centos7_10_1_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$centos7_10_1 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: centos7-v10.1
+      artifacts: true
+    - job: centos7-v10.1-test-x86_64
+      optional: true
+    - job: centos7-v10.1-scan-x86_64
+      optional: true
+    - job: centos7-v10.1-test-ppc64le
+      optional: true
+    - job: centos7-v10.1-scan-ppc64le
+      optional: true
+    - job: centos7-v10.1-cudnn8
+      optional: true
+    - job: centos7-v10.1-cudnn7
+      optional: true
+
+
+.ubi8_10_1_variables: &ubi8_10_1_variables
+  DIST_BASE_PATH: "dist/10.1"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "x86_64"
+  OS: "ubi8"
+  OS_NAME: "ubi"
+  OS_VERSION: "8"
+  CUDA_VERSION: "10.1"
+
+.ubi8_10_1_only: &ubi8_10_1_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *ubi8_10_1_variables
+  rules:
+    - if: '$ubi8_10_1 == "true"'
+    - if: '$all == "true"'
+
+ubi8-v10.1:
+  <<: *cuda_base_definition
+  <<: *ubi8_10_1_only
+
+ubi8-v10.1-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubi8_10_1_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi8_10_1_variables
+    CUDNN_VERSION: "cudnn7"
+    ARCHES: "x86_64"
+  needs:
+    - job: ubi8-v10.1
+      artifacts: true
+
+ubi8-v10.1-test-x86_64:
+  needs: ["ubi8-v10.1"]
+  <<: *ubi8_10_1_only
+  <<: *test_definition
+  variables:
+    <<: *ubi8_10_1_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubi8_10_1 == "true"'
+    - if: '$all == "true"'
+
+ubi8-v10.1-scan-x86_64:
+  <<: *scan_definition
+  <<: *ubi8_10_1_only
+  needs:
+    - job: ubi8-v10.1
+    - job: ubi8-v10.1-test-x86_64
+      optional: true
+  variables:
+    <<: *ubi8_10_1_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubi8_10_1 == "true"'
+    - if: '$all == "true"'
+
+
+ubi8-v10.1-deploy:
+  <<: *deploy_definition
+  <<: *ubi8_10_1_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$ubi8_10_1 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubi8-v10.1
+      artifacts: true
+    - job: ubi8-v10.1-test-x86_64
+      optional: true
+    - job: ubi8-v10.1-scan-x86_64
+      optional: true
+    - job: ubi8-v10.1-cudnn7
+      optional: true
+
+
+.ubi7_10_1_variables: &ubi7_10_1_variables
+  DIST_BASE_PATH: "dist/10.1"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "x86_64, ppc64le"
+  OS: "ubi7"
+  OS_NAME: "ubi"
+  OS_VERSION: "7"
+  CUDA_VERSION: "10.1"
+
+.ubi7_10_1_only: &ubi7_10_1_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *ubi7_10_1_variables
+  rules:
+    - if: '$ubi7_10_1 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v10.1:
+  <<: *cuda_base_definition
+  <<: *ubi7_10_1_only
+
+ubi7-v10.1-cudnn8:
+  <<: *cudnn_definition
+  <<: *ubi7_10_1_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi7_10_1_variables
+    CUDNN_VERSION: "cudnn8"
+    ARCHES: "x86_64, ppc64le"
+  needs:
+    - job: ubi7-v10.1
+      artifacts: true
+
+ubi7-v10.1-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubi7_10_1_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi7_10_1_variables
+    CUDNN_VERSION: "cudnn7"
+    ARCHES: "x86_64, ppc64le"
+  needs:
+    - job: ubi7-v10.1
+      artifacts: true
+
+ubi7-v10.1-test-x86_64:
+  needs: ["ubi7-v10.1"]
+  <<: *ubi7_10_1_only
+  <<: *test_definition
+  variables:
+    <<: *ubi7_10_1_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_10_1 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v10.1-scan-x86_64:
+  <<: *scan_definition
+  <<: *ubi7_10_1_only
+  needs:
+    - job: ubi7-v10.1
+    - job: ubi7-v10.1-test-x86_64
+      optional: true
+  variables:
+    <<: *ubi7_10_1_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_10_1 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v10.1-test-ppc64le:
+  needs: ["ubi7-v10.1"]
+  <<: *ubi7_10_1_only
+  <<: *test_definition
+  variables:
+    <<: *ubi7_10_1_variables
+    ARCH: "ppc64le"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_10_1 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v10.1-scan-ppc64le:
+  <<: *scan_definition
+  <<: *ubi7_10_1_only
+  needs:
+    - job: ubi7-v10.1
+    - job: ubi7-v10.1-test-ppc64le
+      optional: true
+  variables:
+    <<: *ubi7_10_1_variables
+    ARCH: "ppc64le"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_10_1 == "true"'
+    - if: '$all == "true"'
+
+
+ubi7-v10.1-deploy:
+  <<: *deploy_definition
+  <<: *ubi7_10_1_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$ubi7_10_1 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubi7-v10.1
+      artifacts: true
+    - job: ubi7-v10.1-test-x86_64
+      optional: true
+    - job: ubi7-v10.1-scan-x86_64
+      optional: true
+    - job: ubi7-v10.1-test-ppc64le
+      optional: true
+    - job: ubi7-v10.1-scan-ppc64le
+      optional: true
+    - job: ubi7-v10.1-cudnn8
+      optional: true
+    - job: ubi7-v10.1-cudnn7
+      optional: true
+
+
+.ubuntu18_04_10_0_variables: &ubuntu18_04_10_0_variables
+  DIST_BASE_PATH: "dist/10.0"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "x86_64, ppc64le"
+  OS: "ubuntu18.04"
+  OS_NAME: "ubuntu"
+  OS_VERSION: "18.04"
+  CUDA_VERSION: "10.0"
+
+.ubuntu18_04_10_0_only: &ubuntu18_04_10_0_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *ubuntu18_04_10_0_variables
+  rules:
+    - if: '$ubuntu18_04_10_0 == "true"'
+    - if: '$all == "true"'
+
+ubuntu18.04-v10.0:
+  <<: *cuda_base_definition
+  <<: *ubuntu18_04_10_0_only
+
+ubuntu18.04-v10.0-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubuntu18_04_10_0_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu18_04_10_0_variables
+    CUDNN_VERSION: "cudnn7"
+    ARCHES: "x86_64, ppc64le"
+  needs:
+    - job: ubuntu18.04-v10.0
+      artifacts: true
+
+ubuntu18.04-v10.0-test-x86_64:
+  needs: ["ubuntu18.04-v10.0"]
+  <<: *ubuntu18_04_10_0_only
+  <<: *test_definition
+  variables:
+    <<: *ubuntu18_04_10_0_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu18_04_10_0 == "true"'
+    - if: '$all == "true"'
+
+ubuntu18.04-v10.0-scan-x86_64:
+  <<: *scan_definition
+  <<: *ubuntu18_04_10_0_only
+  needs:
+    - job: ubuntu18.04-v10.0
+    - job: ubuntu18.04-v10.0-test-x86_64
+      optional: true
+  variables:
+    <<: *ubuntu18_04_10_0_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu18_04_10_0 == "true"'
+    - if: '$all == "true"'
+
+ubuntu18.04-v10.0-test-ppc64le:
+  needs: ["ubuntu18.04-v10.0"]
+  <<: *ubuntu18_04_10_0_only
+  <<: *test_definition
+  variables:
+    <<: *ubuntu18_04_10_0_variables
+    ARCH: "ppc64le"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu18_04_10_0 == "true"'
+    - if: '$all == "true"'
+
+ubuntu18.04-v10.0-scan-ppc64le:
+  <<: *scan_definition
+  <<: *ubuntu18_04_10_0_only
+  needs:
+    - job: ubuntu18.04-v10.0
+    - job: ubuntu18.04-v10.0-test-ppc64le
+      optional: true
+  variables:
+    <<: *ubuntu18_04_10_0_variables
+    ARCH: "ppc64le"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu18_04_10_0 == "true"'
+    - if: '$all == "true"'
+
+
+ubuntu18.04-v10.0-deploy:
+  <<: *deploy_definition
+  <<: *ubuntu18_04_10_0_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$ubuntu18_04_10_0 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubuntu18.04-v10.0
+      artifacts: true
+    - job: ubuntu18.04-v10.0-test-x86_64
+      optional: true
+    - job: ubuntu18.04-v10.0-scan-x86_64
+      optional: true
+    - job: ubuntu18.04-v10.0-test-ppc64le
+      optional: true
+    - job: ubuntu18.04-v10.0-scan-ppc64le
+      optional: true
+    - job: ubuntu18.04-v10.0-cudnn7
+      optional: true
+
+
+.ubuntu16_04_10_0_variables: &ubuntu16_04_10_0_variables
+  DIST_BASE_PATH: "dist/10.0"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "x86_64"
+  OS: "ubuntu16.04"
+  OS_NAME: "ubuntu"
+  OS_VERSION: "16.04"
+  CUDA_VERSION: "10.0"
+
+.ubuntu16_04_10_0_only: &ubuntu16_04_10_0_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *ubuntu16_04_10_0_variables
+  rules:
+    - if: '$ubuntu16_04_10_0 == "true"'
+    - if: '$all == "true"'
+
+ubuntu16.04-v10.0:
+  <<: *cuda_base_definition
+  <<: *ubuntu16_04_10_0_only
+
+ubuntu16.04-v10.0-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubuntu16_04_10_0_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu16_04_10_0_variables
+    CUDNN_VERSION: "cudnn7"
+    ARCHES: "x86_64"
+  needs:
+    - job: ubuntu16.04-v10.0
+      artifacts: true
+
+ubuntu16.04-v10.0-test-x86_64:
+  needs: ["ubuntu16.04-v10.0"]
+  <<: *ubuntu16_04_10_0_only
+  <<: *test_definition
+  variables:
+    <<: *ubuntu16_04_10_0_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu16_04_10_0 == "true"'
+    - if: '$all == "true"'
+
+ubuntu16.04-v10.0-scan-x86_64:
+  <<: *scan_definition
+  <<: *ubuntu16_04_10_0_only
+  needs:
+    - job: ubuntu16.04-v10.0
+    - job: ubuntu16.04-v10.0-test-x86_64
+      optional: true
+  variables:
+    <<: *ubuntu16_04_10_0_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu16_04_10_0 == "true"'
+    - if: '$all == "true"'
+
+
+ubuntu16.04-v10.0-deploy:
+  <<: *deploy_definition
+  <<: *ubuntu16_04_10_0_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$ubuntu16_04_10_0 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubuntu16.04-v10.0
+      artifacts: true
+    - job: ubuntu16.04-v10.0-test-x86_64
+      optional: true
+    - job: ubuntu16.04-v10.0-scan-x86_64
+      optional: true
+    - job: ubuntu16.04-v10.0-cudnn7
+      optional: true
+
+
+.centos7_10_0_variables: &centos7_10_0_variables
+  DIST_BASE_PATH: "dist/10.0"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "x86_64, ppc64le"
+  OS: "centos7"
+  OS_NAME: "centos"
+  OS_VERSION: "7"
+  CUDA_VERSION: "10.0"
+
+.centos7_10_0_only: &centos7_10_0_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *centos7_10_0_variables
+  rules:
+    - if: '$centos7_10_0 == "true"'
+    - if: '$all == "true"'
+
+centos7-v10.0:
+  <<: *cuda_base_definition
+  <<: *centos7_10_0_only
+
+centos7-v10.0-cudnn7:
+  <<: *cudnn_definition
+  <<: *centos7_10_0_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos7_10_0_variables
+    CUDNN_VERSION: "cudnn7"
+    ARCHES: "x86_64, ppc64le"
+  needs:
+    - job: centos7-v10.0
+      artifacts: true
+
+centos7-v10.0-test-x86_64:
+  needs: ["centos7-v10.0"]
+  <<: *centos7_10_0_only
+  <<: *test_definition
+  variables:
+    <<: *centos7_10_0_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$centos7_10_0 == "true"'
+    - if: '$all == "true"'
+
+centos7-v10.0-scan-x86_64:
+  <<: *scan_definition
+  <<: *centos7_10_0_only
+  needs:
+    - job: centos7-v10.0
+    - job: centos7-v10.0-test-x86_64
+      optional: true
+  variables:
+    <<: *centos7_10_0_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$centos7_10_0 == "true"'
+    - if: '$all == "true"'
+
+centos7-v10.0-test-ppc64le:
+  needs: ["centos7-v10.0"]
+  <<: *centos7_10_0_only
+  <<: *test_definition
+  variables:
+    <<: *centos7_10_0_variables
+    ARCH: "ppc64le"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$centos7_10_0 == "true"'
+    - if: '$all == "true"'
+
+centos7-v10.0-scan-ppc64le:
+  <<: *scan_definition
+  <<: *centos7_10_0_only
+  needs:
+    - job: centos7-v10.0
+    - job: centos7-v10.0-test-ppc64le
+      optional: true
+  variables:
+    <<: *centos7_10_0_variables
+    ARCH: "ppc64le"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$centos7_10_0 == "true"'
+    - if: '$all == "true"'
+
+
+centos7-v10.0-deploy:
+  <<: *deploy_definition
+  <<: *centos7_10_0_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$centos7_10_0 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: centos7-v10.0
+      artifacts: true
+    - job: centos7-v10.0-test-x86_64
+      optional: true
+    - job: centos7-v10.0-scan-x86_64
+      optional: true
+    - job: centos7-v10.0-test-ppc64le
+      optional: true
+    - job: centos7-v10.0-scan-ppc64le
+      optional: true
+    - job: centos7-v10.0-cudnn7
+      optional: true
+
+
+.ubi7_10_0_variables: &ubi7_10_0_variables
+  DIST_BASE_PATH: "dist/10.0"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "x86_64, ppc64le"
+  OS: "ubi7"
+  OS_NAME: "ubi"
+  OS_VERSION: "7"
+  CUDA_VERSION: "10.0"
+
+.ubi7_10_0_only: &ubi7_10_0_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *ubi7_10_0_variables
+  rules:
+    - if: '$ubi7_10_0 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v10.0:
+  <<: *cuda_base_definition
+  <<: *ubi7_10_0_only
+
+ubi7-v10.0-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubi7_10_0_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi7_10_0_variables
+    CUDNN_VERSION: "cudnn7"
+    ARCHES: "x86_64, ppc64le"
+  needs:
+    - job: ubi7-v10.0
+      artifacts: true
+
+ubi7-v10.0-test-x86_64:
+  needs: ["ubi7-v10.0"]
+  <<: *ubi7_10_0_only
+  <<: *test_definition
+  variables:
+    <<: *ubi7_10_0_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_10_0 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v10.0-scan-x86_64:
+  <<: *scan_definition
+  <<: *ubi7_10_0_only
+  needs:
+    - job: ubi7-v10.0
+    - job: ubi7-v10.0-test-x86_64
+      optional: true
+  variables:
+    <<: *ubi7_10_0_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_10_0 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v10.0-test-ppc64le:
+  needs: ["ubi7-v10.0"]
+  <<: *ubi7_10_0_only
+  <<: *test_definition
+  variables:
+    <<: *ubi7_10_0_variables
+    ARCH: "ppc64le"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_10_0 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v10.0-scan-ppc64le:
+  <<: *scan_definition
+  <<: *ubi7_10_0_only
+  needs:
+    - job: ubi7-v10.0
+    - job: ubi7-v10.0-test-ppc64le
+      optional: true
+  variables:
+    <<: *ubi7_10_0_variables
+    ARCH: "ppc64le"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_10_0 == "true"'
+    - if: '$all == "true"'
+
+
+ubi7-v10.0-deploy:
+  <<: *deploy_definition
+  <<: *ubi7_10_0_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$ubi7_10_0 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubi7-v10.0
+      artifacts: true
+    - job: ubi7-v10.0-test-x86_64
+      optional: true
+    - job: ubi7-v10.0-scan-x86_64
+      optional: true
+    - job: ubi7-v10.0-test-ppc64le
+      optional: true
+    - job: ubi7-v10.0-scan-ppc64le
+      optional: true
+    - job: ubi7-v10.0-cudnn7
+      optional: true
+
+
+.ubuntu18_04_9_2_variables: &ubuntu18_04_9_2_variables
+  DIST_BASE_PATH: "dist/9.2"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "x86_64"
+  OS: "ubuntu18.04"
+  OS_NAME: "ubuntu"
+  OS_VERSION: "18.04"
+  CUDA_VERSION: "9.2"
+
+.ubuntu18_04_9_2_only: &ubuntu18_04_9_2_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *ubuntu18_04_9_2_variables
+  rules:
+    - if: '$ubuntu18_04_9_2 == "true"'
+    - if: '$all == "true"'
+
+ubuntu18.04-v9.2:
+  <<: *cuda_base_definition
+  <<: *ubuntu18_04_9_2_only
+
+ubuntu18.04-v9.2-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubuntu18_04_9_2_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu18_04_9_2_variables
+    CUDNN_VERSION: "cudnn7"
+    ARCHES: "x86_64"
+  needs:
+    - job: ubuntu18.04-v9.2
+      artifacts: true
+
+ubuntu18.04-v9.2-test-x86_64:
+  needs: ["ubuntu18.04-v9.2"]
+  <<: *ubuntu18_04_9_2_only
+  <<: *test_definition
+  variables:
+    <<: *ubuntu18_04_9_2_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu18_04_9_2 == "true"'
+    - if: '$all == "true"'
+
+ubuntu18.04-v9.2-scan-x86_64:
+  <<: *scan_definition
+  <<: *ubuntu18_04_9_2_only
+  needs:
+    - job: ubuntu18.04-v9.2
+    - job: ubuntu18.04-v9.2-test-x86_64
+      optional: true
+  variables:
+    <<: *ubuntu18_04_9_2_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu18_04_9_2 == "true"'
+    - if: '$all == "true"'
+
+
+ubuntu18.04-v9.2-deploy:
+  <<: *deploy_definition
+  <<: *ubuntu18_04_9_2_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$ubuntu18_04_9_2 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubuntu18.04-v9.2
+      artifacts: true
+    - job: ubuntu18.04-v9.2-test-x86_64
+      optional: true
+    - job: ubuntu18.04-v9.2-scan-x86_64
+      optional: true
+    - job: ubuntu18.04-v9.2-cudnn7
+      optional: true
+
+
+.ubuntu16_04_9_2_variables: &ubuntu16_04_9_2_variables
+  DIST_BASE_PATH: "dist/9.2"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "x86_64"
+  OS: "ubuntu16.04"
+  OS_NAME: "ubuntu"
+  OS_VERSION: "16.04"
+  CUDA_VERSION: "9.2"
+
+.ubuntu16_04_9_2_only: &ubuntu16_04_9_2_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *ubuntu16_04_9_2_variables
+  rules:
+    - if: '$ubuntu16_04_9_2 == "true"'
+    - if: '$all == "true"'
+
+ubuntu16.04-v9.2:
+  <<: *cuda_base_definition
+  <<: *ubuntu16_04_9_2_only
+
+ubuntu16.04-v9.2-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubuntu16_04_9_2_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu16_04_9_2_variables
+    CUDNN_VERSION: "cudnn7"
+    ARCHES: "x86_64"
+  needs:
+    - job: ubuntu16.04-v9.2
+      artifacts: true
+
+ubuntu16.04-v9.2-test-x86_64:
+  needs: ["ubuntu16.04-v9.2"]
+  <<: *ubuntu16_04_9_2_only
+  <<: *test_definition
+  variables:
+    <<: *ubuntu16_04_9_2_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu16_04_9_2 == "true"'
+    - if: '$all == "true"'
+
+ubuntu16.04-v9.2-scan-x86_64:
+  <<: *scan_definition
+  <<: *ubuntu16_04_9_2_only
+  needs:
+    - job: ubuntu16.04-v9.2
+    - job: ubuntu16.04-v9.2-test-x86_64
+      optional: true
+  variables:
+    <<: *ubuntu16_04_9_2_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu16_04_9_2 == "true"'
+    - if: '$all == "true"'
+
+
+ubuntu16.04-v9.2-deploy:
+  <<: *deploy_definition
+  <<: *ubuntu16_04_9_2_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$ubuntu16_04_9_2 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubuntu16.04-v9.2
+      artifacts: true
+    - job: ubuntu16.04-v9.2-test-x86_64
+      optional: true
+    - job: ubuntu16.04-v9.2-scan-x86_64
+      optional: true
+    - job: ubuntu16.04-v9.2-cudnn7
+      optional: true
+
+
+.centos7_9_2_variables: &centos7_9_2_variables
+  DIST_BASE_PATH: "dist/9.2"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "x86_64, ppc64le"
+  OS: "centos7"
+  OS_NAME: "centos"
+  OS_VERSION: "7"
+  CUDA_VERSION: "9.2"
+
+.centos7_9_2_only: &centos7_9_2_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *centos7_9_2_variables
+  rules:
+    - if: '$centos7_9_2 == "true"'
+    - if: '$all == "true"'
+
+centos7-v9.2:
+  <<: *cuda_base_definition
+  <<: *centos7_9_2_only
+
+centos7-v9.2-cudnn7:
+  <<: *cudnn_definition
+  <<: *centos7_9_2_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos7_9_2_variables
+    CUDNN_VERSION: "cudnn7"
+    ARCHES: "x86_64, ppc64le"
+  needs:
+    - job: centos7-v9.2
+      artifacts: true
+
+centos7-v9.2-test-x86_64:
+  needs: ["centos7-v9.2"]
+  <<: *centos7_9_2_only
+  <<: *test_definition
+  variables:
+    <<: *centos7_9_2_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$centos7_9_2 == "true"'
+    - if: '$all == "true"'
+
+centos7-v9.2-scan-x86_64:
+  <<: *scan_definition
+  <<: *centos7_9_2_only
+  needs:
+    - job: centos7-v9.2
+    - job: centos7-v9.2-test-x86_64
+      optional: true
+  variables:
+    <<: *centos7_9_2_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$centos7_9_2 == "true"'
+    - if: '$all == "true"'
+
+centos7-v9.2-test-ppc64le:
+  needs: ["centos7-v9.2"]
+  <<: *centos7_9_2_only
+  <<: *test_definition
+  variables:
+    <<: *centos7_9_2_variables
+    ARCH: "ppc64le"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$centos7_9_2 == "true"'
+    - if: '$all == "true"'
+
+centos7-v9.2-scan-ppc64le:
+  <<: *scan_definition
+  <<: *centos7_9_2_only
+  needs:
+    - job: centos7-v9.2
+    - job: centos7-v9.2-test-ppc64le
+      optional: true
+  variables:
+    <<: *centos7_9_2_variables
+    ARCH: "ppc64le"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$centos7_9_2 == "true"'
+    - if: '$all == "true"'
+
+
+centos7-v9.2-deploy:
+  <<: *deploy_definition
+  <<: *centos7_9_2_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$centos7_9_2 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: centos7-v9.2
+      artifacts: true
+    - job: centos7-v9.2-test-x86_64
+      optional: true
+    - job: centos7-v9.2-scan-x86_64
+      optional: true
+    - job: centos7-v9.2-test-ppc64le
+      optional: true
+    - job: centos7-v9.2-scan-ppc64le
+      optional: true
+    - job: centos7-v9.2-cudnn7
+      optional: true
+
+
+.ubi7_9_2_variables: &ubi7_9_2_variables
+  DIST_BASE_PATH: "dist/9.2"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "x86_64, ppc64le"
+  OS: "ubi7"
+  OS_NAME: "ubi"
+  OS_VERSION: "7"
+  CUDA_VERSION: "9.2"
+
+.ubi7_9_2_only: &ubi7_9_2_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *ubi7_9_2_variables
+  rules:
+    - if: '$ubi7_9_2 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v9.2:
+  <<: *cuda_base_definition
+  <<: *ubi7_9_2_only
+
+ubi7-v9.2-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubi7_9_2_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi7_9_2_variables
+    CUDNN_VERSION: "cudnn7"
+    ARCHES: "x86_64, ppc64le"
+  needs:
+    - job: ubi7-v9.2
+      artifacts: true
+
+ubi7-v9.2-test-x86_64:
+  needs: ["ubi7-v9.2"]
+  <<: *ubi7_9_2_only
+  <<: *test_definition
+  variables:
+    <<: *ubi7_9_2_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_9_2 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v9.2-scan-x86_64:
+  <<: *scan_definition
+  <<: *ubi7_9_2_only
+  needs:
+    - job: ubi7-v9.2
+    - job: ubi7-v9.2-test-x86_64
+      optional: true
+  variables:
+    <<: *ubi7_9_2_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_9_2 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v9.2-test-ppc64le:
+  needs: ["ubi7-v9.2"]
+  <<: *ubi7_9_2_only
+  <<: *test_definition
+  variables:
+    <<: *ubi7_9_2_variables
+    ARCH: "ppc64le"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_9_2 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v9.2-scan-ppc64le:
+  <<: *scan_definition
+  <<: *ubi7_9_2_only
+  needs:
+    - job: ubi7-v9.2
+    - job: ubi7-v9.2-test-ppc64le
+      optional: true
+  variables:
+    <<: *ubi7_9_2_variables
+    ARCH: "ppc64le"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_9_2 == "true"'
+    - if: '$all == "true"'
+
+
+ubi7-v9.2-deploy:
+  <<: *deploy_definition
+  <<: *ubi7_9_2_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$ubi7_9_2 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubi7-v9.2
+      artifacts: true
+    - job: ubi7-v9.2-test-x86_64
+      optional: true
+    - job: ubi7-v9.2-scan-x86_64
+      optional: true
+    - job: ubi7-v9.2-test-ppc64le
+      optional: true
+    - job: ubi7-v9.2-scan-ppc64le
+      optional: true
+    - job: ubi7-v9.2-cudnn7
+      optional: true
+
+
+.ubuntu16_04_9_1_variables: &ubuntu16_04_9_1_variables
+  DIST_BASE_PATH: "dist/9.1"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "x86_64, ppc64le"
+  OS: "ubuntu16.04"
+  OS_NAME: "ubuntu"
+  OS_VERSION: "16.04"
+  CUDA_VERSION: "9.1"
+
+.ubuntu16_04_9_1_only: &ubuntu16_04_9_1_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *ubuntu16_04_9_1_variables
+  rules:
+    - if: '$ubuntu16_04_9_1 == "true"'
+    - if: '$all == "true"'
+
+ubuntu16.04-v9.1:
+  <<: *cuda_base_definition
+  <<: *ubuntu16_04_9_1_only
+
+ubuntu16.04-v9.1-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubuntu16_04_9_1_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu16_04_9_1_variables
+    CUDNN_VERSION: "cudnn7"
+    ARCHES: "x86_64, ppc64le"
+  needs:
+    - job: ubuntu16.04-v9.1
+      artifacts: true
+
+ubuntu16.04-v9.1-test-x86_64:
+  needs: ["ubuntu16.04-v9.1"]
+  <<: *ubuntu16_04_9_1_only
+  <<: *test_definition
+  variables:
+    <<: *ubuntu16_04_9_1_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu16_04_9_1 == "true"'
+    - if: '$all == "true"'
+
+ubuntu16.04-v9.1-scan-x86_64:
+  <<: *scan_definition
+  <<: *ubuntu16_04_9_1_only
+  needs:
+    - job: ubuntu16.04-v9.1
+    - job: ubuntu16.04-v9.1-test-x86_64
+      optional: true
+  variables:
+    <<: *ubuntu16_04_9_1_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu16_04_9_1 == "true"'
+    - if: '$all == "true"'
+
+ubuntu16.04-v9.1-test-ppc64le:
+  needs: ["ubuntu16.04-v9.1"]
+  <<: *ubuntu16_04_9_1_only
+  <<: *test_definition
+  variables:
+    <<: *ubuntu16_04_9_1_variables
+    ARCH: "ppc64le"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu16_04_9_1 == "true"'
+    - if: '$all == "true"'
+
+ubuntu16.04-v9.1-scan-ppc64le:
+  <<: *scan_definition
+  <<: *ubuntu16_04_9_1_only
+  needs:
+    - job: ubuntu16.04-v9.1
+    - job: ubuntu16.04-v9.1-test-ppc64le
+      optional: true
+  variables:
+    <<: *ubuntu16_04_9_1_variables
+    ARCH: "ppc64le"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu16_04_9_1 == "true"'
+    - if: '$all == "true"'
+
+
+ubuntu16.04-v9.1-deploy:
+  <<: *deploy_definition
+  <<: *ubuntu16_04_9_1_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$ubuntu16_04_9_1 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubuntu16.04-v9.1
+      artifacts: true
+    - job: ubuntu16.04-v9.1-test-x86_64
+      optional: true
+    - job: ubuntu16.04-v9.1-scan-x86_64
+      optional: true
+    - job: ubuntu16.04-v9.1-test-ppc64le
+      optional: true
+    - job: ubuntu16.04-v9.1-scan-ppc64le
+      optional: true
+    - job: ubuntu16.04-v9.1-cudnn7
+      optional: true
+
+
+.centos7_9_1_variables: &centos7_9_1_variables
+  DIST_BASE_PATH: "dist/9.1"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "x86_64, ppc64le"
+  OS: "centos7"
+  OS_NAME: "centos"
+  OS_VERSION: "7"
+  CUDA_VERSION: "9.1"
+
+.centos7_9_1_only: &centos7_9_1_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *centos7_9_1_variables
+  rules:
+    - if: '$centos7_9_1 == "true"'
+    - if: '$all == "true"'
+
+centos7-v9.1:
+  <<: *cuda_base_definition
+  <<: *centos7_9_1_only
+
+centos7-v9.1-cudnn7:
+  <<: *cudnn_definition
+  <<: *centos7_9_1_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos7_9_1_variables
+    CUDNN_VERSION: "cudnn7"
+    ARCHES: "x86_64, ppc64le"
+  needs:
+    - job: centos7-v9.1
+      artifacts: true
+
+centos7-v9.1-test-x86_64:
+  needs: ["centos7-v9.1"]
+  <<: *centos7_9_1_only
+  <<: *test_definition
+  variables:
+    <<: *centos7_9_1_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$centos7_9_1 == "true"'
+    - if: '$all == "true"'
+
+centos7-v9.1-scan-x86_64:
+  <<: *scan_definition
+  <<: *centos7_9_1_only
+  needs:
+    - job: centos7-v9.1
+    - job: centos7-v9.1-test-x86_64
+      optional: true
+  variables:
+    <<: *centos7_9_1_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$centos7_9_1 == "true"'
+    - if: '$all == "true"'
+
+centos7-v9.1-test-ppc64le:
+  needs: ["centos7-v9.1"]
+  <<: *centos7_9_1_only
+  <<: *test_definition
+  variables:
+    <<: *centos7_9_1_variables
+    ARCH: "ppc64le"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$centos7_9_1 == "true"'
+    - if: '$all == "true"'
+
+centos7-v9.1-scan-ppc64le:
+  <<: *scan_definition
+  <<: *centos7_9_1_only
+  needs:
+    - job: centos7-v9.1
+    - job: centos7-v9.1-test-ppc64le
+      optional: true
+  variables:
+    <<: *centos7_9_1_variables
+    ARCH: "ppc64le"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$centos7_9_1 == "true"'
+    - if: '$all == "true"'
+
+
+centos7-v9.1-deploy:
+  <<: *deploy_definition
+  <<: *centos7_9_1_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$centos7_9_1 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: centos7-v9.1
+      artifacts: true
+    - job: centos7-v9.1-test-x86_64
+      optional: true
+    - job: centos7-v9.1-scan-x86_64
+      optional: true
+    - job: centos7-v9.1-test-ppc64le
+      optional: true
+    - job: centos7-v9.1-scan-ppc64le
+      optional: true
+    - job: centos7-v9.1-cudnn7
+      optional: true
+
+
+.ubi7_9_1_variables: &ubi7_9_1_variables
+  DIST_BASE_PATH: "dist/9.1"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "x86_64, ppc64le"
+  OS: "ubi7"
+  OS_NAME: "ubi"
+  OS_VERSION: "7"
+  CUDA_VERSION: "9.1"
+
+.ubi7_9_1_only: &ubi7_9_1_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *ubi7_9_1_variables
+  rules:
+    - if: '$ubi7_9_1 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v9.1:
+  <<: *cuda_base_definition
+  <<: *ubi7_9_1_only
+
+ubi7-v9.1-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubi7_9_1_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi7_9_1_variables
+    CUDNN_VERSION: "cudnn7"
+    ARCHES: "x86_64, ppc64le"
+  needs:
+    - job: ubi7-v9.1
+      artifacts: true
+
+ubi7-v9.1-test-x86_64:
+  needs: ["ubi7-v9.1"]
+  <<: *ubi7_9_1_only
+  <<: *test_definition
+  variables:
+    <<: *ubi7_9_1_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_9_1 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v9.1-scan-x86_64:
+  <<: *scan_definition
+  <<: *ubi7_9_1_only
+  needs:
+    - job: ubi7-v9.1
+    - job: ubi7-v9.1-test-x86_64
+      optional: true
+  variables:
+    <<: *ubi7_9_1_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_9_1 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v9.1-test-ppc64le:
+  needs: ["ubi7-v9.1"]
+  <<: *ubi7_9_1_only
+  <<: *test_definition
+  variables:
+    <<: *ubi7_9_1_variables
+    ARCH: "ppc64le"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_9_1 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v9.1-scan-ppc64le:
+  <<: *scan_definition
+  <<: *ubi7_9_1_only
+  needs:
+    - job: ubi7-v9.1
+    - job: ubi7-v9.1-test-ppc64le
+      optional: true
+  variables:
+    <<: *ubi7_9_1_variables
+    ARCH: "ppc64le"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_9_1 == "true"'
+    - if: '$all == "true"'
+
+
+ubi7-v9.1-deploy:
+  <<: *deploy_definition
+  <<: *ubi7_9_1_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$ubi7_9_1 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubi7-v9.1
+      artifacts: true
+    - job: ubi7-v9.1-test-x86_64
+      optional: true
+    - job: ubi7-v9.1-scan-x86_64
+      optional: true
+    - job: ubi7-v9.1-test-ppc64le
+      optional: true
+    - job: ubi7-v9.1-scan-ppc64le
+      optional: true
+    - job: ubi7-v9.1-cudnn7
+      optional: true
+
+
+.ubuntu16_04_9_0_variables: &ubuntu16_04_9_0_variables
+  DIST_BASE_PATH: "dist/9.0"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "x86_64, ppc64le"
+  OS: "ubuntu16.04"
+  OS_NAME: "ubuntu"
+  OS_VERSION: "16.04"
+  CUDA_VERSION: "9.0"
+
+.ubuntu16_04_9_0_only: &ubuntu16_04_9_0_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *ubuntu16_04_9_0_variables
+  rules:
+    - if: '$ubuntu16_04_9_0 == "true"'
+    - if: '$all == "true"'
+
+ubuntu16.04-v9.0:
+  <<: *cuda_base_definition
+  <<: *ubuntu16_04_9_0_only
+
+ubuntu16.04-v9.0-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubuntu16_04_9_0_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu16_04_9_0_variables
+    CUDNN_VERSION: "cudnn7"
+    ARCHES: "x86_64, ppc64le"
+  needs:
+    - job: ubuntu16.04-v9.0
+      artifacts: true
+
+ubuntu16.04-v9.0-test-x86_64:
+  needs: ["ubuntu16.04-v9.0"]
+  <<: *ubuntu16_04_9_0_only
+  <<: *test_definition
+  variables:
+    <<: *ubuntu16_04_9_0_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu16_04_9_0 == "true"'
+    - if: '$all == "true"'
+
+ubuntu16.04-v9.0-scan-x86_64:
+  <<: *scan_definition
+  <<: *ubuntu16_04_9_0_only
+  needs:
+    - job: ubuntu16.04-v9.0
+    - job: ubuntu16.04-v9.0-test-x86_64
+      optional: true
+  variables:
+    <<: *ubuntu16_04_9_0_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu16_04_9_0 == "true"'
+    - if: '$all == "true"'
+
+ubuntu16.04-v9.0-test-ppc64le:
+  needs: ["ubuntu16.04-v9.0"]
+  <<: *ubuntu16_04_9_0_only
+  <<: *test_definition
+  variables:
+    <<: *ubuntu16_04_9_0_variables
+    ARCH: "ppc64le"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu16_04_9_0 == "true"'
+    - if: '$all == "true"'
+
+ubuntu16.04-v9.0-scan-ppc64le:
+  <<: *scan_definition
+  <<: *ubuntu16_04_9_0_only
+  needs:
+    - job: ubuntu16.04-v9.0
+    - job: ubuntu16.04-v9.0-test-ppc64le
+      optional: true
+  variables:
+    <<: *ubuntu16_04_9_0_variables
+    ARCH: "ppc64le"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu16_04_9_0 == "true"'
+    - if: '$all == "true"'
+
+
+ubuntu16.04-v9.0-deploy:
+  <<: *deploy_definition
+  <<: *ubuntu16_04_9_0_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$ubuntu16_04_9_0 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubuntu16.04-v9.0
+      artifacts: true
+    - job: ubuntu16.04-v9.0-test-x86_64
+      optional: true
+    - job: ubuntu16.04-v9.0-scan-x86_64
+      optional: true
+    - job: ubuntu16.04-v9.0-test-ppc64le
+      optional: true
+    - job: ubuntu16.04-v9.0-scan-ppc64le
+      optional: true
+    - job: ubuntu16.04-v9.0-cudnn7
+      optional: true
+
+
+.centos7_9_0_variables: &centos7_9_0_variables
+  DIST_BASE_PATH: "dist/9.0"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "x86_64, ppc64le"
+  OS: "centos7"
+  OS_NAME: "centos"
+  OS_VERSION: "7"
+  CUDA_VERSION: "9.0"
+
+.centos7_9_0_only: &centos7_9_0_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *centos7_9_0_variables
+  rules:
+    - if: '$centos7_9_0 == "true"'
+    - if: '$all == "true"'
+
+centos7-v9.0:
+  <<: *cuda_base_definition
+  <<: *centos7_9_0_only
+
+centos7-v9.0-cudnn7:
+  <<: *cudnn_definition
+  <<: *centos7_9_0_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos7_9_0_variables
+    CUDNN_VERSION: "cudnn7"
+    ARCHES: "x86_64, ppc64le"
+  needs:
+    - job: centos7-v9.0
+      artifacts: true
+
+centos7-v9.0-test-x86_64:
+  needs: ["centos7-v9.0"]
+  <<: *centos7_9_0_only
+  <<: *test_definition
+  variables:
+    <<: *centos7_9_0_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$centos7_9_0 == "true"'
+    - if: '$all == "true"'
+
+centos7-v9.0-scan-x86_64:
+  <<: *scan_definition
+  <<: *centos7_9_0_only
+  needs:
+    - job: centos7-v9.0
+    - job: centos7-v9.0-test-x86_64
+      optional: true
+  variables:
+    <<: *centos7_9_0_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$centos7_9_0 == "true"'
+    - if: '$all == "true"'
+
+centos7-v9.0-test-ppc64le:
+  needs: ["centos7-v9.0"]
+  <<: *centos7_9_0_only
+  <<: *test_definition
+  variables:
+    <<: *centos7_9_0_variables
+    ARCH: "ppc64le"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$centos7_9_0 == "true"'
+    - if: '$all == "true"'
+
+centos7-v9.0-scan-ppc64le:
+  <<: *scan_definition
+  <<: *centos7_9_0_only
+  needs:
+    - job: centos7-v9.0
+    - job: centos7-v9.0-test-ppc64le
+      optional: true
+  variables:
+    <<: *centos7_9_0_variables
+    ARCH: "ppc64le"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$centos7_9_0 == "true"'
+    - if: '$all == "true"'
+
+
+centos7-v9.0-deploy:
+  <<: *deploy_definition
+  <<: *centos7_9_0_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$centos7_9_0 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: centos7-v9.0
+      artifacts: true
+    - job: centos7-v9.0-test-x86_64
+      optional: true
+    - job: centos7-v9.0-scan-x86_64
+      optional: true
+    - job: centos7-v9.0-test-ppc64le
+      optional: true
+    - job: centos7-v9.0-scan-ppc64le
+      optional: true
+    - job: centos7-v9.0-cudnn7
+      optional: true
+
+
+.ubi7_9_0_variables: &ubi7_9_0_variables
+  DIST_BASE_PATH: "dist/9.0"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "x86_64, ppc64le"
+  OS: "ubi7"
+  OS_NAME: "ubi"
+  OS_VERSION: "7"
+  CUDA_VERSION: "9.0"
+
+.ubi7_9_0_only: &ubi7_9_0_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *ubi7_9_0_variables
+  rules:
+    - if: '$ubi7_9_0 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v9.0:
+  <<: *cuda_base_definition
+  <<: *ubi7_9_0_only
+
+ubi7-v9.0-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubi7_9_0_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi7_9_0_variables
+    CUDNN_VERSION: "cudnn7"
+    ARCHES: "x86_64, ppc64le"
+  needs:
+    - job: ubi7-v9.0
+      artifacts: true
+
+ubi7-v9.0-test-x86_64:
+  needs: ["ubi7-v9.0"]
+  <<: *ubi7_9_0_only
+  <<: *test_definition
+  variables:
+    <<: *ubi7_9_0_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_9_0 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v9.0-scan-x86_64:
+  <<: *scan_definition
+  <<: *ubi7_9_0_only
+  needs:
+    - job: ubi7-v9.0
+    - job: ubi7-v9.0-test-x86_64
+      optional: true
+  variables:
+    <<: *ubi7_9_0_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_9_0 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v9.0-test-ppc64le:
+  needs: ["ubi7-v9.0"]
+  <<: *ubi7_9_0_only
+  <<: *test_definition
+  variables:
+    <<: *ubi7_9_0_variables
+    ARCH: "ppc64le"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_9_0 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v9.0-scan-ppc64le:
+  <<: *scan_definition
+  <<: *ubi7_9_0_only
+  needs:
+    - job: ubi7-v9.0
+    - job: ubi7-v9.0-test-ppc64le
+      optional: true
+  variables:
+    <<: *ubi7_9_0_variables
+    ARCH: "ppc64le"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_9_0 == "true"'
+    - if: '$all == "true"'
+
+
+ubi7-v9.0-deploy:
+  <<: *deploy_definition
+  <<: *ubi7_9_0_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$ubi7_9_0 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubi7-v9.0
+      artifacts: true
+    - job: ubi7-v9.0-test-x86_64
+      optional: true
+    - job: ubi7-v9.0-scan-x86_64
+      optional: true
+    - job: ubi7-v9.0-test-ppc64le
+      optional: true
+    - job: ubi7-v9.0-scan-ppc64le
+      optional: true
+    - job: ubi7-v9.0-cudnn7
+      optional: true
+
+
+.ubuntu16_04_8_0_variables: &ubuntu16_04_8_0_variables
+  DIST_BASE_PATH: "dist/8.0"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "x86_64, ppc64le"
+  OS: "ubuntu16.04"
+  OS_NAME: "ubuntu"
+  OS_VERSION: "16.04"
+  CUDA_VERSION: "8.0"
+
+.ubuntu16_04_8_0_only: &ubuntu16_04_8_0_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *ubuntu16_04_8_0_variables
+  rules:
+    - if: '$ubuntu16_04_8_0 == "true"'
+    - if: '$all == "true"'
+
+ubuntu16.04-v8.0:
+  <<: *cuda_definition_deprecated
+  <<: *ubuntu16_04_8_0_only
+
+ubuntu16.04-v8.0-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubuntu16_04_8_0_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu16_04_8_0_variables
+    CUDNN_VERSION: "cudnn7"
+    ARCHES: "x86_64, ppc64le"
+  needs:
+    - job: ubuntu16.04-v8.0
+      artifacts: true
+
+ubuntu16.04-v8.0-cudnn6:
+  <<: *cudnn_definition
+  <<: *ubuntu16_04_8_0_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu16_04_8_0_variables
+    CUDNN_VERSION: "cudnn6"
+    ARCHES: "x86_64, ppc64le"
+  needs:
+    - job: ubuntu16.04-v8.0
+      artifacts: true
+
+ubuntu16.04-v8.0-cudnn5:
+  <<: *cudnn_definition
+  <<: *ubuntu16_04_8_0_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu16_04_8_0_variables
+    CUDNN_VERSION: "cudnn5"
+    ARCHES: "x86_64, ppc64le"
+  needs:
+    - job: ubuntu16.04-v8.0
+      artifacts: true
+
+ubuntu16.04-v8.0-test-x86_64:
+  needs: ["ubuntu16.04-v8.0"]
+  <<: *ubuntu16_04_8_0_only
+  <<: *test_definition
+  variables:
+    <<: *ubuntu16_04_8_0_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu16_04_8_0 == "true"'
+    - if: '$all == "true"'
+
+ubuntu16.04-v8.0-scan-x86_64:
+  <<: *scan_definition
+  <<: *ubuntu16_04_8_0_only
+  needs:
+    - job: ubuntu16.04-v8.0
+    - job: ubuntu16.04-v8.0-test-x86_64
+      optional: true
+  variables:
+    <<: *ubuntu16_04_8_0_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu16_04_8_0 == "true"'
+    - if: '$all == "true"'
+
+ubuntu16.04-v8.0-test-ppc64le:
+  needs: ["ubuntu16.04-v8.0"]
+  <<: *ubuntu16_04_8_0_only
+  <<: *test_definition
+  variables:
+    <<: *ubuntu16_04_8_0_variables
+    ARCH: "ppc64le"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu16_04_8_0 == "true"'
+    - if: '$all == "true"'
+
+ubuntu16.04-v8.0-scan-ppc64le:
+  <<: *scan_definition
+  <<: *ubuntu16_04_8_0_only
+  needs:
+    - job: ubuntu16.04-v8.0
+    - job: ubuntu16.04-v8.0-test-ppc64le
+      optional: true
+  variables:
+    <<: *ubuntu16_04_8_0_variables
+    ARCH: "ppc64le"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubuntu16_04_8_0 == "true"'
+    - if: '$all == "true"'
+
+
+ubuntu16.04-v8.0-deploy:
+  <<: *deploy_definition
+  <<: *ubuntu16_04_8_0_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$ubuntu16_04_8_0 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubuntu16.04-v8.0
+      artifacts: true
+    - job: ubuntu16.04-v8.0-test-x86_64
+      optional: true
+    - job: ubuntu16.04-v8.0-scan-x86_64
+      optional: true
+    - job: ubuntu16.04-v8.0-test-ppc64le
+      optional: true
+    - job: ubuntu16.04-v8.0-scan-ppc64le
+      optional: true
+    - job: ubuntu16.04-v8.0-cudnn7
+      optional: true
+    - job: ubuntu16.04-v8.0-cudnn6
+      optional: true
+    - job: ubuntu16.04-v8.0-cudnn5
+      optional: true
+
+
+.centos7_8_0_variables: &centos7_8_0_variables
+  DIST_BASE_PATH: "dist/8.0"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "x86_64, ppc64le"
+  OS: "centos7"
+  OS_NAME: "centos"
+  OS_VERSION: "7"
+  CUDA_VERSION: "8.0"
+
+.centos7_8_0_only: &centos7_8_0_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *centos7_8_0_variables
+  rules:
+    - if: '$centos7_8_0 == "true"'
+    - if: '$all == "true"'
+
+centos7-v8.0:
+  <<: *cuda_definition_deprecated
+  <<: *centos7_8_0_only
+
+centos7-v8.0-cudnn7:
+  <<: *cudnn_definition
+  <<: *centos7_8_0_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos7_8_0_variables
+    CUDNN_VERSION: "cudnn7"
+    ARCHES: "x86_64, ppc64le"
+  needs:
+    - job: centos7-v8.0
+      artifacts: true
+
+centos7-v8.0-cudnn6:
+  <<: *cudnn_definition
+  <<: *centos7_8_0_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos7_8_0_variables
+    CUDNN_VERSION: "cudnn6"
+    ARCHES: "x86_64, ppc64le"
+  needs:
+    - job: centos7-v8.0
+      artifacts: true
+
+centos7-v8.0-cudnn5:
+  <<: *cudnn_definition
+  <<: *centos7_8_0_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos7_8_0_variables
+    CUDNN_VERSION: "cudnn5"
+    ARCHES: "x86_64, ppc64le"
+  needs:
+    - job: centos7-v8.0
+      artifacts: true
+
+centos7-v8.0-test-x86_64:
+  needs: ["centos7-v8.0"]
+  <<: *centos7_8_0_only
+  <<: *test_definition
+  variables:
+    <<: *centos7_8_0_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$centos7_8_0 == "true"'
+    - if: '$all == "true"'
+
+centos7-v8.0-scan-x86_64:
+  <<: *scan_definition
+  <<: *centos7_8_0_only
+  needs:
+    - job: centos7-v8.0
+    - job: centos7-v8.0-test-x86_64
+      optional: true
+  variables:
+    <<: *centos7_8_0_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$centos7_8_0 == "true"'
+    - if: '$all == "true"'
+
+centos7-v8.0-test-ppc64le:
+  needs: ["centos7-v8.0"]
+  <<: *centos7_8_0_only
+  <<: *test_definition
+  variables:
+    <<: *centos7_8_0_variables
+    ARCH: "ppc64le"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$centos7_8_0 == "true"'
+    - if: '$all == "true"'
+
+centos7-v8.0-scan-ppc64le:
+  <<: *scan_definition
+  <<: *centos7_8_0_only
+  needs:
+    - job: centos7-v8.0
+    - job: centos7-v8.0-test-ppc64le
+      optional: true
+  variables:
+    <<: *centos7_8_0_variables
+    ARCH: "ppc64le"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$centos7_8_0 == "true"'
+    - if: '$all == "true"'
+
+
+centos7-v8.0-deploy:
+  <<: *deploy_definition
+  <<: *centos7_8_0_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$centos7_8_0 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: centos7-v8.0
+      artifacts: true
+    - job: centos7-v8.0-test-x86_64
+      optional: true
+    - job: centos7-v8.0-scan-x86_64
+      optional: true
+    - job: centos7-v8.0-test-ppc64le
+      optional: true
+    - job: centos7-v8.0-scan-ppc64le
+      optional: true
+    - job: centos7-v8.0-cudnn7
+      optional: true
+    - job: centos7-v8.0-cudnn6
+      optional: true
+    - job: centos7-v8.0-cudnn5
+      optional: true
+
+
+.ubi7_8_0_variables: &ubi7_8_0_variables
+  DIST_BASE_PATH: "dist/8.0"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "x86_64, ppc64le"
+  OS: "ubi7"
+  OS_NAME: "ubi"
+  OS_VERSION: "7"
+  CUDA_VERSION: "8.0"
+
+.ubi7_8_0_only: &ubi7_8_0_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *ubi7_8_0_variables
+  rules:
+    - if: '$ubi7_8_0 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v8.0:
+  <<: *cuda_definition_deprecated
+  <<: *ubi7_8_0_only
+
+ubi7-v8.0-cudnn7:
+  <<: *cudnn_definition
+  <<: *ubi7_8_0_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi7_8_0_variables
+    CUDNN_VERSION: "cudnn7"
+    ARCHES: "x86_64, ppc64le"
+  needs:
+    - job: ubi7-v8.0
+      artifacts: true
+
+ubi7-v8.0-cudnn6:
+  <<: *cudnn_definition
+  <<: *ubi7_8_0_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi7_8_0_variables
+    CUDNN_VERSION: "cudnn6"
+    ARCHES: "x86_64, ppc64le"
+  needs:
+    - job: ubi7-v8.0
+      artifacts: true
+
+ubi7-v8.0-cudnn5:
+  <<: *cudnn_definition
+  <<: *ubi7_8_0_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi7_8_0_variables
+    CUDNN_VERSION: "cudnn5"
+    ARCHES: "x86_64, ppc64le"
+  needs:
+    - job: ubi7-v8.0
+      artifacts: true
+
+ubi7-v8.0-test-x86_64:
+  needs: ["ubi7-v8.0"]
+  <<: *ubi7_8_0_only
+  <<: *test_definition
+  variables:
+    <<: *ubi7_8_0_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_8_0 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v8.0-scan-x86_64:
+  <<: *scan_definition
+  <<: *ubi7_8_0_only
+  needs:
+    - job: ubi7-v8.0
+    - job: ubi7-v8.0-test-x86_64
+      optional: true
+  variables:
+    <<: *ubi7_8_0_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_8_0 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v8.0-test-ppc64le:
+  needs: ["ubi7-v8.0"]
+  <<: *ubi7_8_0_only
+  <<: *test_definition
+  variables:
+    <<: *ubi7_8_0_variables
+    ARCH: "ppc64le"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_8_0 == "true"'
+    - if: '$all == "true"'
+
+ubi7-v8.0-scan-ppc64le:
+  <<: *scan_definition
+  <<: *ubi7_8_0_only
+  needs:
+    - job: ubi7-v8.0
+    - job: ubi7-v8.0-test-ppc64le
+      optional: true
+  variables:
+    <<: *ubi7_8_0_variables
+    ARCH: "ppc64le"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$ubi7_8_0 == "true"'
+    - if: '$all == "true"'
+
+
+ubi7-v8.0-deploy:
+  <<: *deploy_definition
+  <<: *ubi7_8_0_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$ubi7_8_0 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: ubi7-v8.0
+      artifacts: true
+    - job: ubi7-v8.0-test-x86_64
+      optional: true
+    - job: ubi7-v8.0-scan-x86_64
+      optional: true
+    - job: ubi7-v8.0-test-ppc64le
+      optional: true
+    - job: ubi7-v8.0-scan-ppc64le
+      optional: true
+    - job: ubi7-v8.0-cudnn7
+      optional: true
+    - job: ubi7-v8.0-cudnn6
+      optional: true
+    - job: ubi7-v8.0-cudnn5
       optional: true
 

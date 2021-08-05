@@ -3,11 +3,12 @@ FROM {{ cuda.base_image }} as base
 {% if "x86_64" in cuda %}
 FROM base as base-amd64
 
-ENV NVARCH "x86_64"
+ENV NVARCH x86_64
 {% if "requires" in cuda.x86_64 %}
-ENV NVIDIA_REQUIRE_CUDA "cuda>=11.4 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=440,driver<441 driver>=450"
+ENV NVIDIA_REQUIRE_CUDA "{{ cuda.x86_64.requires }}"
 {% endif %}
 ENV NV_CUDA_CUDART_VERSION {{ cuda.x86_64.components.cudart.version }}
+ENV NV_CUDA_COMPAT_PACKAGE cuda-compat-{{ cuda.version.major }}-{{ cuda.version.minor }}
 
 {% if cuda.x86_64.use_ml_repo %}
 ENV NV_ML_REPO_ENABLED 1
@@ -18,12 +19,15 @@ ENV NV_ML_REPO_URL {{ cuda.ml_repo_url }}/${NVARCH}
 {% if "arm64" in cuda %}
 FROM base as base-arm64
 
-ENV NVARCH "sbsa"
+{% if cuda.flavor == "l4t" %}
+ENV NVARCH arm64
+{% else %}
+ENV NVARCH sbsa
+{% endif %}
 {% if "requires" in cuda.arm64 %}
-ENV NVIDIA_REQUIRE_CUDA "cuda>=11.4"
+ENV NVIDIA_REQUIRE_CUDA "{{ cuda.arm64.requires }}"
 {% endif %}
 ENV NV_CUDA_CUDART_VERSION {{ cuda.arm64.components.cudart.version }}
-
 {% if cuda.arm64.use_ml_repo %}
 ENV NV_ML_REPO_ENABLED 1
 ENV NV_ML_REPO_URL {{ cuda.ml_repo_url }}/${NVARCH}
@@ -33,17 +37,19 @@ ENV NV_ML_REPO_URL {{ cuda.ml_repo_url }}/${NVARCH}
 {% if "ppc64le" in cuda %}
 FROM base as base-ppc64le
 
-ENV NVARCH "ppc64el"
+ENV NVARCH ppc64el
 {% if "requires" in cuda.ppc64le %}
-ENV NVIDIA_REQUIRE_CUDA "cuda>=11.4"
+ENV NVIDIA_REQUIRE_CUDA "{{ cuda.ppc64le.requires }}"
 {% endif %}
 ENV NV_CUDA_CUDART_VERSION {{ cuda.ppc64le.components.cudart.version }}
+ENV NV_CUDA_COMPAT_PACKAGE cuda-compat-{{ cuda.version.major }}-{{ cuda.version.minor }}
 
 {% if cuda.ppc64le.use_ml_repo %}
 ENV NV_ML_REPO_ENABLED 1
 ENV NV_ML_REPO_URL {{ cuda.ml_repo_url }}/${NVARCH}
 
 {% endif %}
+
 {% endif -%}
 
 FROM base-${TARGETARCH}
@@ -59,7 +65,7 @@ ENV NVIDIA_REQUIRE_JETPACK_HOST_MOUNTS ${NVIDIA_REQUIRE_JETPACK_HOST_MOUNTS}
 {% endif -%}
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-{% if cuda.os.version in ["18.04", "20.04"] %}
+{% if cuda.os.version in ["18.04", "20.04"] or cuda.flavor == "l4t" %}
     gnupg2 curl ca-certificates && \
     curl -fsSL {{ cuda.repo_url }}/${NVARCH}/7fa2af80.pub | apt-key add - && \
     echo "deb {{ cuda.repo_url }}/${NVARCH} /" > /etc/apt/sources.list.d/cuda.list && \
@@ -83,9 +89,7 @@ ENV CUDA_VERSION {{ cuda.version.release_label }}
 # For libraries in the cuda-compat-* package: https://docs.nvidia.com/cuda/eula/index.html#attachment-a
 RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-cudart-{{ cuda.version.major }}-{{ cuda.version.minor }}=${NV_CUDA_CUDART_VERSION} \
-{% if cuda.arch != "arm64" %}
-    cuda-compat-{{ cuda.version.major }}-{{ cuda.version.minor }} \
-{% endif %}
+    ${NV_CUDA_COMPAT_PACKAGE} \
     && ln -s cuda-{{ cuda.version.major }}.{{ cuda.version.minor }} /usr/local/cuda && \
     rm -rf /var/lib/apt/lists/*
 

@@ -9,9 +9,13 @@ FROM base as base-amd64
 ENV NV_NVTX_VERSION {{ cuda.x86_64.components.nvtx.version }}
 ENV NV_LIBNPP_VERSION {{ cuda.x86_64.components.libnpp.version }}
 ENV NV_LIBCUBLAS_VERSION {{ cuda.x86_64.components.libcublas.version }}
-{% if "libnccl2" in cuda.components %}
-ENV NCCL_VERSION {{ cuda.components.libnccl2.version[:-2] }}
-ENV NV_LIBNCCL_PACKAGE {{ libnccl- cuda.x86_64.components.libnccl2.version + "+cuda" + cuda.version.major + "." + cuda.version.minor }}
+{% if "libnccl2" in cuda.x86_64.components %}
+    {% set has_libnccl_package = true %}
+ENV NV_LIBNCCL_PACKAGE_NAME libnccl
+ENV NV_LIBNCCL_PACKAGE_VERSION {{ cuda.x86_64.components.libnccl2.version }}
+ENV NV_LIBNCCL_VERSION {{ cuda.x86_64.components.libnccl2.version[:-2] }}
+ENV NCCL_VERSION {{ cuda.x86_64.components.libnccl2.version[:-2] }}
+ENV NV_LIBNCCL_PACKAGE ${NV_LIBNCCL_PACKAGE_NAME}-${NV_LIBNCCL_PACKAGE_VERSION}+cuda{{ cuda.version.major }}.{{ cuda.version.minor }}
 {% endif -%}
 
 {% endif %}
@@ -21,9 +25,13 @@ FROM base as base-arm64
 ENV NV_NVTX_VERSION {{ cuda.arm64.components.nvtx.version }}
 ENV NV_LIBNPP_VERSION {{ cuda.arm64.components.libnpp.version }}
 ENV NV_LIBCUBLAS_VERSION {{ cuda.arm64.components.libcublas.version }}
-{% if "libnccl2" in cuda.components %}
-ENV NCCL_VERSION {{ cuda.components.libnccl2.version[:-2] }}
-ENV NV_LIBNCCL_PACKAGE {{ libnccl- cuda.arm64.components.libnccl2.version + "+cuda" + cuda.version.major + "." + cuda.version.minor }}
+{% if "libnccl2" in cuda.arm64.components %}
+    {% set has_libnccl_package = true %}
+ENV NV_LIBNCCL_PACKAGE_NAME libnccl
+ENV NV_LIBNCCL_PACKAGE_VERSION {{ cuda.arm64.components.libnccl2.version }}
+ENV NV_LIBNCCL_VERSION {{ cuda.arm64.components.libnccl2.version[:-2] }}
+ENV NCCL_VERSION {{ cuda.arm64.components.libnccl2.version[:-2] }}
+ENV NV_LIBNCCL_PACKAGE ${NV_LIBNCCL_PACKAGE_NAME}-${NV_LIBNCCL_PACKAGE_VERSION}+cuda{{ cuda.version.major }}.{{ cuda.version.minor }}
 {% endif -%}
 
 {% endif %}
@@ -33,9 +41,13 @@ FROM base as base-ppc64le
 ENV NV_NVTX_VERSION {{ cuda.ppc64le.components.nvtx.version }}
 ENV NV_LIBNPP_VERSION {{ cuda.ppc64le.components.libnpp.version }}
 ENV NV_LIBCUBLAS_VERSION {{ cuda.ppc64le.components.libcublas.version }}
-{% if "libnccl2" in cuda.components %}
-ENV NCCL_VERSION {{ cuda.components.libnccl2.version[:-2] }}
-ENV NV_LIBNCCL_PACKAGE {{ libnccl- cuda.ppc64le.components.libnccl2.version + "+cuda" + cuda.version.major + "." + cuda.version.minor }}
+{% if "libnccl2" in cuda.ppc64le.components %}
+    {% set has_libnccl_package = true %}
+ENV NV_LIBNCCL_PACKAGE_NAME libnccl
+ENV NV_LIBNCCL_PACKAGE_VERSION {{ cuda.ppc64le.components.libnccl2.version }}
+ENV NV_LIBNCCL_VERSION {{ cuda.ppc64le.components.libnccl2.version[:-2] }}
+ENV NCCL_VERSION {{ cuda.ppc64le.components.libnccl2.version[:-2] }}
+ENV NV_LIBNCCL_PACKAGE ${NV_LIBNCCL_PACKAGE_NAME}-${NV_LIBNCCL_PACKAGE_VERSION}+cuda{{ cuda.version.major }}.{{ cuda.version.minor }}
 
 {% endif %}
 {% endif -%}
@@ -51,22 +63,8 @@ RUN yum install -y \
     cuda-nvtx-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_NVTX_VERSION} \
     libnpp-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBNPP_VERSION} \
     libcublas-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBCUBLAS_VERSION} \
+    {% if has_libnccl_package %}
     ${NV_LIBNCCL_PACKAGE} \
+    {% endif %}
     && yum clean all \
     && rm -rf /var/cache/yum/*
-
-{# {% if "libnccl2" in cuda.components and "source" in cuda.components.libnccl2 %} #}
-{#     {% set arch = cuda.arch %} #}
-{#     {% if cuda.arch == "arm64" %} {% set arch = "aarch64" %} {% endif %} #}
-{#     {% set basename =  "nccl_" + cuda.components.libnccl2.version + "-1+cuda" + cuda.version.major + "." + cuda.version.minor + "_" + arch + ".txz" %} #}
-{# RUN yum install -y xz && NCCL_DOWNLOAD_SUM={{ cuda.components.libnccl2.sha256sum }} \ #}
-{#     && curl -fsSL {{ cuda.components.libnccl2.source }} -O \ #}
-{#     && echo "$NCCL_DOWNLOAD_SUM  {{ basename }}" | sha256sum -c - \ #}
-{#     && unxz {{ basename }} \ #}
-{#     && tar --no-same-owner --keep-old-files -xvf {{ basename[:-4] + ".tar" }} -C /usr/local/cuda/lib64/ --strip-components=2 --wildcards '*/lib/libnccl.so.*' \ #}
-{#     && tar --no-same-owner --keep-old-files -xvf  {{ basename[:-4] + ".tar" }} -C /usr/lib64/pkgconfig/ --strip-components=3 --wildcards '*/lib/pkgconfig/*' \ #}
-{#     && rm -f {{ basename[:-4] + ".tar" }} \ #}
-{#     && ldconfig \ #}
-{#     && yum clean all \ #}
-{#     && rm -rf /var/cache/yum/* #}
-{# {% endif %} #}

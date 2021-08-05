@@ -21,23 +21,22 @@ For more information on CUDA, including the release notes, programming model, AP
 
 ## Announcement
 
-### End-of-life for nvdia/cuda-arm64 and nvidia/cuda-ppc64le images names in place of Multi-arch image Manifests
+### Multi-arch image manifests are now LIVE for all supported CUDA container image versions
 
-For an upcoming release of Cuda Toolkit, support for the `nvidia/cuda-arm64` and `nvidia/cuda-ppc64le` images names will be dropped in place of multi-arch container image manifests in `nvidia/cuda` on NGC and Docker Hub.
+It is now possible to build CUDA container images for all supported architectures using Docker
+Buildkit in one step. See the example script below.
 
-The following product pages will still exist but will no longer be supported:
+The deprecated image names `nvidia/cuda-arm64` and `nvidia/cuda-ppc64le` will remain available, but no longer supported.
+
+The following product pages still exist but will no longer be supported:
 
 * https://hub.docker.com/r/nvidia/cuda-ppc64le
 * https://hub.docker.com/r/nvidia/cuda-arm64
-* https://ngc.nvidia.com/containers/nvidia:cuda-ppc64le
-* https://ngc.nvidia.com/containers/nvidia:cuda-arm64
 
 The following gitlab repositories will be archived:
 
 * https://gitlab.com/nvidia/container-images/cuda-ppc64le
 * https://gitlab.com/nvidia/container-images/cuda-arm64
-
-Additionally, existing cuda-arm64 and cuda-ppc64le tags will not be deleted from Docker Hub or NGC and will be marked as unsupported in our [documentation](https://gitlab.com/nvidia/container-images/cuda/blob/master/doc/unsupported-tags.md).
 
 ### Deprecated: "latest" tag
 
@@ -87,22 +86,22 @@ Visit [OpenSource @ Nvidia](https://developer.download.nvidia.com/compute/cuda/o
 {% set OS = [] %}
 {% for keys, values in readme.cuda_release_info.items() %}
     {% if readme.latest_version in keys %}
-        {% for os in readme.os_name %}
-            {% if os.replace(" ", "").lower() in keys %}
-                {% if readme.arch in keys %}
-                    {% if os not in OS %}
-                        {% print "\n### " %}{% print os %}{% print "\n\n" %}
-                        {% do OS.append(os) %}
-                        {% if "centos" in os.lower() %}
+        {% for platform in readme.platforms %}
+          {# {{ platform }} #}
+          {% if readme.platforms[platform].name.replace(" ", "").lower() in keys %}
+            {# {{ platform }} #}
+              {% if platform not in OS %}
+                {% print "\n### " %}{% print platform %} [{{readme.platforms[platform].arches | join(", ")}}]{% print "\n\n" %}
+                  {% do OS.append(platform) %}
+                  {% if "centos" in platform.lower() %}
 *WARNING*: POSSIBLE MISSING IMAGE TAGS
 
 The Cuda image tags for centos7 and 8 may be missing on NGC and Docker Hub. Centos upstream images often fail security scans required by Nvidia before publishing images. Please check https://gitlab-master.nvidia.com/cuda-installer/cuda/-/issues for any security notices!
 
-                        {% endif %}
-                    {% endif %}
-                    {% print "- [`" %}{% print values %}{% print "` (*" %}{% print keys %}{% print "*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/" %}{% print keys %}{% print ")\n" %}
-                {% endif %}
-            {% endif %}
+                  {% endif %}
+              {% endif %}
+              {% print "- [`" %}{% print values %}{% print "` (*" %}{% print keys %}{% print "*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/" %}{% print keys %}{% print ")\n" %}
+          {% endif %}
         {% endfor %}
     {% endif %}
 {% endfor %}

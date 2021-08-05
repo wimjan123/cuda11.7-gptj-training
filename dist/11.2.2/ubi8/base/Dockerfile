@@ -2,27 +2,27 @@ FROM registry.access.redhat.com/ubi8/ubi:latest as base
 
 FROM base as base-amd64
 
-ENV NVARCH "x86_64"
+ENV NVARCH x86_64
 ENV NVIDIA_REQUIRE_CUDA "cuda>=11.2 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=440,driver<441 driver>=450"
-ENV NV_CUDA_CUDART_VERSION "11.2.152-1"
+ENV NV_CUDA_CUDART_VERSION 11.2.152-1
 
 COPY cuda.repo-x86_64 /etc/yum.repos.d/cuda.repo
 COPY nvidia-ml.repo-x86_64 /etc/yum.repos.d/nvidia-ml.repo
 
 FROM base as base-arm64
 
-ENV NVARCH "sbsa"
+ENV NVARCH sbsa
 ENV NVIDIA_REQUIRE_CUDA "cuda>=11.2"
-ENV NV_CUDA_CUDART_VERSION "11.2.152-1"
+ENV NV_CUDA_CUDART_VERSION 11.2.152-1
 
 COPY cuda.repo-arm64 /etc/yum.repos.d/cuda.repo
 COPY nvidia-ml.repo-arm64 /etc/yum.repos.d/nvidia-ml.repo
 
 FROM base as base-ppc64le
 
-ENV NVARCH "ppc64le"
+ENV NVARCH ppc64le
 ENV NVIDIA_REQUIRE_CUDA "cuda>=11.2"
-ENV NV_CUDA_CUDART_VERSION "11.2.152-1"
+ENV NV_CUDA_CUDART_VERSION 11.2.152-1
 
 COPY cuda.repo-ppc64le /etc/yum.repos.d/cuda.repo
 COPY nvidia-ml.repo-ppc64le /etc/yum.repos.d/nvidia-ml.repo

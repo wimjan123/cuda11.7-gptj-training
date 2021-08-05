@@ -1,13 +1,44 @@
 ARG IMAGE_NAME
-FROM ${IMAGE_NAME}:{{ cuda.version.major }}.{{ cuda.version.minor }}-{{ cuda.cudnn.target }}-{{ cuda.os.distro }}{{ cuda.os.version }}{{ cuda.image_tag_suffix }}
+FROM ${IMAGE_NAME}:{{ cuda.version.major }}.{{ cuda.version.minor }}-{{ cuda.cudnn.target }}-{{ cuda.os.distro }}{{ cuda.os.version }}{{ cuda.image_tag_suffix }} as base
+
+{% if "x86_64" in cuda %}
+FROM base as base-amd64
+
+ENV NV_CUDNN_PACKAGE_VERSION {{ cuda.x86_64.cudnn.version }}
+ENV NV_CUDNN_VERSION {{ cuda.x86_64.cudnn.version[:-2] }}
+
+ENV NV_CUDNN_PACKAGE_NAME libcudnn{{ cuda.x86_64.cudnn.version[0] }}
+{% if cuda.cudnn.target == "runtime" %}
+ENV NV_CUDNN_PACKAGE ${NV_CUDNN_PACKAGE_NAME}=${NV_CUDNN_PACKAGE_VERSION}+cuda{{ cuda.version.major }}.{{ cuda.version.minor }}
+{% else %}
+ENV NV_CUDNN_PACKAGE ${NV_CUDNN_PACKAGE_NAME}=${NV_CUDNN_PACKAGE_VERSION}+cuda{{ cuda.version.major }}.{{ cuda.version.minor }}
+ENV NV_CUDNN_PACKAGE_DEV ${NV_CUDNN_PACKAGE_NAME}-dev=${NV_CUDNN_PACKAGE_VERSION}+cuda{{ cuda.version.major }}.{{ cuda.version.minor }}
+{% endif %}
+
+{% endif %}
+{% if "ppc64le" in cuda %}
+FROM base as base-ppc64le
+
+ENV NV_CUDNN_PACKAGE_VERSION {{ cuda.ppc64le.cudnn.version }}
+ENV NV_CUDNN_VERSION {{ cuda.ppc64le.cudnn.version[:-2] }}
+
+ENV NV_CUDNN_PACKAGE_NAME libcudnn{{ cuda.ppc64le.cudnn.version[0] }}
+{% if cuda.cudnn.target == "runtime" %}
+ENV NV_CUDNN_PACKAGE ${NV_CUDNN_PACKAGE_NAME}=${NV_CUDNN_PACKAGE_VERSION}+cuda{{ cuda.version.major }}.{{ cuda.version.minor }}
+{% else %}
+ENV NV_CUDNN_PACKAGE ${NV_CUDNN_PACKAGE_NAME}=${NV_CUDNN_PACKAGE_VERSION}+cuda{{ cuda.version.major }}.{{ cuda.version.minor }}
+ENV NV_CUDNN_PACKAGE_DEV ${NV_CUDNN_PACKAGE_NAME}-dev=${NV_CUDNN_PACKAGE_VERSION}+cuda{{ cuda.version.major }}.{{ cuda.version.minor }}
+{% endif %}
+
+{% endif -%}
+FROM base-${TARGETARCH}
+
+ARG TARGETARCH
+
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 
 {% if cuda.version.major | int == 8 %}
-    {% set arch = cuda.arch  %}
-    {% if cuda.arch == "ppc64le" %}
-        {% set arch = cuda.arch | replace("le", "el") %}
-    {% endif %}
-RUN echo "deb https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu{{ cuda.os.version | replace(".", "") }}/{{ arch }} /" > /etc/apt/sources.list.d/nvidia-ml.list
+RUN echo "deb {{ cuda.ml_repo_url }}/${NVARCH} /" > /etc/apt/sources.list.d/nvidia-ml.list
 
 {% endif -%}
 
@@ -16,50 +47,12 @@ RUN echo "deb https://developer.download.nvidia.com/compute/machine-learning/rep
     {% set cudnn_version = cuda.cudnn.version[:-2] %}
 {% endif -%}
 
-ENV CUDNN_VERSION {{ cudnn_version }}
+ENV CUDNN_VERSION ${NV_CUDNN_VERSION}
 
 LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
 
-{% if "source" in cuda.cudnn %}
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gnupg2 curl ca-certificates
-
-RUN CUDNN_DOWNLOAD_SUM={{ cuda.cudnn.sha256sum }} && \
-    curl -fsSL {{ cuda.cudnn.source }} -O && \
-    echo "$CUDNN_DOWNLOAD_SUM  {{ cuda.cudnn.basename }}" | sha256sum -c - && \
-    dpkg -i {{ cuda.cudnn.basename }} && \
-    rm -f {{ cuda.cudnn.basename }}
-
-  {% if cuda.cudnn.target == "devel" -%}
-RUN CUDNN_DEV_DOWNLOAD_SUM={{ cuda.cudnn.dev.sha256sum }} && \
-    curl -fsSL {{ cuda.cudnn.dev.source }} -O && \
-    echo "$CUDNN_DEV_DOWNLOAD_SUM  {{ cuda.cudnn.dev.basename }}" | sha256sum -c - && \
-    dpkg -i {{ cuda.cudnn.dev.basename }} && \
-    rm -f {{ cuda.cudnn.dev.basename }}
-
-  {% endif %}
-RUN rm -rf /var/lib/apt/lists/*
-{% elif "sha256sum" not in cuda.cudnn %}
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    {% if cuda.cudnn.target == "runtime" %}
-    libcudnn{{ cuda.cudnn.version[0] }}=$CUDNN_VERSION-1+cuda{{ cuda.version.major }}.{{ cuda.version.minor }} \
-    {% else %}
-    libcudnn{{ cuda.cudnn.version[0] }}=$CUDNN_VERSION-1+cuda{{ cuda.version.major }}.{{ cuda.version.minor }} \
-    libcudnn{{ cuda.cudnn.version[0] }}-dev=$CUDNN_VERSION-1+cuda{{ cuda.version.major }}.{{ cuda.version.minor }} \
-    {% endif %}
-    && apt-mark hold libcudnn{{ cuda.cudnn.version[0] }} && \
+    ${NV_CUDNN_PACKAGE} \
+    ${NV_CUDNN_PACKAGE_DEV} \
+    && apt-mark hold ${NV_CUDNN_PACKAGE_NAME} && \
     rm -rf /var/lib/apt/lists/*
-{% else %}
-    {% set arch = cuda.arch | replace("86_", "") %}
-    {% set archive_path = "cuda/lib64/libcudnn.so.*" %}
-    {% if arch == "ppc64le" %}
-        {% set archive_path = "cuda/targets/ppc64le-linux/lib/libcudnn.so.*" %}
-    {% endif %}
-# cuDNN license: https://developer.nvidia.com/cudnn/license_agreement
-RUN CUDNN_DOWNLOAD_SUM={{ cuda.cudnn.sha256sum }} && \
-    curl -fsSL http://developer.download.nvidia.com/compute/redist/cudnn/v{{ cuda.cudnn.version[:cuda.cudnn.version.rfind(".")] }}/cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-{{ arch }}-v{{ cudnn_version }}.tgz -O && \
-    echo "$CUDNN_DOWNLOAD_SUM  cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-{{ arch }}-v{{ cudnn_version}}.tgz" | sha256sum -c - && \
-    tar --no-same-owner -xzf cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-{{ arch }}-v{{ cudnn_version }}.tgz -C /usr/local {% if cuda.cudnn.target == "runtime" -%}--wildcards '{{ archive_path }}' {% endif -%} && \
-    rm cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-{{ arch }}-v{{ cudnn_version }}.tgz && \
-    ldconfig
-{% endif %}
