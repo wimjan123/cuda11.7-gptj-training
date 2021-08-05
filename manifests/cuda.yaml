@@ -580,8 +580,8 @@ cuda_v11.3.1:
   image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
   push_repos:
     - artifactory
-    # - docker.io
-    # - nvcr.io
+    - docker.io
+    - nvcr.io
   ubuntu20.04:
     template_path: templates/ubuntu
     base_image: ubuntu:20.04
@@ -727,8 +727,8 @@ cuda_v11.3.0:
   image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
   push_repos:
     - artifactory
-    # - docker.io
-    # - nvcr.io
+    - docker.io
+    - nvcr.io
   ubuntu20.04:
     template_path: templates/ubuntu
     base_image: ubuntu:20.04
@@ -874,8 +874,8 @@ cuda_v11.2.2:
   image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
   push_repos:
     - artifactory
-    # - docker.io
-    # - nvcr.io
+    - docker.io
+    - nvcr.io
   ubuntu20.04:
     template_path: templates/ubuntu
     base_image: ubuntu:20.04
@@ -1021,8 +1021,8 @@ cuda_v11.2.1:
   image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
   push_repos:
     - artifactory
-    # - docker.io
-    # - nvcr.io
+    - docker.io
+    - nvcr.io
   ubuntu20.04:
     template_path: templates/ubuntu
     base_image: ubuntu:20.04
@@ -1168,8 +1168,8 @@ cuda_v11.2.0:
   image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
   push_repos:
     - artifactory
-    # - docker.io
-    # - nvcr.io
+    - docker.io
+    - nvcr.io
   ubuntu20.04:
     template_path: templates/ubuntu
     base_image: ubuntu:20.04
@@ -1315,8 +1315,8 @@ cuda_v11.1.1:
   image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
   push_repos:
     - artifactory
-    # - docker.io
-    # - nvcr.io
+    - docker.io
+    - nvcr.io
   ubuntu20.04:
     template_path: templates/ubuntu
     base_image: ubuntu:20.04
@@ -1472,8 +1472,8 @@ cuda_v11.0.3:
   image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
   push_repos:
     - artifactory
-    # - docker.io
-    # - nvcr.io
+    - docker.io
+    - nvcr.io
   ubuntu20.04:
     template_path: templates/ubuntu
     base_image: ubuntu:20.04
@@ -1630,8 +1630,8 @@ cuda_v10.2:
   image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
   push_repos:
     - artifactory
-    # - docker.io
-    # - nvcr.io
+    - docker.io
+    - nvcr.io
   ubuntu18.04:
     template_path: templates/ubuntu/legacy
     base_image: ubuntu:18.04
@@ -1779,8 +1779,8 @@ cuda_v10.1:
   image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
   push_repos:
     - artifactory
-    # - docker.io
-    # - nvcr.io
+    - docker.io
+    - nvcr.io
   ubuntu18.04:
     template_path: templates/ubuntu/legacy
     base_image: ubuntu:18.04
@@ -1947,8 +1947,8 @@ cuda_v10.0:
   image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
   push_repos:
     - artifactory
-    # - docker.io
-    # - nvcr.io
+    - docker.io
+    - nvcr.io
   ubuntu18.04:
     template_path: templates/ubuntu/legacy
     base_image: ubuntu:18.04
@@ -2059,8 +2059,8 @@ cuda_v9.2:
   image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
   push_repos:
     - artifactory
-    # - docker.io
-    # - nvcr.io
+    - docker.io
+    - nvcr.io
   ubuntu18.04:
     template_path: templates/ubuntu/legacy
     base_image: ubuntu:18.04
@@ -2173,8 +2173,8 @@ cuda_v9.1:
   image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
   push_repos:
     - artifactory
-    # - docker.io
-    # - nvcr.io
+    - docker.io
+    - nvcr.io
   ubuntu16.04:
     template_path: templates/ubuntu/legacy
     base_image: ubuntu:16.04
@@ -2198,10 +2198,6 @@ cuda_v9.1:
     template_path: templates/redhat/legacy
     base_image: centos:7
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
-    push_repos:
-      - artifactory
-      # - docker.io
-      # - nvcr.io
     x86_64:
       <<: *cuda9_1_requires
       components:
@@ -2219,10 +2215,6 @@ cuda_v9.1:
   ubi7:
     template_path: templates/redhat/legacy
     base_image: registry.access.redhat.com/ubi7/ubi:latest
-    push_repos:
-      - artifactory
-      # - docker.io
-      # - nvcr.io
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
     x86_64:
       <<: *cuda9_1_requires
@@ -2291,8 +2283,8 @@ cuda_v9.0:
   build_version: 176
   push_repos:
     - artifactory
-    # - docker.io
-    # - nvcr.io
+    - docker.io
+    - nvcr.io
   image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
   ubuntu16.04:
     template_path: templates/ubuntu/legacy
@@ -2409,8 +2401,8 @@ cuda_v8.0:
   image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
   push_repos:
     - artifactory
-    # - docker.io
-    # - nvcr.io
+    - docker.io
+    - nvcr.io
   ubuntu16.04:
     template_path: templates/ubuntu/legacy
     base_image: ubuntu:16.04
