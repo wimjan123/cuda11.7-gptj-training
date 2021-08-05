@@ -31,7 +31,6 @@ The deprecated image names `nvidia/cuda-arm64` and `nvidia/cuda-ppc64le` will re
 The following product pages still exist but will no longer be supported:
 
 * https://hub.docker.com/r/nvidia/cuda-ppc64le
-* https://hub.docker.com/r/nvidia/cuda-arm64
 
 The following gitlab repositories will be archived:
 
