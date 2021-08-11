@@ -28,8 +28,8 @@ logging:
       level: DEBUG
   formatters:
     simpleFormatter:
-      format: "%(asctime)s,%(msecs)03d %(levelname)s %(name)s:%(funcName)s:%(lineno)s -- %(message)s"
+      format: "%(asctime)s,%(msecs)03d %(levelname)s %(name)s:%(filename)s:%(funcName)s:%(lineno)s -- %(message)s"
     coloredFormatter:
       (): "coloredlogs.ColoredFormatter"
       datefmt: "%H:%M:%S"
-      format: "%(asctime)s,%(msecs)03d %(levelname)s %(name)s:%(funcName)s:%(lineno)s -- %(message)s"
+      format: "%(asctime)s,%(msecs)03d %(levelname)s %(name)s:%(filename)s:%(funcName)s:%(lineno)s -- %(message)s"

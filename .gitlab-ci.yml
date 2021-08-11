@@ -136,7 +136,7 @@ prepare:
           rm -rf kitpick || true
           run_cmd mkdir -p kitpick/${OS}/{devel,runtime,base}
 
-          NEW_CANDIDATE_URL="${CANDIDATE_URL}/${OS}"
+          NEW_CANDIDATE_URL="${CANDIDATE_URL}/${OS/./}"
           # Ensure the url ends with a slash! This prevents wget from getting everything (and bringing apache to its knees)
           [[ "${NEW_CANDIDATE_URL}" != */ ]] && NEW_CANDIDATE_URL="${NEW_CANDIDATE_URL}/"
           echo "NEW_CANDIDATE_URL: ${NEW_CANDIDATE_URL}"
@@ -214,7 +214,7 @@ prepare:
           export DIST_BASE_PATH="kitpick/${OS}"
           rm -rf kitpick || true
           run_cmd mkdir -p kitpick/${OS}/{devel,runtime,base}
-          NEW_CANDIDATE_URL="${CANDIDATE_URL}/${OS}"
+          NEW_CANDIDATE_URL="${CANDIDATE_URL}/${OS/./}"
           # Ensure the url ends with a slash! This prevents wget from getting everything (and bringing apache to its knees)
           [[ "${CANDIDATE_URL}" != */ ]] && NEW_CANDIDATE_URL="${NEW_CANDIDATE_URL}/"
           echo "NEW_CANDIDATE_URL: ${NEW_CANDIDATE_URL}"
@@ -708,14 +708,6 @@ kitmaker_failure:
   rules:
     - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "default"'
       when: on_failure
-  needs:
-    - job: kitmaker_ubuntu20.04_deploy
-      artifacts: true
-    - job: kitmaker_ubuntu18.04_deploy
-    - job: kitmaker_centos8_deploy
-    - job: kitmaker_centos7_deploy
-    - job: kitmaker_ubi8_deploy
-    - job: kitmaker_ubi7_deploy
   script:
     - |
       kitmaker_webhook_failed

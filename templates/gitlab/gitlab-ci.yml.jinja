@@ -140,7 +140,7 @@ prepare:
           rm -rf kitpick || true
           run_cmd mkdir -p kitpick/${OS}/{devel,runtime,base}
 
-          NEW_CANDIDATE_URL="${CANDIDATE_URL}/${OS}"
+          NEW_CANDIDATE_URL="${CANDIDATE_URL}/${OS/./}"
           # Ensure the url ends with a slash! This prevents wget from getting everything (and bringing apache to its knees)
           [[ "${NEW_CANDIDATE_URL}" != */ ]] && NEW_CANDIDATE_URL="${NEW_CANDIDATE_URL}/"
           echo "NEW_CANDIDATE_URL: ${NEW_CANDIDATE_URL}"
@@ -218,7 +218,7 @@ prepare:
           export DIST_BASE_PATH="kitpick/${OS}"
           rm -rf kitpick || true
           run_cmd mkdir -p kitpick/${OS}/{devel,runtime,base}
-          NEW_CANDIDATE_URL="${CANDIDATE_URL}/${OS}"
+          NEW_CANDIDATE_URL="${CANDIDATE_URL}/${OS/./}"
           # Ensure the url ends with a slash! This prevents wget from getting everything (and bringing apache to its knees)
           [[ "${CANDIDATE_URL}" != */ ]] && NEW_CANDIDATE_URL="${NEW_CANDIDATE_URL}/"
           echo "NEW_CANDIDATE_URL: ${NEW_CANDIDATE_URL}"
@@ -540,20 +540,6 @@ kitmaker_failure:
   rules:
     - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "default"'
       when: on_failure
-  needs:
-{% set stahp = { 'flag': True } %}
-{% for data in  kitmaker_distro_data %}
-    {% if "flavor" in data %}
-        {% continue %}
-    {% endif %}
-  {% set kitmaker_distro = data["distro"] + data["version"] %}
-  {% set kitmaker_distro_clean = data["distro"] + data["version"].replace(".", "_") %}
-    - job: kitmaker_{{ kitmaker_distro }}_deploy
-    {% if stahp.flag %}
-      artifacts: true
-      {% do stahp.update({'flag':False}) %}
-    {% endif %}
-{% endfor %}
   script:
     - |
       kitmaker_webhook_failed

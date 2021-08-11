@@ -33,7 +33,6 @@ class ShipitData:
         self.data = DotDict(self.get_shipit_global_json())
 
     def get_shipit_funnel_json(self, distro, distro_version, arch):
-        #  modified_cuda_version = self.release_label.replace(".", "-")
         funnel_distro = distro
         if any(distro in funnel_distro for distro in ["centos", "ubi"]):
             funnel_distro = "rhel"
@@ -41,13 +40,12 @@ class ShipitData:
         modified_distro_version = distro_version.replace(".", "")
         modified_arch = self.arch.replace("_", "-")
         if modified_arch == "arm64":
+            log.debug(f"Converting arch '{arch}' into 'arm64' for container images")
             modified_arch = "sbsa"
         shipit_distro = f"{funnel_distro}{modified_distro_version}"
         if "tegra" in self.data.product_name:
             shipit_distro = "l4t"
             modified_arch = "aarch64"
-
-        #  last_dot_index = self.release_label.rfind(".")
 
         platform_name = (
             f"{shipit_distro}-{self.data.product_name}-linux-{modified_arch}.json"
@@ -136,92 +134,45 @@ class ShipitData:
 
         # FIXME: hacky WAR, need a better way to define container "flavors"
         if "tegra" in self.data.product_name:
+            log.debug("TEGRA DETECTED")
             distros.add("ubuntu1804")
             return distros
 
         for platform in self.data.targets.items():
             for os in platform[1]:
-                #  print(os)
-                # if x == os[: len(x)] or "rhel" in os and x in os:
-                #  pp(SUPPORTED_DISTRO_LIST)
-                #  for x, y in SUPPORTED_DISTRO_LIST():
-                #      print(os, x, y)
-                #      #  if isinstance(x, tuple):
-                #      #      for y in enumerate(x):
-                #      #          pp(x, y)
-                #      #  pp(f"x: {x}")
-                #      #  if isinstance(x, tuple):
-                #      #      if
-                #      #      if any(y in os for y in x):
-                #      #          distros.add(os)
-                #      #  else:
-                #      #      if x in os:
-                #      #          distros.add(os)
-                #      #      #  pp(x)
                 if any(x in os for x in SUPPORTED_DISTRO_LIST):
                     distros.add(os)
         return distros
 
     def supported_distros_by_arch(self, arch):
-        sdistros = []
-        for distro in self.distros:
-            if "wsl" in distro or (
-                "rhel" not in distro
-                and not any(f in distro for f in SUPPORTED_DISTRO_LIST)
-            ):
+        sdistros = set()
+        larch = arch
+        if "ppc64el" in arch:
+            larch = "ppc64le"
+        elif "arm64" in arch:
+            larch = "aarch64"
+        for distro in self.data.targets[f"linux-{larch}"]:
+            if "wsl" in distro:
                 continue
-            if "rhel" in distro:
-                sdistros.append("ubi" + distro[len(distro) - 1 :])
-                sdistros.append("centos" + distro[len(distro) - 1 :])
-            else:
-                sdistros.append(distro)
+            for sdistro in SUPPORTED_DISTRO_LIST:
+                if sdistro in ["ubi", "centos"] and "rhel" in distro:
+                    sdistros.add("ubi" + distro[len(distro) - 1 :])
+                    sdistros.add("centos" + distro[len(distro) - 1 :])
+                elif sdistro in distro:
+                    sdistros.add(distro)
         return sdistros
-
-    #  def data_iter(self):
-    #      """Returns the Shipit Global Data as a list of tuples.  """
-    #      for k, v in self.data.items():
-    #          if isinstance(v, dict):
-    #              for pair in self.data_iter(v):
-    #                  yield (k, *pair)
-    #          else:
-    #              if "distros" in k:
-    #                  yield ([v])
-    #              else:
-    #                  yield (k, v)
-
-    #  def distros(self):
-    #      """Returns Shipit Distro Iterator"""
-    #      for k, v in self.data.items():
-    #          pp(v)
-    #          #  if isinstance(v, dict):
-    #          #      for pair in nested_gjson_data(v):
-    #          #          yield (k, *pair)
-    #          #  else:
-    #          #      if "distros" in k:
-    #          #          yield ([v])
-    #          #      else:
-    #          #          yield (k, v)
 
     def kitpick_repo_url(self, global_json):
         repo_distro = self.distro
         if any(x in repo_distro for x in ["ubi", "centos"]):
             repo_distro = "rhel"
         clean_distro = "{}{}".format(repo_distro, self.distro_version.replace(".", ""))
-        #  arch = self.arch
-        #  if "ubuntu" in repo_distro and arch == "ppc64le":
-        #      arch = "ppc64el"
-        #  elif arch == "arm64":
-        #      arch = "sbsa"
-        #  suffix = f"{clean_distro}/{arch}"
-        #  if "tegra" in self.product_name:
-        #      arch = "arm64"
-        #      suffix = f"l4t/{arch}"
         return f"http://cuda-internal.nvidia.com/release-candidates/kitpicks/{self.product_name}/{self.release_label}/{self.candidate_number}/repos/{clean_distro}"
 
     def generate_shipit_manifest(self, output_path, cudnn_json_path=None):
         # 22:31 Tue Jul 13 2021 FIXME: (jesusa) this function is way too long to be considered good practice in python
         log.debug("Building the shipit manifest")
-        #  pp(self.data)
+
         self.product_name = self.data["product_name"]
         self.candidate_number = self.data["cand_number"]
         self.release_label = self.data["rel_label"]
@@ -237,6 +188,7 @@ class ShipitData:
                 continue
             os, arch = plat.split("-")
             if any(a in arch for a in ["aarch64", "sbsa"]):
+                log.debug(f"Converting arch '{arch}' into 'arm64' for container images")
                 arch = "arm64"
             if not os in reldata:
                 reldata[os] = {}
@@ -279,11 +231,11 @@ class ShipitData:
                         yield (k, v)
 
         for platform in nested_keys(reldata):
-            #  print(platform)
+            log.info(f"Inspecting global.json platform: {platform}")
+            #  continue
             os = platform[0]
             self.arch = platform[1]
             distros = platform[2]
-            log.debug(f"os: '{os}' arch: '{self.arch}' distros: {distros}")
             if "tegra" in self.product_name and not "arm64" in self.arch:
                 log.warning(
                     f"Skipping platform! '{self.arch}' is not supported for L4T Cuda Container Images (yet)"
@@ -337,7 +289,7 @@ class ShipitData:
                             "dev": {"source": "", "md5sum": ""},
                         }
                     }
-                    #  print(cudnn_json_path)
+                    log.debug(f"cudnn_json_path: {cudnn_json_path}")
                     with open(pathlib.Path(cudnn_json_path), "r") as f:
                         cudnn = json.loads(f.read())
                     for x in cudnn:
