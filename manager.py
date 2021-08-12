@@ -606,7 +606,6 @@ class ManagerContainerPush(Manager):
     key = ""
     push_repos = {}
     target_repos = []
-    #  copy_failed = False
     repo_creds = {}
 
     def setup_repos(self):
@@ -1414,7 +1413,9 @@ class ManagerGenerate(Manager):
     # fmt: on
 
     def set_output_path(self, target):
-        self.output_path = pathlib.Path(f"{self.dist_base_path}/{target}")
+        self.output_path = pathlib.Path(
+            f"{self.dist_base_path}/{target.replace('.', '')}"
+        )
         if not self.parent.shipit_uuid and self.output_path.exists:
             log.warning(f"Removing {self.output_path}")
             rm["-rf", self.output_path]()
@@ -1538,12 +1539,7 @@ class ManagerGenerate(Manager):
             )
             self.target_all_kitmaker()
         else:
-            if (
-                (self.generate_all and not self.parent.shipit_uuid)
-                or self.generate_ci
-                #  or self.generate_readme
-                #  or self.generate_tags
-            ):
+            if (self.generate_all and not self.parent.shipit_uuid) or self.generate_ci:
                 self.generate_gitlab_pipelines()
             elif not (self.generate_readme or self.generate_tags):
                 # Make sure all of our arguments are present

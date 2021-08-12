@@ -228,6 +228,6 @@ def latest_l4t_base_image():
         # Match r32_CUDA
         #  if re.match("^r[\d_]*CUDA", tag):
         # Match r32\.*
-        if re.match("^r[\d]*\.", tag):
+        if re.match("^r[\\d]*\\.", tag):
             tag_list2.append(tag)
     return f"{l4t_base_image}:{sorted(tag_list2, reverse=True)[0]}"
