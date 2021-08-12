@@ -148,9 +148,11 @@ class ShipitData:
         sdistros = set()
         larch = arch
         if "ppc64el" in arch:
+            log.debug(f"Setting key '{arch}' to 'ppc64le' for images")
             larch = "ppc64le"
-        elif "arm64" in arch:
-            larch = "aarch64"
+        elif any(f in arch for f in ["arm64", "aarch64"]):
+            log.debug(f"Setting key '{arch}' to 'sbsa' for images")
+            larch = "sbsa"
         for distro in self.data.targets[f"linux-{larch}"]:
             if "wsl" in distro:
                 continue
