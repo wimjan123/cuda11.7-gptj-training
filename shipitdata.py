@@ -356,7 +356,7 @@ class ShipitData:
             log.warning(
                 "No manifest to write after parsing Shipit data. Unsupported kitpick as it doesn't contain anything useful for Cuda Image!"
             )
-            sys.exit(0)
+            sys.exit(155)
 
         self.shipit_manifest[release_key] = manifest
         log.info(f"Writing shipit manifest: {self.output_manifest_path}")
