@@ -232,6 +232,7 @@ class ShipitData:
                     else:
                         yield (k, v)
 
+        manifest = DotDict()
         for platform in nested_keys(reldata):
             log.info(f"Inspecting global.json platform: {platform}")
             #  continue
@@ -350,6 +351,12 @@ class ShipitData:
                     "requires": requires,
                     "components": components,
                 }
+
+        if not manifest:
+            log.error(
+                "No manifest to write after parsing Shipit data. Unsupported kitpick as it doesn't contain anything useful for Cuda Image!"
+            )
+            sys.exit(1)
 
         self.shipit_manifest[release_key] = manifest
         log.info(f"Writing shipit manifest: {self.output_manifest_path}")
