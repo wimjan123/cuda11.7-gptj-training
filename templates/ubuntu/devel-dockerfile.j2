@@ -43,9 +43,9 @@ ENV NV_LIBNPP_DEV_PACKAGE libnpp-dev-{{ cuda.version.major }}-{{ cuda.version.mi
 
 {% if cuda.flavor == "l4t" %}
     {% if cuda.version.major | int == 10 %}
-ENV NV_LIBCUBLAS_PACKAGE_NAME libcublas-dev
+ENV NV_LIBCUBLAS_DEV_PACKAGE_NAME libcublas-dev
     {% else %}
-ENV NV_LIBCUBLAS_PACKAGE_NAME libcublas-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}
+ENV NV_LIBCUBLAS_DEV_PACKAGE_NAME libcublas-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}
     {% endif %}
 {% else %}
 ENV NV_LIBCUBLAS_DEV_PACKAGE_NAME libcublas-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}
