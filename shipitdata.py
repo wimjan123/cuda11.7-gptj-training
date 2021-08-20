@@ -153,6 +153,9 @@ class ShipitData:
         elif any(f in arch for f in ["arm64", "aarch64"]):
             log.debug(f"Setting key '{arch}' to 'sbsa' for images")
             larch = "sbsa"
+        if not f"linux-{larch}" in self.data.targets:
+            log.debug(f"'linux-{larch}' not found in shipit data!")
+            return
         for distro in self.data.targets[f"linux-{larch}"]:
             if "wsl" in distro:
                 continue
