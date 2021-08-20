@@ -147,12 +147,16 @@ class ShipitData:
     def supported_distros_by_arch(self, arch):
         sdistros = set()
         larch = arch
+        #  log.debug(f"arch: {arch}")
         if "ppc64el" in arch:
             log.debug(f"Setting key '{arch}' to 'ppc64le' for images")
             larch = "ppc64le"
-        elif any(f in arch for f in ["arm64", "aarch64"]):
-            log.debug(f"Setting key '{arch}' to 'sbsa' for images")
-            larch = "sbsa"
+        elif "arm64" in arch:
+            larch = "aarch64"
+        #  elif any(f in arch for f in ["arm64", "aarch64"]):
+        #      log.debug(f"Setting key '{arch}' to 'sbsa' for images")
+        #      larch = "sbsa"
+        #  pp(self.data.targets)
         if not f"linux-{larch}" in self.data.targets:
             log.debug(f"'linux-{larch}' not found in shipit data!")
             return
@@ -191,7 +195,12 @@ class ShipitData:
         for plat, distros in self.data["targets"].items():
             if "windows" in plat:
                 continue
-            os, arch = plat.split("-")
+            log.debug(f"platform: {plat}")
+            splat = plat.split("-")
+            if len(splat) > 2 or len(splat) <= 1:
+                # At the moment, platforms needed by cuda image only contain a name and arch separated by a single hyphen
+                continue
+            os, arch = splat[0], splat[1]
             if any(a in arch for a in ["aarch64", "sbsa"]):
                 log.debug(f"Converting arch '{arch}' into 'arm64' for container images")
                 arch = "arm64"
