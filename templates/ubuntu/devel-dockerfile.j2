@@ -9,7 +9,11 @@ FROM base as base-amd64
 ENV NV_CUDA_CUDART_DEV_VERSION {{ cuda.x86_64.components.cudart_dev.version }}
 ENV NV_NVML_DEV_VERSION {{ cuda.x86_64.components.nvml_dev.version }}
 ENV NV_LIBCUSPARSE_DEV_VERSION {{ cuda.x86_64.components.libcusparse_dev.version }}
+{% if "libnpp_dev" in cuda.x86_64.components %}
+    {% set has_libnpp_dev_package = true %}
 ENV NV_LIBNPP_DEV_VERSION {{ cuda.x86_64.components.libnpp_dev.version }}
+ENV NV_LIBNPP_DEV_PACKAGE libnpp-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}=${NV_LIBNPP_DEV_VERSION}
+{% endif %}
 
 ENV NV_LIBCUBLAS_DEV_VERSION {{ cuda.x86_64.components.libcublas_dev.version }}
 ENV NV_LIBCUBLAS_DEV_PACKAGE_NAME libcublas-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}
@@ -28,16 +32,14 @@ ENV NV_LIBNCCL_DEV_PACKAGE ${NV_LIBNCCL_DEV_PACKAGE_NAME}=${NV_LIBNCCL_DEV_PACKA
 {% if "arm64" in cuda %}
 FROM base as base-arm64
 
-{# [> L4T uses older packaging name format for libcublas <] #}
-{# {% if cuda.version.major_minor in ["10.2"] %} #}
-{#     {% set libcublas_dev_pkg_name = "libcublas-dev" -%} #}
-{#     {% set libcublas_dev_component_version = cuda.components.libcublas.version %} #}
-{# {% endif -%} #}
-
 ENV NV_CUDA_CUDART_DEV_VERSION {{ cuda.arm64.components.cudart_dev.version }}
 ENV NV_NVML_DEV_VERSION {{ cuda.arm64.components.nvml_dev.version }}
 ENV NV_LIBCUSPARSE_DEV_VERSION {{ cuda.arm64.components.libcusparse_dev.version }}
+{% if "libnpp_dev" in cuda.arm64.components %}
+    {% set has_libnpp_dev_package = true %}
 ENV NV_LIBNPP_DEV_VERSION {{ cuda.arm64.components.libnpp_dev.version }}
+ENV NV_LIBNPP_DEV_PACKAGE libnpp-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}=${NV_LIBNPP_DEV_VERSION}
+{% endif %}
 
 {% if cuda.flavor == "l4t" %}
 ENV NV_LIBCUBLAS_DEV_PACKAGE_NAME libcublas-dev
@@ -63,7 +65,11 @@ FROM base as base-ppc64le
 ENV NV_CUDA_CUDART_DEV_VERSION {{ cuda.ppc64le.components.cudart_dev.version }}
 ENV NV_NVML_DEV_VERSION {{ cuda.ppc64le.components.nvml_dev.version }}
 ENV NV_LIBCUSPARSE_DEV_VERSION {{ cuda.ppc64le.components.libcusparse_dev.version }}
+{% if "libnpp_dev" in cuda.ppc64le.components %}
+    {% set has_libnpp_dev_package = true %}
 ENV NV_LIBNPP_DEV_VERSION {{ cuda.ppc64le.components.libnpp_dev.version }}
+ENV NV_LIBNPP_DEV_PACKAGE libnpp-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}=${NV_LIBNPP_DEV_VERSION}
+{% endif %}
 
 ENV NV_LIBCUBLAS_DEV_VERSION {{ cuda.ppc64le.components.libcublas_dev.version }}
 ENV NV_LIBCUBLAS_DEV_PACKAGE_NAME libcublas-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}
@@ -95,7 +101,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-minimal-build-{{ cuda.version.major }}-{{ cuda.version.minor }}=${NV_CUDA_LIB_VERSION} \
     cuda-libraries-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}=${NV_CUDA_LIB_VERSION} \
     cuda-nvml-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}=${NV_NVML_DEV_VERSION} \
-    libnpp-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}=${NV_LIBNPP_DEV_VERSION} \
+    {% if has_libnpp_dev_package %}
+    ${NV_LIBNPP_DEV_PACKAGE} \
+    {% endif %}
     libcusparse-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}=${NV_LIBCUSPARSE_DEV_VERSION} \
     ${NV_LIBCUBLAS_DEV_PACKAGE} \
     {% if has_libnccl_dev_package %}

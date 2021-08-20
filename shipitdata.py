@@ -28,6 +28,10 @@ class ShipitData:
     release_label = ""
     distros = None
 
+    l4t_base_image = ""
+
+    push_repo_logged_in = ""
+
     def __init__(self, shipit_uuid):
         self.shipit_uuid = shipit_uuid
         self.data = DotDict(self.get_shipit_global_json())
@@ -339,10 +343,15 @@ class ShipitData:
                 if "tegra" in self.product_name:
                     key = "l4t_push_repos"
                 prepos = utils.load_rc_push_repos_manifest_yaml()[key]
-                utils.auth_registries(prepos)
+                if not self.push_repo_logged_in:
+                    # only need to do this once
+                    utils.auth_registries(prepos)
+                    self.push_repo_logged_in = True
 
                 if "tegra" in self.product_name:
-                    base_image = utils.latest_l4t_base_image()
+                    if not self.l4t_base_image:
+                        self.l4t_base_image = utils.latest_l4t_base_image()
+                    base_image = self.l4t_base_image
                     requires = "cuda>=10.2"
                     image_name = (
                         f"gitlab-master.nvidia.com:5005/cuda-installer/cuda/l4t-cuda"

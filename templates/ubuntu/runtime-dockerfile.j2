@@ -7,7 +7,11 @@ ENV NV_CUDA_LIB_VERSION {{ cuda.version.release_label + "-1" }}
 FROM base as base-amd64
 
 ENV NV_NVTX_VERSION {{ cuda.x86_64.components.nvtx.version }}
+{% if "libnpp" in cuda.x86_64.components %}
+    {% set has_libnpp_package = true %}
 ENV NV_LIBNPP_VERSION {{ cuda.x86_64.components.libnpp.version }}
+ENV NV_LIBNPP_PACKAGE libnpp-{{ cuda.version.major }}-{{ cuda.version.minor }}=${NV_LIBNPP_VERSION}
+{% endif %}
 ENV NV_LIBCUSPARSE_VERSION {{ cuda.x86_64.components.libcusparse.version }}
 
 ENV NV_LIBCUBLAS_PACKAGE_NAME libcublas-{{ cuda.version.major }}-{{ cuda.version.minor }}
@@ -28,7 +32,11 @@ ENV NV_LIBNCCL_PACKAGE ${NV_LIBNCCL_PACKAGE_NAME}=${NV_LIBNCCL_PACKAGE_VERSION}+
 FROM base as base-arm64
 
 ENV NV_NVTX_VERSION {{ cuda.arm64.components.nvtx.version }}
+{% if "libnpp" in cuda.arm64.components %}
+    {% set has_libnpp_package = true %}
 ENV NV_LIBNPP_VERSION {{ cuda.arm64.components.libnpp.version }}
+ENV NV_LIBNPP_PACKAGE libnpp-{{ cuda.version.major }}-{{ cuda.version.minor }}=${NV_LIBNPP_VERSION}
+{% endif %}
 ENV NV_LIBCUSPARSE_VERSION {{ cuda.arm64.components.libcusparse.version }}
 
 {% if cuda.flavor == "l4t" %}
@@ -53,7 +61,11 @@ ENV NV_LIBNCCL_PACKAGE ${NV_LIBNCCL_PACKAGE_NAME}=${NV_LIBNCCL_PACKAGE_VERSION}+
 FROM base as base-ppc64le
 
 ENV NV_NVTX_VERSION {{ cuda.ppc64le.components.nvtx.version }}
+{% if "libnpp" in cuda.ppc64le.components %}
+    {% set has_libnpp_package = true %}
 ENV NV_LIBNPP_VERSION {{ cuda.ppc64le.components.libnpp.version }}
+ENV NV_LIBNPP_PACKAGE libnpp-{{ cuda.version.major }}-{{ cuda.version.minor }}=${NV_LIBNPP_VERSION}
+{% endif %}
 ENV NV_LIBCUSPARSE_VERSION {{ cuda.ppc64le.components.libcusparse.version }}
 
 ENV NV_LIBCUBLAS_PACKAGE_NAME libcublas-{{ cuda.version.major }}-{{ cuda.version.minor }}
@@ -78,7 +90,9 @@ LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-libraries-{{ cuda.version.major }}-{{ cuda.version.minor }}=${NV_CUDA_LIB_VERSION} \
-    libnpp-{{ cuda.version.major }}-{{ cuda.version.minor }}=${NV_LIBNPP_VERSION} \
+    {% if has_libnpp_package %}
+    ${NV_LIBNPP_PACKAGE} \
+    {% endif %}
     cuda-nvtx-{{ cuda.version.major }}-{{ cuda.version.minor }}=${NV_NVTX_VERSION} \
     libcusparse-{{ cuda.version.major }}-{{ cuda.version.minor }}=${NV_LIBCUSPARSE_VERSION} \
     ${NV_LIBCUBLAS_PACKAGE} \
