@@ -24,8 +24,12 @@ retry() {
 }
 
 kitmaker_cleanup_webhook_success() {
-    if [ ! -z $KITMAKER ] && [ ! -z $TRIGGER ]; then
+    # echo "In here yo!"
+    if [[ ! -z $KITMAKER && ! -z $TRIGGER ]]; then
+        # set -x
+        # echo "In here yo 2!"
         for tag_file in $(find . -iname "tag_manifest_*"); do
+            # cat ${tag_file}
             cat ${tag_file} | grep -v nvidia.com >> UBER_TAG_MANIFEST
             cat ${tag_file} | grep nvidia.com >> image_name
         done
@@ -38,6 +42,7 @@ kitmaker_cleanup_webhook_success() {
         export json_data="{\"status\": \"success\", \"CI_PIPELINE_ID\": \"${CI_PIPELINE_ID}\", \"CI_JOB_ID\": \"${CI_JOB_ID}\", \"CI_COMMIT_SHORT_SHA\": \"${CI_COMMIT_SHORT_SHA}\", \"gitlab_pipeline_url\": \"${CI_PIPELINE_URL}\", \"image_name\": \"${a_image_name}\", \"tags\": $(cat UBER_TAG_MANIFEST | jq -R . | jq -s . | jq 'map(select(length > 0))' | jq -c .)}"
         echo curl -v -H "Content-Type: application/json" -d "${json_data}" "${WEBHOOK_URL}"
         curl -v -H "Content-Type: application/json" -d "${json_data}" "${WEBHOOK_URL}"
+        # set +x
     fi
 }
 

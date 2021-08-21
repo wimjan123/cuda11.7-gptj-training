@@ -340,6 +340,7 @@ prepare:
   <<: *tags_definition
   script:
     - |
+      set -x
       # How gitlab handles errors: https://gitlab.com/gitlab-org/gitlab-runner/-/issues/25394
       # prevent exit codes from killing the pipeline completely, errors must now be handled manually
       set +e
@@ -381,7 +382,9 @@ prepare:
           # kitmaker_webhook_failed
           exit 1
       fi
-      cat $MANIFEST | grep ".*urm.nvidia.com\/" | cut -f2 -d: | head -n 1 | xargs >> ${TAG_MANIFEST_PATH}
+      cat $MANIFEST | grep ".*urm.nvidia.com\/sw-gpu-cuda-installer-docker-local\/" | cut -f2 -d: | head -n 1 | xargs >> ${TAG_MANIFEST_PATH}
+      run_cmd cat ${TAG_MANIFEST_PATH}
+      set +x
       # kitmaker_cleanup_webhook_success
   artifacts:
     paths:
