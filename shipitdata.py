@@ -118,7 +118,10 @@ class ShipitData:
             version = fragment["version"]
 
             pkg_rel = self.pkg_rel_from_package_name(name, version)
-            assert pkg_rel  # should always have a value
+            if not pkg_rel:
+                raise Exception(
+                    f"Could not get package release version from package name '{name}' using version '{version}'. Perhaps there is an issue in the RC data?"
+                )
 
             pkg_no_prefix = pkg[len("cuda_") :] if pkg.startswith("cuda_") else pkg
 
