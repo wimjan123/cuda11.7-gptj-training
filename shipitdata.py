@@ -88,9 +88,12 @@ class ShipitData:
         return r.json()
 
     def pkg_rel_from_package_name(self, name, version):
+        log.debug(f"have name: {name} version: {version}")
         rgx = re.search(fr"[\w\d-]*{version}-(\d)_?", name)
         if rgx:
+            log.debug(f"found match: {rgx.group(1)}")
             return rgx.group(1)
+        log.debug("Could not match pkgrel from package name!")
 
     def shipit_components(self, shipit_json, packages):
         components = {}
@@ -156,7 +159,10 @@ class ShipitData:
             log.debug(f"Setting key '{arch}' to 'ppc64le' for images")
             larch = "ppc64le"
         elif "arm64" in arch:
+            # There are three different names for arm64 at nvidia...
             larch = "aarch64"
+            if not f"linux-{larch}" in self.data.targets:
+                larch = "sbsa"
         #  elif any(f in arch for f in ["arm64", "aarch64"]):
         #      log.debug(f"Setting key '{arch}' to 'sbsa' for images")
         #      larch = "sbsa"
@@ -231,6 +237,7 @@ class ShipitData:
 
         #  pp(self.data.targets)
         #  pp(reldata)
+        #  log.debug(f"reldata: {pp(reldata)}")
 
         #
         # FIXME: find a better way to do this!
