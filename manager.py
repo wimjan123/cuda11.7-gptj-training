@@ -1238,13 +1238,19 @@ class ManagerGenerate(Manager):
                             if re.compile(r"centos*|ubuntu*|ubi*").match(value):
                                 operating_system = value.split("-")
                                 labels[4] = operating_system[0]
-                                distros.append(labels[4])
+                                dotdistro = labels[4]
+                                if "ubuntu" in labels[4]:
+                                    dotdistro = f"{labels[4][:-2]}.{labels[4][-2:]}"
+                                distros.append(dotdistro)
 
                         for key in sorted(labels.keys()):
                             if not releaseLabel:
                                 releaseLabel = releaseLabel + labels[key]
                             else:
-                                releaseLabel = releaseLabel + "-" + labels[key]
+                                distrokey = labels[key]
+                                if "ubuntu" in labels[key]:
+                                    distrokey = f"{labels[key][:-2]}.{labels[key][-2:]}"
+                                releaseLabel = releaseLabel + "-" + distrokey
 
                         # storing all release info in a dictionary variable
                         release_info[dockerfilePath] = releaseLabel

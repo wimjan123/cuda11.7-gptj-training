@@ -87,7 +87,13 @@ Visit [OpenSource @ Nvidia](https://developer.download.nvidia.com/compute/cuda/o
     {% if readme.latest_version in keys %}
         {% for platform in readme.platforms %}
           {# {{ platform }} #}
-          {% if readme.platforms[platform].name.replace(" ", "").lower() in keys %}
+          {% set distrokey = readme.platforms[platform].name.replace(" ", "").lower() %}
+          {% if "ubuntu" in distrokey %}
+              {% set distrokey = distrokey[:-3] + distrokey[-2:] %}
+          {% endif %}
+          {# distro key {{ distrokey }} #}
+          {# keys {{ keys }} #}
+          {% if distrokey in keys %}
             {# {{ platform }} #}
               {% if platform not in OS %}
                 {% print "\n### " %}{% print platform %} [{{readme.platforms[platform].arches | join(", ")}}]{% print "\n\n" %}

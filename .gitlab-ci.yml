@@ -97,7 +97,7 @@ prepare:
         export TAG_DEVEL=" -t ${IMAGE_NAME}:${CUDA_VERSION}-devel ";
         export CUDA_TAGS="${CUDA_VERSION}-runtime ${CUDA_VERSION}-devel ";
       fi
-    - export DIST_BASE_PATH="${DIST_BASE_PATH}/${OS}";
+    - export DIST_BASE_PATH="${DIST_BASE_PATH}/${OS//.}";
     - export PLATFORM_ARG=`printf '%s ' '--platform'; for var in $(echo $ARCHES | sed "s/,/ /g"); do printf 'linux/%s,' "$var"; done | sed 's/,*$//g'`
     - 'echo "PLATFORM_ARG: ${PLATFORM_ARG}"'
     # COPY the NGC DEEP LEARNING CONTAINER LICENSE
@@ -130,11 +130,11 @@ prepare:
         export TAG_DEVEL=" -t ${IMAGE_NAME}:${CUDA_VERSION}-devel${IMAGE_TAG_SUFFIX} "
         export CUDA_TAGS="${CUDA_VERSION}-base${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-runtime${IMAGE_TAG_SUFFIX} ${CUDA_VERSION}-devel${IMAGE_TAG_SUFFIX} "
       fi
-      export DIST_BASE_PATH="${DIST_BASE_PATH}/${OS}"
+      export DIST_BASE_PATH="${DIST_BASE_PATH}/${OS//.}"
       if [ ! -z $KITMAKER ] && [ ! -z $TRIGGER ]; then
-          export DIST_BASE_PATH="kitpick/${OS}"
+          export DIST_BASE_PATH="kitpick/${OS//.}"
           rm -rf kitpick || true
-          run_cmd mkdir -p kitpick/${OS}/{devel,runtime,base}
+          run_cmd mkdir -p kitpick/${OS//.}/{devel,runtime,base}
 
           NEW_CANDIDATE_URL="${CANDIDATE_URL}/${OS/./}"
           # Ensure the url ends with a slash! This prevents wget from getting everything (and bringing apache to its knees)
@@ -209,11 +209,11 @@ prepare:
   script:
     - |
       # no set +e necessary here since we don't use this yet for kitmaker builds
-      DIST_BASE_PATH="${DIST_BASE_PATH}/${OS}";
+      DIST_BASE_PATH="${DIST_BASE_PATH}/${OS/./}";
       if [ ! -z $KITMAKER ] && [ ! -z $TRIGGER ]; then
-          export DIST_BASE_PATH="kitpick/${OS}"
+          export DIST_BASE_PATH="kitpick/${OS/./}"
           rm -rf kitpick || true
-          run_cmd mkdir -p kitpick/${OS}/{devel,runtime,base}
+          run_cmd mkdir -p kitpick/${OS/./}/{devel,runtime,base}
           NEW_CANDIDATE_URL="${CANDIDATE_URL}/${OS/./}"
           # Ensure the url ends with a slash! This prevents wget from getting everything (and bringing apache to its knees)
           [[ "${CANDIDATE_URL}" != */ ]] && NEW_CANDIDATE_URL="${NEW_CANDIDATE_URL}/"
