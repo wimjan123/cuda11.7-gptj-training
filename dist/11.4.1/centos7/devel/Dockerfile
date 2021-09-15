@@ -9,6 +9,7 @@ ENV NV_CUDA_CUDART_DEV_VERSION 11.4.108-1
 ENV NV_NVML_DEV_VERSION 11.4.43-1
 ENV NV_LIBCUBLAS_DEV_VERSION 11.5.4.8-1
 ENV NV_LIBNPP_DEV_VERSION 11.4.0.90-1
+ENV NV_LIBNPP_DEV_PACKAGE libnpp-devel-11-4-${NV_LIBNPP_DEV_VERSION}
 
 
 
@@ -27,7 +28,7 @@ RUN yum install -y \
     cuda-nvprof-11-4-${NV_NVPROF_VERSION} \
     cuda-nvml-devel-11-4-${NV_NVML_DEV_VERSION} \
     libcublas-devel-11-4-${NV_LIBCUBLAS_DEV_VERSION} \
-    libnpp-devel-11-4-${NV_LIBNPP_DEV_VERSION} \
+    ${NV_LIBNPP_DEV_PACKAGE} \
     && yum clean all \
     && rm -rf /var/cache/yum/*
 
