@@ -417,6 +417,7 @@ trigger:
 ] %}
 
 {% for data in  kitmaker_distro_data %}
+    {% set flavor = "" %}
     {% set kitmaker_distro = data["distro"] + data["version"] %}
     {% set kitmaker_distro_clean = data["distro"] + data["version"].replace(".", "_") %}
     {% if "flavor" in data %}

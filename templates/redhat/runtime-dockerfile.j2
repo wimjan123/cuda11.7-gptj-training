@@ -10,7 +10,7 @@ ENV NV_NVTX_VERSION {{ cuda.x86_64.components.nvtx.version }}
 {% if "libnpp" in cuda.x86_64.components %}
     {% set has_libnpp_package = true %}
 ENV NV_LIBNPP_VERSION {{ cuda.x86_64.components.libnpp.version }}
-ENV NV_LIBNPP_PACKAGE libnpp-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBNPP_DEV_VERSION}
+ENV NV_LIBNPP_PACKAGE libnpp-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBNPP_VERSION}
 {% endif %}
 ENV NV_LIBCUBLAS_VERSION {{ cuda.x86_64.components.libcublas.version }}
 {% if "libnccl2" in cuda.x86_64.components %}
@@ -30,7 +30,7 @@ ENV NV_NVTX_VERSION {{ cuda.arm64.components.nvtx.version }}
 {% if "libnpp" in cuda.arm64.components %}
     {% set has_libnpp_package = true %}
 ENV NV_LIBNPP_VERSION {{ cuda.arm64.components.libnpp.version }}
-ENV NV_LIBNPP_PACKAGE libnpp-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBNPP_DEV_VERSION}
+ENV NV_LIBNPP_PACKAGE libnpp-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBNPP_VERSION}
 {% endif %}
 ENV NV_LIBCUBLAS_VERSION {{ cuda.arm64.components.libcublas.version }}
 {% if "libnccl2" in cuda.arm64.components %}
@@ -50,7 +50,7 @@ ENV NV_NVTX_VERSION {{ cuda.ppc64le.components.nvtx.version }}
 {% if "libnpp" in cuda.ppc64le.components %}
     {% set has_libnpp_package = true %}
 ENV NV_LIBNPP_VERSION {{ cuda.ppc64le.components.libnpp.version }}
-ENV NV_LIBNPP_PACKAGE libnpp-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBNPP_DEV_VERSION}
+ENV NV_LIBNPP_PACKAGE libnpp-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBNPP_VERSION}
 {% endif %}
 ENV NV_LIBCUBLAS_VERSION {{ cuda.ppc64le.components.libcublas.version }}
 {% if "libnccl2" in cuda.ppc64le.components %}
@@ -73,7 +73,7 @@ LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 RUN yum install -y \
     cuda-libraries-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_CUDA_LIB_VERSION} \
     cuda-nvtx-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_NVTX_VERSION} \
-    {% if has_libnpp_dev_package %}
+    {% if has_libnpp_package %}
     ${NV_LIBNPP_PACKAGE} \
     {% endif %}
     libcublas-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBCUBLAS_VERSION} \

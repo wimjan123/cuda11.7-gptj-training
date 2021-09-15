@@ -43,7 +43,7 @@ RUN echo "deb {{ cuda.ml_repo_url }}/${NVARCH} /" > /etc/apt/sources.list.d/nvid
 {% endif -%}
 
 {% set cudnn_version = cuda.cudnn.version %}
-{% if "-" in cuda.cudnn.version %}
+{% if "version" in cuda.cudnn and "-" in cuda.cudnn.version %}
     {% set cudnn_version = cuda.cudnn.version[:-2] %}
 {% endif -%}
 
