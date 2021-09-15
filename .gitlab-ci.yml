@@ -738,6 +738,18 @@ centos7-v11.4.2:
   <<: *cuda_base_definition
   <<: *centos7_11_4_2_only
 
+centos7-v11.4.2-cudnn8:
+  <<: *cudnn_definition
+  <<: *centos7_11_4_2_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos7_11_4_2_variables
+    CUDNN_VERSION: "cudnn8"
+    ARCHES: "x86_64"
+  needs:
+    - job: centos7-v11.4.2
+      artifacts: true
+
 centos7-v11.4.2-test-x86_64:
   needs: ["centos7-v11.4.2"]
   <<: *centos7_11_4_2_only
@@ -785,6 +797,8 @@ centos7-v11.4.2-deploy:
       optional: true
     - job: centos7-v11.4.2-scan-x86_64
       optional: true
+    - job: centos7-v11.4.2-cudnn8
+      optional: true
 
 
 .centos8_11_4_2_variables: &centos8_11_4_2_variables
@@ -808,6 +822,18 @@ centos7-v11.4.2-deploy:
 centos8-v11.4.2:
   <<: *cuda_base_definition
   <<: *centos8_11_4_2_only
+
+centos8-v11.4.2-cudnn8:
+  <<: *cudnn_definition
+  <<: *centos8_11_4_2_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos8_11_4_2_variables
+    CUDNN_VERSION: "cudnn8"
+    ARCHES: "arm64, ppc64le, x86_64"
+  needs:
+    - job: centos8-v11.4.2
+      artifacts: true
 
 centos8-v11.4.2-test-arm64:
   needs: ["centos8-v11.4.2"]
@@ -924,6 +950,8 @@ centos8-v11.4.2-deploy:
       optional: true
     - job: centos8-v11.4.2-scan-x86_64
       optional: true
+    - job: centos8-v11.4.2-cudnn8
+      optional: true
 
 
 .ubi7_11_4_2_variables: &ubi7_11_4_2_variables
@@ -947,6 +975,18 @@ centos8-v11.4.2-deploy:
 ubi7-v11.4.2:
   <<: *cuda_base_definition
   <<: *ubi7_11_4_2_only
+
+ubi7-v11.4.2-cudnn8:
+  <<: *cudnn_definition
+  <<: *ubi7_11_4_2_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi7_11_4_2_variables
+    CUDNN_VERSION: "cudnn8"
+    ARCHES: "x86_64"
+  needs:
+    - job: ubi7-v11.4.2
+      artifacts: true
 
 ubi7-v11.4.2-test-x86_64:
   needs: ["ubi7-v11.4.2"]
@@ -995,6 +1035,8 @@ ubi7-v11.4.2-deploy:
       optional: true
     - job: ubi7-v11.4.2-scan-x86_64
       optional: true
+    - job: ubi7-v11.4.2-cudnn8
+      optional: true
 
 
 .ubi8_11_4_2_variables: &ubi8_11_4_2_variables
@@ -1018,6 +1060,18 @@ ubi7-v11.4.2-deploy:
 ubi8-v11.4.2:
   <<: *cuda_base_definition
   <<: *ubi8_11_4_2_only
+
+ubi8-v11.4.2-cudnn8:
+  <<: *cudnn_definition
+  <<: *ubi8_11_4_2_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubi8_11_4_2_variables
+    CUDNN_VERSION: "cudnn8"
+    ARCHES: "arm64, ppc64le, x86_64"
+  needs:
+    - job: ubi8-v11.4.2
+      artifacts: true
 
 ubi8-v11.4.2-test-arm64:
   needs: ["ubi8-v11.4.2"]
@@ -1134,6 +1188,8 @@ ubi8-v11.4.2-deploy:
       optional: true
     - job: ubi8-v11.4.2-scan-x86_64
       optional: true
+    - job: ubi8-v11.4.2-cudnn8
+      optional: true
 
 
 .ubuntu18_04_11_4_2_variables: &ubuntu18_04_11_4_2_variables
@@ -1157,6 +1213,18 @@ ubi8-v11.4.2-deploy:
 ubuntu18.04-v11.4.2:
   <<: *cuda_base_definition
   <<: *ubuntu18_04_11_4_2_only
+
+ubuntu18.04-v11.4.2-cudnn8:
+  <<: *cudnn_definition
+  <<: *ubuntu18_04_11_4_2_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu18_04_11_4_2_variables
+    CUDNN_VERSION: "cudnn8"
+    ARCHES: "x86_64"
+  needs:
+    - job: ubuntu18.04-v11.4.2
+      artifacts: true
 
 ubuntu18.04-v11.4.2-test-arm64:
   needs: ["ubuntu18.04-v11.4.2"]
@@ -1239,6 +1307,8 @@ ubuntu18.04-v11.4.2-deploy:
       optional: true
     - job: ubuntu18.04-v11.4.2-scan-x86_64
       optional: true
+    - job: ubuntu18.04-v11.4.2-cudnn8
+      optional: true
 
 
 .ubuntu20_04_11_4_2_variables: &ubuntu20_04_11_4_2_variables
@@ -1262,6 +1332,18 @@ ubuntu18.04-v11.4.2-deploy:
 ubuntu20.04-v11.4.2:
   <<: *cuda_base_definition
   <<: *ubuntu20_04_11_4_2_only
+
+ubuntu20.04-v11.4.2-cudnn8:
+  <<: *cudnn_definition
+  <<: *ubuntu20_04_11_4_2_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *ubuntu20_04_11_4_2_variables
+    CUDNN_VERSION: "cudnn8"
+    ARCHES: "x86_64"
+  needs:
+    - job: ubuntu20.04-v11.4.2
+      artifacts: true
 
 ubuntu20.04-v11.4.2-test-arm64:
   needs: ["ubuntu20.04-v11.4.2"]
@@ -1344,6 +1426,8 @@ ubuntu20.04-v11.4.2-deploy:
       optional: true
     - job: ubuntu20.04-v11.4.2-scan-x86_64
       optional: true
+    - job: ubuntu20.04-v11.4.2-cudnn8
+      optional: true
 
 
 .centos7_11_4_1_variables: &centos7_11_4_1_variables
@@ -1367,6 +1451,18 @@ ubuntu20.04-v11.4.2-deploy:
 centos7-v11.4.1:
   <<: *cuda_base_definition
   <<: *centos7_11_4_1_only
+
+centos7-v11.4.1-cudnn8:
+  <<: *cudnn_definition
+  <<: *centos7_11_4_1_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *centos7_11_4_1_variables
+    CUDNN_VERSION: "cudnn8"
+    ARCHES: "x86_64"
+  needs:
+    - job: centos7-v11.4.1
+      artifacts: true
 
 centos7-v11.4.1-test-x86_64:
   needs: ["centos7-v11.4.1"]
@@ -1414,6 +1510,8 @@ centos7-v11.4.1-deploy:
     - job: centos7-v11.4.1-test-x86_64
       optional: true
     - job: centos7-v11.4.1-scan-x86_64
+      optional: true
+    - job: centos7-v11.4.1-cudnn8
       optional: true
 
 

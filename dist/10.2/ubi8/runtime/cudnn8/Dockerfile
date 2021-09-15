@@ -3,7 +3,7 @@ FROM ${IMAGE_NAME}:10.2-runtime-ubi8 as base
 
 FROM base as base-amd64
 
-ENV NV_CUDNN_VERSION 8.2.2.26-1
+ENV NV_CUDNN_VERSION 8.2.4.15-1
 ENV NV_CUDNN_PACKAGE libcudnn8-${NV_CUDNN_VERSION}.cuda10.2
 
 

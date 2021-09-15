@@ -68,6 +68,12 @@ cuda_v11.4.2:
           version: 11.4.120-1
         nvtx:
           version: 11.4.120-1
+        libnccl2:
+          version: 2.11.4-1
+        libnccl2_dev:
+          version: 2.11.4-1
+        cudnn8:
+          version: 8.2.4.15-1
       <<: *cuda11_4_2_requires
   centos8:
     arm64:
@@ -90,6 +96,12 @@ cuda_v11.4.2:
           version: 11.4.120-1
         nvtx:
           version: 11.4.120-1
+        libnccl2:
+          version: 2.11.4-1
+        libnccl2_dev:
+          version: 2.11.4-1
+        cudnn8:
+          version: 8.2.4.15-1
       requires: 'cuda>=11.4'
     base_image: centos:8
     ppc64le:
@@ -112,6 +124,12 @@ cuda_v11.4.2:
           version: 11.4.120-1
         nvtx:
           version: 11.4.120-1
+        libnccl2:
+          version: 2.11.4-1
+        libnccl2_dev:
+          version: 2.11.4-1
+        cudnn8:
+          version: 8.2.4.15-1
       requires: 'cuda>=11.4'
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8
     template_path: templates/redhat
@@ -135,6 +153,12 @@ cuda_v11.4.2:
           version: 11.4.120-1
         nvtx:
           version: 11.4.120-1
+        libnccl2:
+          version: 2.11.4-1
+        libnccl2_dev:
+          version: 2.11.4-1
+        cudnn8:
+          version: 8.2.4.15-1
       <<: *cuda11_4_2_requires
   ubi7:
     base_image: registry.access.redhat.com/ubi7/ubi:latest
@@ -160,6 +184,12 @@ cuda_v11.4.2:
           version: 11.4.120-1
         nvtx:
           version: 11.4.120-1
+        libnccl2:
+          version: 2.11.4-1
+        libnccl2_dev:
+          version: 2.11.4-1
+        cudnn8:
+          version: 8.2.4.15-1
       <<: *cuda11_4_2_requires
   ubi8:
     arm64:
@@ -182,6 +212,12 @@ cuda_v11.4.2:
           version: 11.4.120-1
         nvtx:
           version: 11.4.120-1
+        libnccl2:
+          version: 2.11.4-1
+        libnccl2_dev:
+          version: 2.11.4-1
+        cudnn8:
+          version: 8.2.4.15-1
       requires: 'cuda>=11.4'
     base_image: registry.access.redhat.com/ubi8/ubi:latest
     ppc64le:
@@ -204,6 +240,12 @@ cuda_v11.4.2:
           version: 11.4.120-1
         nvtx:
           version: 11.4.120-1
+        libnccl2:
+          version: 2.11.4-1
+        libnccl2_dev:
+          version: 2.11.4-1
+        cudnn8:
+          version: 8.2.4.15-1
       requires: 'cuda>=11.4'
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8
     template_path: templates/redhat
@@ -227,6 +269,12 @@ cuda_v11.4.2:
           version: 11.4.120-1
         nvtx:
           version: 11.4.120-1
+        libnccl2:
+          version: 2.11.4-1
+        libnccl2_dev:
+          version: 2.11.4-1
+        cudnn8:
+          version: 8.2.4.15-1
       <<: *cuda11_4_2_requires
   ubuntu18.04:
     arm64:
@@ -277,6 +325,12 @@ cuda_v11.4.2:
           version: 11.4.120-1
         nvtx:
           version: 11.4.120-1
+        libnccl2:
+          version: 2.11.4-1
+        libnccl2_dev:
+          version: 2.11.4-1
+        cudnn8:
+          version: 8.2.4.15-1
       <<: *cuda11_4_2_requires
   ubuntu20.04:
     arm64:
@@ -301,6 +355,10 @@ cuda_v11.4.2:
           version: 11.4.120-1
         nvtx:
           version: 11.4.120-1
+        libnccl2:
+          version: 2.11.4-1
+        libnccl2_dev:
+          version: 2.11.4-1
       requires: 'cuda>=11.4'
     base_image: ubuntu:20.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004
@@ -327,6 +385,12 @@ cuda_v11.4.2:
           version: 11.4.120-1
         nvtx:
           version: 11.4.120-1
+        libnccl2:
+          version: 2.11.4-1
+        libnccl2_dev:
+          version: 2.11.4-1
+        cudnn8:
+          version: 8.2.4.15-1
       <<: *cuda11_4_2_requires
 
 
@@ -365,6 +429,12 @@ cuda_v11.4.1:
           version: 11.4.100-1
         nvtx:
           version: 11.4.100-1
+        libnccl2:
+          version: 2.11.4-1
+        libnccl2_dev:
+          version: 2.11.4-1
+        cudnn8:
+          version: 8.2.4.15-1
       <<: *cuda11_4_1_requires
   centos8:
     base_image: centos:8
@@ -391,11 +461,11 @@ cuda_v11.4.1:
         nvtx:
           version: 11.4.100-1
         libnccl2:
-          version: 2.10.3-1
+          version: 2.11.4-1
         libnccl2_dev:
-          version: 2.10.3-1
+          version: 2.11.4-1
         cudnn8:
-          version: 8.2.2.26-1
+          version: 8.2.4.15-1
       requires: "cuda>=11.4"
     ppc64le:
       components:
@@ -418,11 +488,11 @@ cuda_v11.4.1:
         nvtx:
           version: 11.4.100-1
         libnccl2:
-          version: 2.10.3-1
+          version: 2.11.4-1
         libnccl2_dev:
-          version: 2.10.3-1
+          version: 2.11.4-1
         cudnn8:
-          version: 8.2.2.26-1
+          version: 8.2.4.15-1
       requires: "cuda>=11.4"
     x86_64:
       components:
@@ -445,11 +515,11 @@ cuda_v11.4.1:
         nvtx:
           version: 11.4.100-1
         libnccl2:
-          version: 2.10.3-1
+          version: 2.11.4-1
         libnccl2_dev:
-          version: 2.10.3-1
+          version: 2.11.4-1
         cudnn8:
-          version: 8.2.2.26-1
+          version: 8.2.4.15-1
       <<: *cuda11_4_1_requires
   ubi7:
     base_image: registry.access.redhat.com/ubi7/ubi:latest
@@ -476,11 +546,11 @@ cuda_v11.4.1:
         nvtx:
           version: 11.4.100-1
         libnccl2:
-          version: 2.10.3-1
+          version: 2.11.4-1
         libnccl2_dev:
-          version: 2.10.3-1
+          version: 2.11.4-1
         cudnn8:
-          version: 8.2.2.26-1
+          version: 8.2.4.15-1
       <<: *cuda11_4_1_requires
   ubi8:
     base_image: registry.access.redhat.com/ubi8/ubi:latest
@@ -507,11 +577,11 @@ cuda_v11.4.1:
         nvtx:
           version: 11.4.100-1
         libnccl2:
-          version: 2.10.3-1
+          version: 2.11.4-1
         libnccl2_dev:
-          version: 2.10.3-1
+          version: 2.11.4-1
         cudnn8:
-          version: 8.2.2.26-1
+          version: 8.2.4.15-1
       requires: "cuda>=11.4"
     ppc64le:
       components:
@@ -534,11 +604,11 @@ cuda_v11.4.1:
         nvtx:
           version: 11.4.100-1
         libnccl2:
-          version: 2.10.3-1
+          version: 2.11.4-1
         libnccl2_dev:
-          version: 2.10.3-1
+          version: 2.11.4-1
         cudnn8:
-          version: 8.2.2.26-1
+          version: 8.2.4.15-1
       requires: "cuda>=11.4"
     x86_64:
       components:
@@ -561,11 +631,11 @@ cuda_v11.4.1:
         nvtx:
           version: 11.4.100-1
         libnccl2:
-          version: 2.10.3-1
+          version: 2.11.4-1
         libnccl2_dev:
-          version: 2.10.3-1
+          version: 2.11.4-1
         cudnn8:
-          version: 8.2.2.26-1
+          version: 8.2.4.15-1
       <<: *cuda11_4_1_requires
   ubuntu18.04:
     base_image: ubuntu:18.04
@@ -593,6 +663,10 @@ cuda_v11.4.1:
           version: 11.4.43-1
         nvtx:
           version: 11.4.100-1
+        libnccl2:
+          version: 2.11.4-1
+        libnccl2_dev:
+          version: 2.11.4-1
       requires: "cuda>=11.4"
     x86_64:
       components:
@@ -617,11 +691,11 @@ cuda_v11.4.1:
         nvtx:
           version: 11.4.100-1
         libnccl2:
-          version: 2.10.3-1
+          version: 2.11.4-1
         libnccl2_dev:
-          version: 2.10.3-1
+          version: 2.11.4-1
         cudnn8:
-          version: 8.2.2.26-1
+          version: 8.2.4.15-1
       <<: *cuda11_4_1_requires
   ubuntu20.04:
     base_image: ubuntu:20.04
@@ -650,11 +724,11 @@ cuda_v11.4.1:
         nvtx:
           version: 11.4.100-1
         libnccl2:
-          version: 2.10.3-1
+          version: 2.11.4-1
         libnccl2_dev:
-          version: 2.10.3-1
+          version: 2.11.4-1
         cudnn8:
-          version: 8.2.2.26-1
+          version: 8.2.4.15-1
       requires: "cuda>=11.4"
     x86_64:
       components:
@@ -679,11 +753,11 @@ cuda_v11.4.1:
         nvtx:
           version: 11.4.100-1
         libnccl2:
-          version: 2.10.3-1
+          version: 2.11.4-1
         libnccl2_dev:
-          version: 2.10.3-1
+          version: 2.11.4-1
         cudnn8:
-          version: 8.2.2.26-1
+          version: 8.2.4.15-1
       <<: *cuda11_4_1_requires
 
 
@@ -725,11 +799,11 @@ cuda_v11.4.1:
   libcusparse_dev:
     version: 11.6.0.43-1
   libnccl2:
-    version: 2.10.3-1
+    version: 2.11.4-1
   libnccl2_dev:
-    version: 2.10.3-1
+    version: 2.11.4-1
   cudnn8:
-    version: 8.2.2.26-1
+    version: 8.2.4.15-1
 
 
 cuda_v11.4.0:
@@ -1755,9 +1829,9 @@ cuda_v11.1.1:
   libcusparse_dev:
     version: 11.1.1.245-1
   libnccl2:
-    version: 2.10.3-1
+    version: 2.11.4-1
   libnccl2_dev:
-    version: 2.10.3-1
+    version: 2.11.4-1
   cudnn8:
     version: 8.0.5.39-1
 
@@ -1910,11 +1984,11 @@ cuda_v11.0.3:
   libcublas_dev:
     version: 10.2.2.89-1
   libnccl2:
-    version: 2.10.3-1
+    version: 2.11.4-1
   libnccl2_dev:
-    version: 2.10.3-1
+    version: 2.11.4-1
   cudnn8:
-    version: 8.2.2.26-1
+    version: 8.2.4.15-1
   cudnn7:
     version: 7.6.5.32-1
 

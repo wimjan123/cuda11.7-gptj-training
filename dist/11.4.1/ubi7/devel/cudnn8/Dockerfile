@@ -3,7 +3,7 @@ FROM ${IMAGE_NAME}:11.4.1-devel-ubi7 as base
 
 FROM base as base-amd64
 
-ENV NV_CUDNN_VERSION 8.2.2.26-1
+ENV NV_CUDNN_VERSION 8.2.4.15-1
 ENV NV_CUDNN_PACKAGE libcudnn8-devel-${NV_CUDNN_VERSION}.cuda11.4
 
 FROM base-${TARGETARCH}
