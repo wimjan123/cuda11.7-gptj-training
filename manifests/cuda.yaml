@@ -43,7 +43,7 @@ cuda_v11.4.2:
   push_repos:
     - artifactory
     - docker.io
-    - nvcr.io
+    - ngc
   centos7:
     base_image: centos:7
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
@@ -404,7 +404,7 @@ cuda_v11.4.1:
   push_repos:
     - artifactory
     - docker.io
-    - nvcr.io
+    - ngc
   centos7:
     base_image: centos:7
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
@@ -813,7 +813,7 @@ cuda_v11.4.0:
   push_repos:
     - artifactory
     - docker.io
-    - nvcr.io
+    - ngc
   ubuntu20.04:
     template_path: templates/ubuntu
     base_image: ubuntu:20.04
@@ -951,7 +951,7 @@ cuda_v11.3.1:
   push_repos:
     - artifactory
     - docker.io
-    - nvcr.io
+    - ngc
   ubuntu20.04:
     template_path: templates/ubuntu
     base_image: ubuntu:20.04
@@ -1098,7 +1098,7 @@ cuda_v11.3.0:
   push_repos:
     - artifactory
     - docker.io
-    - nvcr.io
+    - ngc
   ubuntu20.04:
     template_path: templates/ubuntu
     base_image: ubuntu:20.04
@@ -1245,7 +1245,7 @@ cuda_v11.2.2:
   push_repos:
     - artifactory
     - docker.io
-    - nvcr.io
+    - ngc
   ubuntu20.04:
     template_path: templates/ubuntu
     base_image: ubuntu:20.04
@@ -1392,7 +1392,7 @@ cuda_v11.2.1:
   push_repos:
     - artifactory
     - docker.io
-    - nvcr.io
+    - ngc
   ubuntu20.04:
     template_path: templates/ubuntu
     base_image: ubuntu:20.04
@@ -1539,7 +1539,7 @@ cuda_v11.2.0:
   push_repos:
     - artifactory
     - docker.io
-    - nvcr.io
+    - ngc
   ubuntu20.04:
     template_path: templates/ubuntu
     base_image: ubuntu:20.04
@@ -1686,7 +1686,7 @@ cuda_v11.1.1:
   push_repos:
     - artifactory
     - docker.io
-    - nvcr.io
+    - ngc
   ubuntu20.04:
     template_path: templates/ubuntu
     base_image: ubuntu:20.04
@@ -1843,7 +1843,7 @@ cuda_v11.0.3:
   push_repos:
     - artifactory
     - docker.io
-    - nvcr.io
+    - ngc
   ubuntu20.04:
     template_path: templates/ubuntu
     base_image: ubuntu:20.04
@@ -2001,7 +2001,7 @@ cuda_v10.2:
   push_repos:
     - artifactory
     - docker.io
-    - nvcr.io
+    - ngc
   ubuntu18.04:
     template_path: templates/ubuntu/legacy
     base_image: ubuntu:18.04
@@ -2150,7 +2150,7 @@ cuda_v10.1:
   push_repos:
     - artifactory
     - docker.io
-    - nvcr.io
+    - ngc
   ubuntu18.04:
     template_path: templates/ubuntu/legacy
     base_image: ubuntu:18.04
@@ -2318,7 +2318,7 @@ cuda_v10.0:
   push_repos:
     - artifactory
     - docker.io
-    - nvcr.io
+    - ngc
   ubuntu18.04:
     template_path: templates/ubuntu/legacy
     base_image: ubuntu:18.04
@@ -2430,7 +2430,7 @@ cuda_v9.2:
   push_repos:
     - artifactory
     - docker.io
-    - nvcr.io
+    - ngc
   ubuntu18.04:
     template_path: templates/ubuntu/legacy
     base_image: ubuntu:18.04
@@ -2544,7 +2544,7 @@ cuda_v9.1:
   push_repos:
     - artifactory
     - docker.io
-    - nvcr.io
+    - ngc
   ubuntu16.04:
     template_path: templates/ubuntu/legacy
     base_image: ubuntu:16.04
@@ -2654,7 +2654,7 @@ cuda_v9.0:
   push_repos:
     - artifactory
     - docker.io
-    - nvcr.io
+    - ngc
   image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
   ubuntu16.04:
     template_path: templates/ubuntu/legacy
@@ -2772,7 +2772,7 @@ cuda_v8.0:
   push_repos:
     - artifactory
     - docker.io
-    - nvcr.io
+    - ngc
   ubuntu16.04:
     template_path: templates/ubuntu/legacy
     base_image: ubuntu:16.04

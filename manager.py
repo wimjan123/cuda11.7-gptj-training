@@ -622,8 +622,10 @@ class ManagerContainerPush(Manager):
         )
 
         for repo, metadata in self.push_repos.items():
-            #  print(repo)
+            #  log.debug(repo)
+            #  log.debug(self.target_repos)
             if repo not in self.target_repos:
+                log.debug(f"IN HERE: {repo}")
                 continue
             if "gitlab-master" in repo:
                 # Images have already been pushed to gitlab by this point
