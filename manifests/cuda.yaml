@@ -664,9 +664,7 @@ cuda_v11.4.1:
         nvtx:
           version: 11.4.100-1
         libnccl2:
-          version: 2.11.4-1
         libnccl2_dev:
-          version: 2.11.4-1
       requires: "cuda>=11.4"
     x86_64:
       components:
@@ -728,7 +726,6 @@ cuda_v11.4.1:
         libnccl2_dev:
           version: 2.11.4-1
         cudnn8:
-          version: 8.2.4.15-1
       requires: "cuda>=11.4"
     x86_64:
       components:
@@ -829,6 +826,7 @@ cuda_v11.4.0:
       requires: "cuda>=11.4"
       components:
         <<: *cuda11_4_0_components
+        cudnn8:
   ubuntu18.04:
     template_path: templates/ubuntu
     base_image: ubuntu:18.04

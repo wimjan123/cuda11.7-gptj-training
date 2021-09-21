@@ -2054,7 +2054,7 @@ ubuntu20.04-v11.4.1-cudnn8:
   variables:
     <<: *ubuntu20_04_11_4_1_variables
     CUDNN_VERSION: "cudnn8"
-    ARCHES: "arm64, x86_64"
+    ARCHES: "x86_64"
   needs:
     - job: ubuntu20.04-v11.4.1
       artifacts: true
@@ -2173,7 +2173,7 @@ ubuntu20.04-v11.4.0-cudnn8:
   variables:
     <<: *ubuntu20_04_11_4_0_variables
     CUDNN_VERSION: "cudnn8"
-    ARCHES: "x86_64, arm64"
+    ARCHES: "x86_64"
   needs:
     - job: ubuntu20.04-v11.4.0
       artifacts: true
