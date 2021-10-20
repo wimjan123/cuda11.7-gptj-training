@@ -3,15 +3,15 @@ FROM ubuntu:20.04 as base
 FROM base as base-amd64
 
 ENV NVARCH x86_64
-ENV NVIDIA_REQUIRE_CUDA "cuda>=11.4 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=440,driver<441 brand=tesla,driver>=450,driver<451"
-ENV NV_CUDA_CUDART_VERSION 11.4.108-1
-ENV NV_CUDA_COMPAT_PACKAGE cuda-compat-11-4
+ENV NVIDIA_REQUIRE_CUDA "cuda>=11.5 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=440,driver<441 brand=tesla,driver>=450,driver<451"
+ENV NV_CUDA_CUDART_VERSION 11.5.50-1
+ENV NV_CUDA_COMPAT_PACKAGE cuda-compat-11-5
 
 FROM base as base-arm64
 
 ENV NVARCH sbsa
-ENV NVIDIA_REQUIRE_CUDA "cuda>=11.4"
-ENV NV_CUDA_CUDART_VERSION 11.4.108-1
+ENV NVIDIA_REQUIRE_CUDA "cuda>=11.5"
+ENV NV_CUDA_CUDART_VERSION 11.5.50-1
 FROM base-${TARGETARCH}
 
 ARG TARGETARCH
@@ -26,13 +26,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-get purge --autoremove -y curl \
     && rm -rf /var/lib/apt/lists/*
 
-ENV CUDA_VERSION 11.4.2
+ENV CUDA_VERSION 11.5.0
 
 # For libraries in the cuda-compat-* package: https://docs.nvidia.com/cuda/eula/index.html#attachment-a
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    cuda-cudart-11-4=${NV_CUDA_CUDART_VERSION} \
+    cuda-cudart-11-5=${NV_CUDA_CUDART_VERSION} \
     ${NV_CUDA_COMPAT_PACKAGE} \
-    && ln -s cuda-11.4 /usr/local/cuda && \
+    && ln -s cuda-11.5 /usr/local/cuda && \
     rm -rf /var/lib/apt/lists/*
 
 # Required for nvidia-docker v1
