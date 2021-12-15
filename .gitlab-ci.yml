@@ -51,10 +51,14 @@ before_script:
   - retry 5 20 docker login -u "gitlab-ci-token" -p $CI_JOB_TOKEN gitlab-master.nvidia.com:5005
   # Login to NGC to pull images
   - retry 5 20 docker login -u '$oauthtoken' -p $NVCR_TOKEN nvcr.io;
-  - AuthHeader=$(echo -n $SSA_CLIENT_ID:$SSA_CLIENT_SECRET | base64 -w0)
-  - >
-    export SSA_TOKEN=$(curl --request POST --header "Authorization: Basic $AuthHeader" --header "Content-Type: application/x-www-form-urlencoded" ${SSA_ISSUER_URL} | jq ".access_token" |  tr -d '"')
-  - if [ -z "$SSA_TOKEN" ]; then exit 1; else echo "SSA_TOKEN set!"; fi
+
+.security_scan:
+  image: gitlab-master.nvidia.com:5005/pstooling/pulse-group/pulse-container-scanner/pulse-cli:stable
+  variables:
+    PSS_SSA_ID: "x9thwm-cootr2q1jdv5p7b8iw4fs4ob3x6nqqsoznyk"
+    PSS_SSA_SCOPE: "nspect.verify%20scan.anchore"
+    SSA_ISSUER_URL: "https://${PSS_SSA_ID}.ssa.nvidia.com/token?grant_type=client_credentials&scope=${PSS_SSA_SCOPE}"
+    IMAGE_ARCHIVE: "cuda-${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}.tar"
 
 stages:
   - prepare
@@ -300,37 +304,34 @@ prepare:
       ${rmicmd}
 
 .scan_template: &scan_definition
-  image: gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
+  extends:
+    - .security_scan
   stage: scan
   <<: *tags_definition
   script:
     - |
-      # git clone https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab-master.nvidia.com/sectooling/scanning/contamer.git
-      # cd contamer
-      # pip3 install -r requirements.txt
-
       docker pull ${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
-
-      # CVE-2020-14352 CVE-2020-15888: librepo, lua-libs packages WAIVED via https://nvbugswb.nvidia.com/NvBugs5/SWBug.aspx?bugid=3028123&cmtNo=35
-      # CVE-2019-25013 WAIVED via https://nvbugs/3229249
-      # CVE-2020-8625  WAIVED via https://nvbugs/3266655
-      # CVE-2021-25215 WAIVED via https://nvbugs/3303060
-      # CVE-2020-12362 WAIVED via https://nvbugs/3303060
-      # CVE-2020-36313 WAIVED via https://nvbugs/3303060
-      # CVE-2021-3501  WAIVED via https://nvbugs/3303060
-      # CVE-2021-27219 WAIVED via https://nvbugs/3317302
-      # CVE-2021-25217 WAIVED via https://nvbugs/3321404
-      # python3 contamer.py --debug-logs -ls --fail-on-non-os ${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX} \
-      #     --suppress-vulns CVE-2021-27219 CVE-2020-14352 CVE-2020-15888 CVE-2019-25013 CVE-2020-8625 CVE-2021-25215 CVE-2020-12362 CVE-2020-36313 CVE-2021-3501 CVE-2021-25217 | tee /tmp/output
-
+      # saving docker image to archive to run the security scan against it in later steps
       docker save ${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX} > ${IMAGE_ARCHIVE}
+      docker rmi -f ${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
+
+      echo "Connection request with Pulse Security Service using SSA..."
+
+      AuthHeader=$(echo -n $SSA_CLIENT_ID:$SSA_CLIENT_SECRET | base64 | tr -d '\n')
+      export SSA_TOKEN=$(curl --request POST --header "Authorization: Basic $AuthHeader" --header "Content-Type: application/x-www-form-urlencoded" ${SSA_ISSUER_URL} | jq ".access_token" |  tr -d '"')
+
+      if [ -z "$SSA_TOKEN" ]; then
+          exit 1;
+      else
+          echo "SSA Token has been set successfully!";
+      fi
 
       pulse-cli -n $NSPECT_ID --ssa $SSA_TOKEN scan -i $IMAGE_ARCHIVE -o
-
       retval=$?
-      echo "Pulse Scan return value: ${retval}";
 
-      docker rmi -f ${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}
+      echo "Pulse Scan return value: ${retval}"
+
+      rm $IMAGE_ARCHIVE
       if [[ $retval -ne 0 ]]; then
           exit 1;
       fi
