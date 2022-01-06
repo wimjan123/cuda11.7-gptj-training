@@ -52,6 +52,8 @@ RUN yum install --setopt=obsoletes=0 -y \
     && yum clean all \
     && rm -rf /var/cache/yum/*
 
+ENV LIBRARY_PATH /usr/local/cuda/lib64/stubs
+
 RUN yum install -y yum-plugin-versionlock && yum versionlock ${NV_LIBCUBLAS_PACKAGE_NAME_DEV}
 
 RUN yum install -y xz && NCCL_DOWNLOAD_SUM=${NV_LIBNCCL_DL_SHA256SUM} && \

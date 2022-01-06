@@ -163,9 +163,7 @@ RUN yum install -y \
     && yum clean all \
     && rm -rf /var/cache/yum/*
 
-{% if cuda.version.major | int == 8 %}
 ENV LIBRARY_PATH /usr/local/cuda/lib64/stubs
-{% endif -%}
 
 {% if cuda.version.major_minor in ["10.0", "10.1"] and cuda.os.distro != "ubi" %}
 RUN yum install -y yum-plugin-versionlock && yum versionlock ${NV_LIBCUBLAS_PACKAGE_NAME_DEV}

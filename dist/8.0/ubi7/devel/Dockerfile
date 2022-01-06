@@ -101,3 +101,4 @@ RUN yum install -y \
     && rm -rf /var/cache/yum/*
 
 ENV LIBRARY_PATH /usr/local/cuda/lib64/stubs
+

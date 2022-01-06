@@ -55,3 +55,5 @@ RUN yum install --setopt=obsoletes=0 -y \
     && yum clean all \
     && rm -rf /var/cache/yum/*
 
+ENV LIBRARY_PATH /usr/local/cuda/lib64/stubs
+
