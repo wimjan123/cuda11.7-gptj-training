@@ -3,7 +3,7 @@ FROM ${IMAGE_NAME}:10.2-devel-centos7 as base
 
 FROM base as base-amd64
 
-ENV NV_CUDNN_VERSION 8.2.4.15-1
+ENV NV_CUDNN_VERSION 8.3.1.22-1
 ENV NV_CUDNN_PACKAGE libcudnn8-devel-${NV_CUDNN_VERSION}.cuda10.2
 
 
