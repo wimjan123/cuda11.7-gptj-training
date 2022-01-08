@@ -732,7 +732,7 @@ kitmaker_failure:
 
 .centos7_11_5_1_variables: &centos7_11_5_1_variables
   DIST_BASE_PATH: "dist/11.5.1"
-  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
   MANIFEST: "manifests/cuda.yaml"
   ARCHES: "x86_64"
   OS: "centos7"
@@ -817,7 +817,7 @@ centos7-v11.5.1-deploy:
 
 .centos8_11_5_1_variables: &centos8_11_5_1_variables
   DIST_BASE_PATH: "dist/11.5.1"
-  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
   MANIFEST: "manifests/cuda.yaml"
   ARCHES: "arm64, ppc64le, x86_64"
   OS: "centos8"
@@ -970,7 +970,7 @@ centos8-v11.5.1-deploy:
 
 .ubi7_11_5_1_variables: &ubi7_11_5_1_variables
   DIST_BASE_PATH: "dist/11.5.1"
-  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
   MANIFEST: "manifests/cuda.yaml"
   ARCHES: "x86_64"
   OS: "ubi7"
@@ -1055,7 +1055,7 @@ ubi7-v11.5.1-deploy:
 
 .ubi8_11_5_1_variables: &ubi8_11_5_1_variables
   DIST_BASE_PATH: "dist/11.5.1"
-  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
   MANIFEST: "manifests/cuda.yaml"
   ARCHES: "arm64, ppc64le, x86_64"
   OS: "ubi8"
@@ -1208,7 +1208,7 @@ ubi8-v11.5.1-deploy:
 
 .ubuntu18_04_11_5_1_variables: &ubuntu18_04_11_5_1_variables
   DIST_BASE_PATH: "dist/11.5.1"
-  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
   MANIFEST: "manifests/cuda.yaml"
   ARCHES: "arm64, x86_64"
   OS: "ubuntu18.04"
@@ -1327,7 +1327,7 @@ ubuntu18.04-v11.5.1-deploy:
 
 .ubuntu20_04_11_5_1_variables: &ubuntu20_04_11_5_1_variables
   DIST_BASE_PATH: "dist/11.5.1"
-  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
   MANIFEST: "manifests/cuda.yaml"
   ARCHES: "arm64, x86_64"
   OS: "ubuntu20.04"
@@ -2160,7 +2160,7 @@ ubuntu20.04-v11.5.0-deploy:
 
 .centos7_11_4_3_variables: &centos7_11_4_3_variables
   DIST_BASE_PATH: "dist/11.4.3"
-  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
   MANIFEST: "manifests/cuda.yaml"
   ARCHES: "x86_64"
   OS: "centos7"
@@ -2245,7 +2245,7 @@ centos7-v11.4.3-deploy:
 
 .centos8_11_4_3_variables: &centos8_11_4_3_variables
   DIST_BASE_PATH: "dist/11.4.3"
-  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
   MANIFEST: "manifests/cuda.yaml"
   ARCHES: "arm64, ppc64le, x86_64"
   OS: "centos8"
@@ -2398,7 +2398,7 @@ centos8-v11.4.3-deploy:
 
 .ubi7_11_4_3_variables: &ubi7_11_4_3_variables
   DIST_BASE_PATH: "dist/11.4.3"
-  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
   MANIFEST: "manifests/cuda.yaml"
   ARCHES: "x86_64"
   OS: "ubi7"
@@ -2483,7 +2483,7 @@ ubi7-v11.4.3-deploy:
 
 .ubi8_11_4_3_variables: &ubi8_11_4_3_variables
   DIST_BASE_PATH: "dist/11.4.3"
-  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
   MANIFEST: "manifests/cuda.yaml"
   ARCHES: "arm64, ppc64le, x86_64"
   OS: "ubi8"
@@ -2636,7 +2636,7 @@ ubi8-v11.4.3-deploy:
 
 .ubuntu18_04_11_4_3_variables: &ubuntu18_04_11_4_3_variables
   DIST_BASE_PATH: "dist/11.4.3"
-  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
   MANIFEST: "manifests/cuda.yaml"
   ARCHES: "arm64, x86_64"
   OS: "ubuntu18.04"
@@ -2755,7 +2755,7 @@ ubuntu18.04-v11.4.3-deploy:
 
 .ubuntu20_04_11_4_3_variables: &ubuntu20_04_11_4_3_variables
   DIST_BASE_PATH: "dist/11.4.3"
-  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
   MANIFEST: "manifests/cuda.yaml"
   ARCHES: "arm64, x86_64"
   OS: "ubuntu20.04"
