@@ -38,6 +38,7 @@ unsupported:
 
 cuda_v11.5.1:
   dist_base_path: dist/11.5.1
+  release_label: 11.5.1
   image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
   push_repos:
     - artifactory
@@ -769,6 +770,7 @@ cuda_v11.5.0:
 cuda_v11.4.3:
   dist_base_path: dist/11.4.3
   image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
+  release_label: 11.4.3
   push_repos:
     - artifactory
     - docker.io
