@@ -374,7 +374,7 @@ cuda_v11.6.0:
       <<: *cuda11_6_0_requires
 
 .requires_v11.5.1: &cuda11_5_1_requires
-  requires: "cuda>=11.5 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=440,driver<441 brand=tesla,driver>=450,driver<451"
+  requires: "cuda>=11.5 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=440,driver<441 brand=tesla,driver>=450,driver<451 brand=tesla,driver>=460,driver<461 brand=tesla,driver>=470,driver<471"
 
 cuda_v11.5.1:
   dist_base_path: dist/11.5.1
@@ -740,7 +740,7 @@ cuda_v11.5.1:
 
 
 .requires_v11.5.0: &cuda11_5_0_requires
-  requires: "cuda>=11.5 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=440,driver<441 brand=tesla,driver>=450,driver<451"
+  requires: "cuda>=11.5 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=440,driver<441 brand=tesla,driver>=450,driver<451 brand=tesla,driver>=460,driver<461 brand=tesla,driver>=470,driver<471"
 
 cuda_v11.5.0:
   dist_base_path: dist/11.5.0
