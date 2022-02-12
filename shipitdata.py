@@ -11,12 +11,13 @@ import sys
 import json
 import yaml
 
-from plumbum.cmd import rm
+from plumbum.cmd import rm  # type: ignore
+
+from beeprint import pp  # type: ignore
 
 
 class ShipitData:
-    """Class to wrap shipit data.
-    """
+    """Class to wrap shipit data."""
 
     data = DotDict()
 
@@ -89,7 +90,7 @@ class ShipitData:
 
     def pkg_rel_from_package_name(self, name, version):
         log.debug(f"have name: {name} version: {version}")
-        rgx = re.search(fr"[\w\d-]*{version}-(\d)_?", name)
+        rgx = re.search(rf"[\w\d-]*{version}-(\d)_?", name)
         if rgx:
             log.debug(f"found match: {rgx.group(1)}")
             return rgx.group(1)
@@ -102,13 +103,14 @@ class ShipitData:
 
         def fragment_by_name(name):
             name_with_hyphens = name.replace("_", "-")
-            for k, v in fragments.items():
-                for k2, v2 in v.items():
+            #  pp(fragments)
+            for _, v in fragments.items():
+                for _, v2 in v.items():
                     if any(x in v2["name"] for x in [name, name_with_hyphens]):
                         return v2
 
         for pkg in packages:
-            #  log.debug(f"package: {pkg}")
+            log.debug(f"package: {pkg}")
             fragment = fragment_by_name(pkg)
             if not fragment:
                 log.warning(f"{pkg} was not found in the fragments json!")
@@ -184,7 +186,7 @@ class ShipitData:
                     sdistros.add(distro)
         return sdistros
 
-    def kitpick_repo_url(self, global_json):
+    def kitpick_repo_url(self):
         repo_distro = self.distro
         if any(x in repo_distro for x in ["ubi", "centos"]):
             repo_distro = "rhel"
@@ -321,19 +323,24 @@ class ShipitData:
                     log.debug(f"cudnn_json_path: {cudnn_json_path}")
                     with open(pathlib.Path(cudnn_json_path), "r") as f:
                         cudnn = json.loads(f.read())
-                    for x in cudnn:
-                        artpath = f"https://urm.nvidia.com/artifactory/{x['repo']}/{x['path']}/{x['name']}"
-                        if "arm64" in x["name"]:
-                            if "-dev_" in x["name"]:
-                                #  cudnn_comp["cudnn8"]["dev"]["version"] = x["version"]
+                    #  pp(type(cudnn))
+                    for rawObj in cudnn:
+                        artf = DotDict(rawObj)
+                        log.debug(f"cudnn json loop item\n{pp(artf, output=False)}")
+                        artdir = pathlib.Path(artf.path)
+                        artpath = f"https://urm.nvidia.com/artifactory/{artdir}"
+                        name = artdir.name
+                        if "arm64" in name:
+                            if "-dev_" in name:
+                                #  cudnn_comp["cudnn8"]["dev"]["version"] = artf["version"]
                                 cudnn_comp["cudnn8"]["dev"]["source"] = artpath
-                                cudnn_comp["cudnn8"]["dev"]["md5sum"] = x["actual_md5"]
+                                cudnn_comp["cudnn8"]["dev"]["md5sum"] = artf.md5
                             else:
-                                cudnn_comp["cudnn8"]["version"] = x["version"]
+                                cudnn_comp["cudnn8"]["version"] = artf.props.version[0]
                                 cudnn_comp["cudnn8"]["source"] = artpath
-                                cudnn_comp["cudnn8"]["md5sum"] = x["actual_md5"]
+                                cudnn_comp["cudnn8"]["md5sum"] = artf.md5
                     if cudnn_comp:
-                        #  print(cudnn_comp)
+                        log.debug(f"cudnn component\n{pp(cudnn_comp, output=False)}")
                         components.update(cudnn_comp)
 
                 image_name = "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
@@ -375,7 +382,7 @@ class ShipitData:
                         "base_image": base_image,
                         "image_tag_suffix": f"-{self.data['cand_number']}",
                         "template_path": template_path,
-                        "repo_url": self.kitpick_repo_url(self.data),
+                        "repo_url": self.kitpick_repo_url(),
                     }
 
                 manifest[platform][f"{self.arch}"] = {
