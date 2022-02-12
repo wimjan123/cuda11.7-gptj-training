@@ -366,7 +366,17 @@ class ShipitData:
                     self.push_repo_logged_in = True
 
                 if "tegra" in self.product_name:
-                    if not self.l4t_base_image:
+
+                    log.debug(f"Show me the object!!\n{pp(self, output=False)}")
+
+                    # Ugh... hardcoded values suck! This will be changed in the future.
+                    if self.release_label == "10.2.460":
+                        self.l4t_base_image = f"{L4T_BASE_IMAGE_NAME}:r32.7.1"
+                    elif self.release_label == "11.4.14":
+                        self.l4t_base_image = (
+                            f"{L4T_BASE_IMAGE_NAME}:focal_CUDA_11.4.14_008"
+                        )
+                    elif not self.l4t_base_image:
                         self.l4t_base_image = utils.latest_l4t_base_image()
                     base_image = self.l4t_base_image
                     requires = "cuda>=10.2"

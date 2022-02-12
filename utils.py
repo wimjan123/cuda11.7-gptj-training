@@ -12,9 +12,8 @@ import sys
 import json
 import re
 
-import plumbum
 from plumbum import local
-from plumbum.cmd import find, cut, sort
+from plumbum.cmd import find, cut, sort  # type: ignore
 
 
 @retry(
@@ -47,7 +46,12 @@ def auth_registries(push_repos):
         #  log.debug(f"USER: {data['user']} PASS: {data['pass']}")
         result = shellcmd(
             "docker",
-            ("login", repo, f"-u" f"{data['user']}", f"-p" f"{data['pass']}",),
+            (
+                "login",
+                repo,
+                f"-u" f"{data['user']}",
+                f"-p" f"{data['pass']}",
+            ),
             printOutput=False,
             returnOut=True,
         )
@@ -55,52 +59,6 @@ def auth_registries(push_repos):
             raise ImageRegistryLoginRetry()
         else:
             log.info(f"Docker login to '{repo}' was successful.")
-
-
-#  def auth_registries(self):
-#      for repo, metadata in self.parent.manifest[self.key].items():
-#          registry = {}
-#          if repo in (
-#              "gitlab-master",
-#              "artifactory",
-#              "nvcr.io",
-#          ):  # TODO: push to Nvidia Registry
-#              log.debug(f"Skipping push to {repo}")
-#              continue
-#          if metadata.get("only_if", False) and not os.getenv(metadata["only_if"]):
-#              log.info("repo: '%s' only_if requirement not satisfied", repo)
-#              continue
-#          user = os.getenv(metadata["user"])
-#          if not user:
-#              user = metadata["user"]
-#          passwd = os.getenv(metadata["pass"])
-#          if not passwd:
-#              passwd = metadata["pass"]
-#          self.repo_creds[repo] = {"user": user, "pass": passwd}
-#          for arch in ("x86_64", "ppc64le", "arm64"):
-#              registry[f"README-{arch}.md"] = metadata["registry"][arch]
-#          self.repos_dict[repo] = registry
-
-#      if not self.repos_dict:
-#          log.fatal("Could not retrieve registry credentials. Environment not set?")
-#          sys.exit(1)
-#      # docker login
-#      result = shellcmd(
-#          "docker",
-#          (
-#              "login",
-#              f"-u" f"{self.repo_creds['docker.io']['user']}",
-#              f"-p" f"{self.repo_creds['docker.io']['pass']}",
-#          ),
-#          printOutput=False,
-#          returnOut=True,
-#      )
-#      if result.returncode > 0:
-#          log.error(result.stderr)
-#          log.error("Docker login failed!")
-#          sys.exit(1)
-#      else:
-#          log.info("Docker login was successful.")
 
 
 def shellcmd(bin, args, printOutput=True, returnOut=False):
@@ -194,14 +152,14 @@ def load_rc_push_repos_manifest_yaml():
 
 
 def latest_l4t_base_image():
-    l4t_base_image = "nvcr.io/nvidian/nvidia-l4t-base"
-    #  return f"{l4t_base_image}:r32_CUDA_10.2.460_RC_006"
-    #  return f"{l4t_base_image}:r32.2"
     # bash equivalent
+    #
     #  /usr/bin/skopeo list-tags docker://nvcr.io/nvidian/nvidia-l4t-base | jq -r '.["Tags"] | .[]' | grep "^r[[:digit:]]*\." | sort -r -n | head -n 1
+    #
+
     out = shellcmd(
         "skopeo",
-        ("list-tags", f"docker://{l4t_base_image}"),
+        ("list-tags", f"docker://{L4T_BASE_IMAGE_NAME}"),
         printOutput=False,
         returnOut=True,
     )
