@@ -64,7 +64,7 @@ ENV NVIDIA_REQUIRE_JETPACK_HOST_MOUNTS ${NVIDIA_REQUIRE_JETPACK_HOST_MOUNTS}
 
 {% endif -%}
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update &&{% if cuda.flavor == "l4t" %} apt upgrade -y &&{% endif %} apt-get install -y --no-install-recommends \
 {% if cuda.os.version in ["18.04", "20.04"] or cuda.flavor == "l4t" %}
     gnupg2 curl ca-certificates && \
     curl -fsSL {{ cuda.repo_url }}/${NVARCH}/7fa2af80.pub | apt-key add - && \
