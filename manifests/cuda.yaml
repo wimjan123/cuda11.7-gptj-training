@@ -43,7 +43,7 @@ cuda_v11.6.0:
   push_repos:
     - artifactory
     - docker.io
-    - ngc
+    # - ngc
   centos7:
     base_image: centos:7
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
