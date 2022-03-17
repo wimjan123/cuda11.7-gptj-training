@@ -41,7 +41,7 @@ cuda_v11.6.0:
   release_label: 11.6
   image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
   push_repos:
-    - artifactory
+    # - artifactory
     - docker.io
     # - ngc
   centos7:
