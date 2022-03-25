@@ -374,7 +374,7 @@ class ShipitData:
                         self.l4t_base_image = f"{L4T_BASE_IMAGE_NAME}:r32.7.1"
                     elif self.release_label == "11.4.14":
                         self.l4t_base_image = (
-                            f"{L4T_BASE_IMAGE_NAME}:focal_CUDA_11.4.14_008"
+                            f"{L4T_BASE_IMAGE_NAME}:r34.1"
                         )
                     elif not self.l4t_base_image:
                         self.l4t_base_image = utils.latest_l4t_base_image()
