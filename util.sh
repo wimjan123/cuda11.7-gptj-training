@@ -40,8 +40,8 @@ kitmaker_cleanup_webhook_success() {
         export a_image_name=$(awk '/./{line=$0} END{print line}' image_name) # get the artifactory repo name
         # sed -i '$ d' UBER_TAG_MANIFEST # delete the last line containing the artifactory repo
         export json_data="{\"status\": \"success\", \"CI_PIPELINE_ID\": \"${CI_PIPELINE_ID}\", \"CI_JOB_ID\": \"${CI_JOB_ID}\", \"CI_COMMIT_SHORT_SHA\": \"${CI_COMMIT_SHORT_SHA}\", \"gitlab_pipeline_url\": \"${CI_PIPELINE_URL}\", \"image_name\": \"${a_image_name}\", \"tags\": $(cat UBER_TAG_MANIFEST | jq -R . | jq -s . | jq 'map(select(length > 0))' | jq -c .)}"
-        echo curl -v -H "Content-Type: application/json" -d "${json_data}" "${WEBHOOK_URL}"
-        curl -v -H "Content-Type: application/json" -d "${json_data}" "${WEBHOOK_URL}"
+        echo curl -L -v -H "Content-Type: application/json" -d "${json_data}" "${WEBHOOK_URL}"
+        curl -L -v -H "Content-Type: application/json" -d "${json_data}" "${WEBHOOK_URL}"
         # set +x
     fi
 }
@@ -65,7 +65,7 @@ kitmaker_webhook_failed() {
                 # '{status: $status, pipeline_id: $pipeline_id, job_id: $job_id, ci_commit: $ci_commit, pipeline_url: $pipeline_url, cmd_output: $cmd_output}')
 
         echo "json_data: $(echo ${json_data} | jq)"
-        curl -H "Content-Type: application/json" -d "${json_data}" ${WEBHOOK_URL}
+        curl -L -H "Content-Type: application/json" -d "${json_data}" ${WEBHOOK_URL}
         # exit 1
         # elif cat cmd_output | grep -q "DONE"; then
         #     echo "Seems the last 'run_cmd' command succeeded! Not calling webhook."
