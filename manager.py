@@ -1455,7 +1455,7 @@ class ManagerGenerate(Manager):
             f"{self.dist_base_path}/{target.replace('.', '')}"
         )
         if not self.parent.shipit_uuid and self.output_path.exists:
-            log.warning(f"Removing {self.output_path}")
+            log.info(f"Removing {self.output_path}")
             rm["-rf", self.output_path]()
         log.debug(f"self.output_path: '{self.output_path}' target: '{target}'")
         log.debug(f"Creating {self.output_path}")
