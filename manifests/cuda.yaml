@@ -2859,7 +2859,7 @@ cuda_v10.2:
         <<: *cuda10_2_components
         # TODO: version is different for rhel7
         cudnn7:
-          version: 7.6.5.32-1
+          version: 7.6.5.33-1
     ppc64le:
       requires: "cuda>=10.2"
       components:
