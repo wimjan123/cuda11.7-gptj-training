@@ -76,6 +76,37 @@ cuda_v11.6.2:
         cudnn8:
           version: 8.4.0.27-1
       <<: *cuda11_6_2_requires
+  ubi7:
+    base_image: registry.access.redhat.com/ubi7/ubi:latest
+    repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
+    template_path: templates/redhat
+    x86_64:
+      components:
+        cudart:
+          version: 11.6.55-1
+        cudart_dev:
+          version: 11.6.55-1
+        libcublas:
+          version: 11.9.2.110-1
+        libcublas_dev:
+          version: 11.9.2.110-1
+        libnpp:
+          version: 11.6.3.124-1
+        libnpp_dev:
+          version: 11.6.3.124-1
+        nvml_dev:
+          version: 11.6.55-1
+        nvprof:
+          version: 11.6.124-1
+        nvtx:
+          version: 11.6.124-1
+        libnccl2:
+          version: 2.12.10-1
+        libnccl2_dev:
+          version: 2.12.10-1
+        cudnn8:
+          version: 8.4.0.27-1
+      <<: *cuda11_6_2_requires
   ubi8:
     arm64:
       components:
@@ -184,6 +215,8 @@ cuda_v11.6.2:
           version: 11.6.55-1
         nvtx:
           version: 11.6.124-1
+        cudnn8:
+          version: 8.4.0.27-1
       requires: "cuda>=11.6"
     base_image: ubuntu:18.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804
@@ -595,9 +628,11 @@ cuda_v11.6.0:
         nvtx:
           version: 11.6.55-1
         libnccl2:
-          version: 2.11.4-1
+          version: 2.12.10-1
         libnccl2_dev:
-          version: 2.11.4-1
+          version: 2.12.10-1
+        cudnn8:
+          version: 8.4.0.27-1
       <<: *cuda11_6_0_requires
   ubi7:
     base_image: registry.access.redhat.com/ubi7/ubi:latest
@@ -624,9 +659,11 @@ cuda_v11.6.0:
         nvtx:
           version: 11.6.55-1
         libnccl2:
-          version: 2.11.4-1
+          version: 2.12.10-1
         libnccl2_dev:
-          version: 2.11.4-1
+          version: 2.12.10-1
+        cudnn8:
+          version: 8.4.0.27-1
       <<: *cuda11_6_0_requires
   ubi8:
     arm64:
@@ -650,9 +687,11 @@ cuda_v11.6.0:
         nvtx:
           version: 11.6.55-1
         libnccl2:
-          version: 2.11.4-1
+          version: 2.12.10-1
         libnccl2_dev:
-          version: 2.11.4-1
+          version: 2.12.10-1
+        cudnn8:
+          version: 8.4.0.27-1
       requires: 'cuda>=11.6'
     base_image: registry.access.redhat.com/ubi8/ubi:latest
     ppc64le:
@@ -676,9 +715,11 @@ cuda_v11.6.0:
         nvtx:
           version: 11.6.55-1
         libnccl2:
-          version: 2.11.4-1
+          version: 2.12.10-1
         libnccl2_dev:
-          version: 2.11.4-1
+          version: 2.12.10-1
+        cudnn8:
+          version: 8.4.0.27-1
       requires: 'cuda>=11.6'
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8
     template_path: templates/redhat
@@ -703,9 +744,11 @@ cuda_v11.6.0:
         nvtx:
           version: 11.6.55-1
         libnccl2:
-          version: 2.11.4-1
+          version: 2.12.10-1
         libnccl2_dev:
-          version: 2.11.4-1
+          version: 2.12.10-1
+        cudnn8:
+          version: 8.4.0.27-1
       <<: *cuda11_6_0_requires
   ubuntu18.04:
     arm64:
@@ -730,6 +773,8 @@ cuda_v11.6.0:
           version: 11.6.55-1
         nvtx:
           version: 11.6.55-1
+        cudnn8:
+          version: 8.4.0.27-1
       requires: 'cuda>=11.6'
     base_image: ubuntu:18.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804
@@ -757,9 +802,11 @@ cuda_v11.6.0:
         nvtx:
           version: 11.6.55-1
         libnccl2:
-          version: 2.11.4-1
+          version: 2.12.10-1
         libnccl2_dev:
-          version: 2.11.4-1
+          version: 2.12.10-1
+        cudnn8:
+          version: 8.4.0.27-1
       <<: *cuda11_6_0_requires
   ubuntu20.04:
     arm64:
@@ -785,9 +832,11 @@ cuda_v11.6.0:
         nvtx:
           version: 11.6.55-1
         libnccl2:
-          version: 2.11.4-1
+          version: 2.12.10-1
         libnccl2_dev:
-          version: 2.11.4-1
+          version: 2.12.10-1
+        cudnn8:
+          version: 8.4.0.27-1
       requires: 'cuda>=11.6'
     base_image: ubuntu:20.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004
@@ -815,10 +864,291 @@ cuda_v11.6.0:
         nvtx:
           version: 11.6.55-1
         libnccl2:
+          version: 2.12.10-1
+        libnccl2_dev:
+          version: 2.12.10-1
+        cudnn8:
+          version: 8.4.0.27-1
+      <<: *cuda11_6_0_requires
+
+.requires_v11.5.2: &cuda11_5_2_requires
+  requires: "cuda>=11.5 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=440,driver<441 brand=tesla,driver>=450,driver<451 brand=tesla,driver>=460,driver<461 brand=tesla,driver>=470,driver<471"
+
+cuda_v11.5.2:
+  dist_base_path: dist/11.5.2
+  image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
+  push_repos:
+    - artifactory
+    - docker.io
+    - ngc
+  centos7:
+    base_image: centos:7
+    repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
+    template_path: templates/redhat
+    x86_64:
+      components:
+        cudart:
+          version: 11.5.117-1
+        cudart_dev:
+          version: 11.5.117-1
+        libcublas:
+          version: 11.7.4.6-1
+        libcublas_dev:
+          version: 11.7.4.6-1
+        libnpp:
+          version: 11.5.1.107-1
+        libnpp_dev:
+          version: 11.5.1.107-1
+        nvml_dev:
+          version: 11.5.50-1
+        nvprof:
+          version: 11.5.114-1
+        nvtx:
+          version: 11.5.114-1
+        libnccl2:
           version: 2.11.4-1
         libnccl2_dev:
           version: 2.11.4-1
-      <<: *cuda11_6_0_requires
+        cudnn8:
+          version: 8.3.3.40-1
+      <<: *cuda11_5_2_requires
+  ubi7:
+    base_image: registry.access.redhat.com/ubi7/ubi:latest
+    repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
+    template_path: templates/redhat
+    x86_64:
+      components:
+        cudart:
+          version: 11.5.117-1
+        cudart_dev:
+          version: 11.5.117-1
+        libcublas:
+          version: 11.7.4.6-1
+        libcublas_dev:
+          version: 11.7.4.6-1
+        libnpp:
+          version: 11.5.1.107-1
+        libnpp_dev:
+          version: 11.5.1.107-1
+        nvml_dev:
+          version: 11.5.50-1
+        nvprof:
+          version: 11.5.114-1
+        nvtx:
+          version: 11.5.114-1
+        libnccl2:
+          version: 2.11.4-1
+        libnccl2_dev:
+          version: 2.11.4-1
+        cudnn8:
+          version: 8.3.3.40-1
+      <<: *cuda11_5_2_requires
+  ubi8:
+    arm64:
+      components:
+        cudart:
+          version: 11.5.117-1
+        cudart_dev:
+          version: 11.5.117-1
+        libcublas:
+          version: 11.7.4.6-1
+        libcublas_dev:
+          version: 11.7.4.6-1
+        libnpp:
+          version: 11.5.1.107-1
+        libnpp_dev:
+          version: 11.5.1.107-1
+        nvml_dev:
+          version: 11.5.50-1
+        nvprof:
+          version: 11.5.114-1
+        nvtx:
+          version: 11.5.114-1
+        libnccl2:
+          version: 2.11.4-1
+        libnccl2_dev:
+          version: 2.11.4-1
+        cudnn8:
+          version: 8.3.3.40-1
+      requires: 'cuda>=11.5'
+    base_image: registry.access.redhat.com/ubi8/ubi:latest
+    ppc64le:
+      components:
+        cudart:
+          version: 11.5.117-1
+        cudart_dev:
+          version: 11.5.117-1
+        libcublas:
+          version: 11.7.4.6-1
+        libcublas_dev:
+          version: 11.7.4.6-1
+        libnpp:
+          version: 11.5.1.107-1
+        libnpp_dev:
+          version: 11.5.1.107-1
+        nvml_dev:
+          version: 11.5.50-1
+        nvprof:
+          version: 11.5.114-1
+        nvtx:
+          version: 11.5.114-1
+        libnccl2:
+          version: 2.11.4-1
+        libnccl2_dev:
+          version: 2.11.4-1
+        cudnn8:
+          version: 8.3.3.40-1
+      requires: 'cuda>=11.5'
+    repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8
+    template_path: templates/redhat
+    x86_64:
+      components:
+        cudart:
+          version: 11.5.117-1
+        cudart_dev:
+          version: 11.5.117-1
+        libcublas:
+          version: 11.7.4.6-1
+        libcublas_dev:
+          version: 11.7.4.6-1
+        libnpp:
+          version: 11.5.1.107-1
+        libnpp_dev:
+          version: 11.5.1.107-1
+        nvml_dev:
+          version: 11.5.50-1
+        nvprof:
+          version: 11.5.114-1
+        nvtx:
+          version: 11.5.114-1
+        libnccl2:
+          version: 2.11.4-1
+        libnccl2_dev:
+          version: 2.11.4-1
+        cudnn8:
+          version: 8.3.3.40-1
+      <<: *cuda11_5_2_requires
+  ubuntu18.04:
+    arm64:
+      components:
+        cudart:
+          version: 11.5.117-1
+        cudart_dev:
+          version: 11.5.117-1
+        libcublas:
+          version: 11.7.4.6-1
+        libcublas_dev:
+          version: 11.7.4.6-1
+        libcusparse:
+          version: 11.7.0.107-1
+        libcusparse_dev:
+          version: 11.7.0.107-1
+        libnpp:
+          version: 11.5.1.107-1
+        libnpp_dev:
+          version: 11.5.1.107-1
+        nvml_dev:
+          version: 11.5.50-1
+        nvtx:
+          version: 11.5.114-1
+        cudnn8:
+          version: 8.3.3.40-1
+      requires: 'cuda>=11.5'
+    base_image: ubuntu:18.04
+    repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804
+    template_path: templates/ubuntu
+    x86_64:
+      components:
+        cudart:
+          version: 11.5.117-1
+        cudart_dev:
+          version: 11.5.117-1
+        libcublas:
+          version: 11.7.4.6-1
+        libcublas_dev:
+          version: 11.7.4.6-1
+        libcusparse:
+          version: 11.7.0.107-1
+        libcusparse_dev:
+          version: 11.7.0.107-1
+        libnpp:
+          version: 11.5.1.107-1
+        libnpp_dev:
+          version: 11.5.1.107-1
+        nvml_dev:
+          version: 11.5.50-1
+        nvtx:
+          version: 11.5.114-1
+        libnccl2:
+          version: 2.11.4-1
+        libnccl2_dev:
+          version: 2.11.4-1
+        cudnn8:
+          version: 8.3.3.40-1
+      <<: *cuda11_5_2_requires
+  ubuntu20.04:
+    arm64:
+      components:
+        cudart:
+          version: 11.5.117-1
+        cudart_dev:
+          version: 11.5.117-1
+        libcublas:
+          version: 11.7.4.6-1
+        libcublas_dev:
+          version: 11.7.4.6-1
+        libcusparse:
+          version: 11.7.0.107-1
+        libcusparse_dev:
+          version: 11.7.0.107-1
+        libnpp:
+          version: 11.5.1.107-1
+        libnpp_dev:
+          version: 11.5.1.107-1
+        nvml_dev:
+          version: 11.5.50-1
+        nvtx:
+          version: 11.5.114-1
+        libnccl2:
+          version: 2.11.4-1
+        libnccl2_dev:
+          version: 2.11.4-1
+        cudnn8:
+          version: 8.3.3.40-1
+      requires: 'cuda>=11.5'
+    base_image: ubuntu:20.04
+    repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004
+    template_path: templates/ubuntu
+    x86_64:
+      components:
+        cudart:
+          version: 11.5.117-1
+        cudart_dev:
+          version: 11.5.117-1
+        libcublas:
+          version: 11.7.4.6-1
+        libcublas_dev:
+          version: 11.7.4.6-1
+        libcusparse:
+          version: 11.7.0.107-1
+        libcusparse_dev:
+          version: 11.7.0.107-1
+        libnpp:
+          version: 11.5.1.107-1
+        libnpp_dev:
+          version: 11.5.1.107-1
+        nvml_dev:
+          version: 11.5.50-1
+        nvtx:
+          version: 11.5.114-1
+        libnccl2:
+          version: 2.11.4-1
+        libnccl2_dev:
+          version: 2.11.4-1
+        cudnn8:
+          version: 8.3.3.40-1
+      <<: *cuda11_5_2_requires
+
 
 .requires_v11.5.1: &cuda11_5_1_requires
   requires: "cuda>=11.5 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=440,driver<441 brand=tesla,driver>=450,driver<451 brand=tesla,driver>=460,driver<461 brand=tesla,driver>=470,driver<471"
@@ -3161,9 +3491,9 @@ cuda_v11.1.1:
   libcusparse_dev:
     version: 11.1.1.245-1
   libnccl2:
-    version: 2.11.4-1
+    version: 2.12.10-1
   libnccl2_dev:
-    version: 2.11.4-1
+    version: 2.12.10-1
   cudnn8:
     version: 8.0.5.39-1
 
@@ -3297,11 +3627,11 @@ cuda_v11.0.3:
   libcublas_dev:
     version: 10.2.2.89-1
   libnccl2:
-    version: 2.11.4-1
+    version: 2.12.10-1
   libnccl2_dev:
-    version: 2.11.4-1
+    version: 2.12.10-1
   cudnn8:
-    version: 8.3.1.22-1
+    version: 8.4.0.27-1
   cudnn7:
     version: 7.6.5.32-1
 
@@ -3325,6 +3655,8 @@ cuda_v10.2:
       <<: *cuda10_2_requires
       components:
         <<: *cuda10_2_components
+        cudnn8:
+          version: 8.4.0.27-1
     ppc64le:
       no_os_suffix: True
       requires: "cuda>=10.2"
@@ -3352,6 +3684,8 @@ cuda_v10.2:
         <<: *cuda10_2_components
         cudnn7:
           version: 7.6.5.33-1
+        cudnn8:
+          version: 8.4.0.27-1
     ppc64le:
       requires: "cuda>=10.2"
       components:
@@ -3373,6 +3707,8 @@ cuda_v10.2:
         cudnn7:
           version: 7.6.5.32
           sha256sum: 600267f2caaed2fd58eb214ba669d8ea35f396a7d19b94822e6b36f9f7088c20
+        cudnn8:
+          version: 8.4.0.27-1
   ubi7:
     template_path: templates/redhat/legacy
     base_image: registry.access.redhat.com/ubi7/ubi:latest
@@ -3385,6 +3721,8 @@ cuda_v10.2:
         # TODO: version is different for rhel7
         cudnn7:
           version: 7.6.5.33-1
+        cudnn8:
+          version: 8.4.0.27-1
     ppc64le:
       requires: "cuda>=10.2"
       components:
