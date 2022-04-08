@@ -900,10 +900,13 @@ class ManagerGenerate(Manager):
                 ),
             ]:
                 continue
+            newv = v
+            if isinstance(v, str):
+                newv = v.strip()
             if arch:
-                self.cuda[arch][k] = v
+                self.cuda[arch][k] = newv
             else:
-                self.cuda[k] = v
+                self.cuda[k] = newv
 
     # For cudnn templates, we need a custom template context
     def output_cudnn_template(self, cudnn_version_name, input_template, output_path):
