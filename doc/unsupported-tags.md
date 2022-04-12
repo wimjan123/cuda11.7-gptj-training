@@ -98,6 +98,111 @@ All tags for _[`cuda-arm64`](https://hub.docker.com/r/nvidia/cuda-arm64/tags) an
 - `7.5-cudnn6-runtime-ubuntu14.04`
 - `7.5-devel-ubuntu14.04`
 - `7.5-runtime-ubuntu14.04`
+### centos8
+#### CUDA 11.6.0
+- `11.6.0-base-centos8`
+- `11.6.0-devel-centos8`
+- `11.6.0-runtime-centos8`
+#### CUDA 11.5.1
+- `11.5.1-base-centos8`
+- `11.5.1-cudnn8-devel-centos8`
+- `11.5.1-cudnn8-runtime-centos8`
+- `11.5.1-devel-centos8`
+- `11.5.1-runtime-centos8`
+#### CUDA 11.5.0
+- `11.5.0-base-centos8`
+- `11.5.0-cudnn8-devel-centos8`
+- `11.5.0-cudnn8-runtime-centos8`
+- `11.5.0-devel-centos8`
+- `11.5.0-runtime-centos8`
+#### CUDA 11.4.3
+- `11.4.3-base-centos8`
+- `11.4.3-cudnn8-devel-centos8`
+- `11.4.3-cudnn8-runtime-centos8`
+- `11.4.3-devel-centos8`
+- `11.4.3-runtime-centos8`
+#### CUDA 11.4.2
+- `11.4.2-base-centos8`
+- `11.4.2-cudnn8-devel-centos8`
+- `11.4.2-cudnn8-runtime-centos8`
+- `11.4.2-devel-centos8`
+- `11.4.2-runtime-centos8`
+#### CUDA 11.4.1
+- `11.4.1-base-centos8`
+- `11.4.1-cudnn8-devel-centos8`
+- `11.4.1-cudnn8-runtime-centos8`
+- `11.4.1-devel-centos8`
+- `11.4.1-runtime-centos8`
+#### CUDA 11.4.0
+- `11.4.0-base-centos8`
+- `11.4.0-cudnn8-devel-centos8`
+- `11.4.0-cudnn8-runtime-centos8`
+- `11.4.0-devel-centos8`
+- `11.4.0-runtime-centos8`
+#### CUDA 11.3.1
+- `11.3.1-base-centos8`
+- `11.3.1-cudnn8-devel-centos8`
+- `11.3.1-cudnn8-runtime-centos8`
+- `11.3.1-devel-centos8`
+- `11.3.1-runtime-centos8`
+#### CUDA 11.3.0
+- `11.3.0-base-centos8`
+- `11.3.0-cudnn8-devel-centos8`
+- `11.3.0-cudnn8-runtime-centos8`
+- `11.3.0-devel-centos8`
+- `11.3.0-runtime-centos8`
+#### CUDA 11.2.2
+- `11.2.2-base-centos8`
+- `11.2.2-cudnn8-devel-centos8`
+- `11.2.2-cudnn8-runtime-centos8`
+- `11.2.2-devel-centos8`
+- `11.2.2-runtime-centos8`
+#### CUDA 11.2.1
+- `11.2.1-base-centos8`
+- `11.2.1-cudnn8-devel-centos8`
+- `11.2.1-cudnn8-runtime-centos8`
+- `11.2.1-devel-centos8`
+- `11.2.1-runtime-centos8`
+#### CUDA 11.2.0
+- `11.2.0-base-centos8`
+- `11.2.0-cudnn8-devel-centos8`
+- `11.2.0-cudnn8-runtime-centos8`
+- `11.2.0-devel-centos8`
+- `11.2.0-runtime-centos8`
+#### CUDA 11.1.1
+- `11.1.1-base-centos8`
+- `11.1.1-cudnn8-devel-centos8`
+- `11.1.1-cudnn8-runtime-centos8`
+- `11.1.1-devel-centos8`
+- `11.1.1-runtime-centos8`
+#### CUDA 11.0.3
+- `11.0.3-base-centos8`
+- `11.0.3-cudnn8-devel-centos8`
+- `11.0.3-cudnn8-runtime-centos8`
+- `11.0.3-devel-centos8`
+- `11.0.3-runtime-centos8`
+#### CUDA 10.2
+- `10.2-base-centos8`
+- `10.2-cudnn7-devel-centos8`
+- `10.2-cudnn7-runtime-centos8`
+- `10.2-cudnn8-devel-centos8`
+- `10.2-cudnn8-runtime-centos8`
+- `10.2-devel-centos8`
+- `10.2-runtime-centos8`
+#### CUDA 10.1
+- `10.1-base-centos8`
+- `10.1-cudnn7-devel-centos8`
+- `10.1-cudnn7-runtime-centos8`
+- `10.1-cudnn8-devel-centos8`
+- `10.1-cudnn8-runtime-centos8`
+- `10.1-devel-centos8`
+- `10.1-runtime-centos8`
+#### CUDA 11.0
+- `11.0-base-centos8`
+- `11.0-cudnn8-devel-centos8`
+- `11.0-cudnn8-runtime-centos8`
+- `11.0-devel-centos8`
+- `11.0-runtime-centos8`
 ### centos6
 #### CUDA 10.2
 - `10.2-base-centos6`

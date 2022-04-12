@@ -876,6 +876,7 @@ cuda_v11.6.0:
 
 cuda_v11.5.2:
   dist_base_path: dist/11.5.2
+  release_label: 11.5.2
   image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
   push_repos:
     - artifactory
