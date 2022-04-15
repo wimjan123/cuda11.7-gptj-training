@@ -28,7 +28,14 @@ ENV NV_LIBNCCL_DEV_PACKAGE ${NV_LIBNCCL_DEV_PACKAGE_NAME}=${NV_LIBNCCL_DEV_PACKA
 
 {% endif -%}
 
-{% endif %}
+{% if "cuda_profiler_api" in cuda.x86_64.components %}
+    {% set has_cuda_profiler_api_package = true %}
+ENV NV_CUDA_PROFILER_API_VERSION {{ cuda.x86_64.components.cuda_profiler_api.version }}
+ENV NV_CUDA_PROFILER_API_PACKAGE cuda-profiler-api-{{ cuda.version.major }}-{{ cuda.version.minor }}=${NV_CUDA_PROFILER_API_VERSION}
+{% endif -%}
+
+{% endif -%}
+
 {% if "arm64" in cuda %}
 FROM base as base-arm64
 
@@ -61,6 +68,13 @@ ENV NCCL_VERSION {{ cuda.arm64.components.libnccl2_dev.version }}
 ENV NV_LIBNCCL_DEV_PACKAGE ${NV_LIBNCCL_DEV_PACKAGE_NAME}=${NV_LIBNCCL_DEV_PACKAGE_VERSION}+cuda{{ cuda.version.major }}.{{ cuda.version.minor }}
 
 {% endif -%}
+
+{%- if "cuda_profiler_api" in cuda.arm64.components %}
+    {% set has_cuda_profiler_api_package = true %}
+ENV NV_CUDA_PROFILER_API_VERSION {{ cuda.arm64.components.cuda_profiler_api.version }}
+ENV NV_CUDA_PROFILER_API_PACKAGE cuda-profiler-api-{{ cuda.version.major }}-{{ cuda.version.minor }}=${NV_CUDA_PROFILER_API_VERSION}
+{% endif -%}
+
 {% endif -%}
 
 {% if "ppc64le" in cuda %}
@@ -88,6 +102,12 @@ ENV NV_LIBNCCL_DEV_PACKAGE ${NV_LIBNCCL_DEV_PACKAGE_NAME}=${NV_LIBNCCL_DEV_PACKA
 
 {% endif -%}
 
+{% if "cuda_profiler_api" in cuda.ppc64le.components %}
+    {% set has_cuda_profiler_api_package = true %}
+ENV NV_CUDA_PROFILER_API_VERSION {{ cuda.ppc64le.components.cuda_profiler_api.version }}
+ENV NV_CUDA_PROFILER_API_PACKAGE cuda-profiler-api-{{ cuda.version.major }}-{{ cuda.version.minor }}=${NV_CUDA_PROFILER_API_VERSION}
+{% endif -%}
+
 {% endif -%}
 
 FROM base-${TARGETARCH}
@@ -112,6 +132,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ${NV_LIBCUBLAS_DEV_PACKAGE} \
     {% if has_libnccl_dev_package %}
     ${NV_LIBNCCL_DEV_PACKAGE} \
+    {% endif %}
+    {% if has_cuda_profiler_api_package %}
+    ${NV_CUDA_PROFILER_API_PACKAGE} \
     {% endif %}
     && rm -rf /var/lib/apt/lists/*
 
