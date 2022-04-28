@@ -420,8 +420,8 @@ trigger:
     - if: '$TRIGGER_OVERRIDE'
 
 {# FIXME: Get this data from the global config #}
-{# ## NOT READY YET... {"distro": "ubuntu", "version": "22.04", "arches": ["x86_64", "arm64"]}, #}
 {% set kitmaker_distro_data = [
+  {"distro": "ubuntu", "version": "22.04", "arches": ["x86_64", "arm64"]},
   {"distro": "ubuntu", "version": "20.04", "arches": ["x86_64", "arm64"]},
   {"distro": "ubuntu", "version": "18.04", "arches": ["x86_64"]},
   {"distro": "centos", "version": "7", "arches": ["x86_64"]},

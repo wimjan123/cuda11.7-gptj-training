@@ -413,6 +413,42 @@ trigger:
 
 
 # Need to pass these from the trigger
+.kitmaker_ubuntu22_04_variables: &kitmaker_ubuntu22_04_variables
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
+  OS: "ubuntu22.04"
+  OS_NAME: "ubuntu"
+  OS_VERSION: "22.04"
+  ARCHES: "x86_64, arm64"
+  # CI_DEBUG_TRACE: "true"
+
+.kitmaker_ubuntu22_04_only: &kitmaker_ubuntu22_04_only
+  image: gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
+  variables:
+    <<: *kitmaker_ubuntu22_04_variables
+    TAG_MANIFEST_PATH: "tag_manifest_ubuntu22_04"
+  rules:
+    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "default"'
+    - if: $UBUNTU22_04 == "true"
+
+kitmaker_ubuntu22.04_base:
+  <<: *cuda_base_definition
+  <<: *kitmaker_ubuntu22_04_only
+  # Need to build container images on a multi-arch capable machine
+  <<: *tags_definition_multiarch
+
+kitmaker_ubuntu22.04_deploy:
+  <<: *deploy_definition
+  <<: *kitmaker_ubuntu22_04_only
+  <<: *tags_definition
+  needs:
+    - job: kitmaker_ubuntu22.04_base
+      artifacts: true
+  artifacts:
+    paths:
+      - tag_manifest_ubuntu22_04
+
+
+# Need to pass these from the trigger
 .kitmaker_ubuntu20_04_variables: &kitmaker_ubuntu20_04_variables
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
   OS: "ubuntu20.04"
@@ -671,8 +707,9 @@ kitmaker_success:
     - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "default"'
       when: on_success
   needs:
-    - job: kitmaker_ubuntu20.04_deploy
+    - job: kitmaker_ubuntu22.04_deploy
       artifacts: true
+    - job: kitmaker_ubuntu20.04_deploy
     - job: kitmaker_ubuntu18.04_deploy
     - job: kitmaker_centos7_deploy
     - job: kitmaker_ubi8_deploy
