@@ -9,6 +9,44 @@ Container images are available from:
 
 ## Announcement
 
+### Cuda Repo Signing Key has Changed!
+
+This may present itself as the following errors.
+
+debian:
+
+```
+Reading package lists... Done
+W: GPG error: http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64  InRelease: The following signatures couldn't be verified because the public key is not available: NO_PUBKEY A4B469963BF863CC
+W: The repository 'http://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/x86_64  InRelease' is not signed.
+N: Data from such a repository can't be authenticated and is therefore potentially dangerous to use.
+N: See apt-secure(8) manpage for repository creation and user configuration details.
+```
+
+RPM:
+
+```
+warning: /var/cache/dnf/cuda-fedora32-x86_64-d60aafcddb176bf5/packages/libnvjpeg-11-1-11.3.0.105-1.x86_64.rpm: Header V4 RSA/SHA512 Signature, key ID d42d0685: NOKEY
+cuda-fedora32-x86_64                                                                                  23 kB/s | 1.6 kB     00:00
+Importing GPG key 0x7FA2AF80:
+ Userid     : "cudatools <cudatools@nvidia.com>"
+ Fingerprint: AE09 FE4B BD22 3A84 B2CC FCE3 F60F 4B3D 7FA2 AF80
+ From       : https://developer.download.nvidia.com/compute/cuda/repos/fedora32/x86_64/7fa2af80.pub
+Is this ok [y/N]: y
+Key imported successfully
+Import of key(s) didn't help, wrong key(s)?
+Public key for libnvjpeg-11-1-11.3.0.105-1.x86_64.rpm is not installed. Failing package is: libnvjpeg-11-1-11.3.0.105-1.x86_64
+ GPG Keys are configured as: https://developer.download.nvidia.com/compute/cuda/repos/fedora32/x86_64/7fa2af80.pub
+The downloaded packages were saved in cache until the next successful transaction.
+You can remove cached packages by executing 'dnf clean packages'.
+Error: GPG check FAILED
+```
+
+Cuda images will be updated in the next few days with updated repo keys. Please follow progress using the links below:
+
+* https://forums.developer.nvidia.com/t/notice-cuda-linux-repository-key-rotation/212771h
+* https://gitlab.com/nvidia/container-images/cuda/-/issues/158
+
 ### Multi-arch image manifests are now LIVE for all supported CUDA container image versions
 
 It is now possible to build CUDA container images for all supported architectures using Docker
@@ -57,26 +95,13 @@ The `LD_LIBRARY_PATH` is set inside the container to legacy nvidia-docker v1 pat
 
 The container image scripts are archived in the `dist/` directory and are available for all supported distros and cuda versions.
 
-Here is an example on how to build an multi-arch container image for UBI8 and CUDA 11.4.1,
+Here is an example on how to build an multi-arch container image for Ubuntu 18.04 and CUDA 11.6.0:
 
 ```bash
-#/bin/bash
-
-#
-# This script requires buildkit: https://docs.docker.com/buildx/working-with-buildx/
-#
-IMAGE_NAME="nvcr.io/nvidia/cuda"
-CUDA_VERSION="11.4.1"
-OS="ubi8"
-ARCHES="x86_64, arm64, ppc64le"
-PLATFORM_ARG=`printf '%s ' '--platform'; for var in $(echo $ARCHES | sed "s/,/ /g"); do printf 'linux/%s,' "$var"; done | sed 's/,*$//g'`
-
-cp NGC-DL-CONTAINER-LICENSE dist/${CUDA_VERSION}/${OS}/base/
-
-docker buildx build --load ${PLATFORM_ARG} -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}" "dist/${CUDA_VERSION}/${OS}/base"
-docker buildx build --load ${PLATFORM_ARG} -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}" --build-arg "IMAGE_NAME=${IMAGE_NAME}" "dist/${CUDA_VERSION}/${OS}/runtime"
-docker buildx build --load ${PLATFORM_ARG} -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}" --build-arg "IMAGE_NAME=${IMAGE_NAME}" "dist/${CUDA_VERSION}/${OS}/devel"
+./build.sh -d --image-name my-remote-container-registry/cuda --cuda-version 11.6.0 --os ubuntu18.04 --arch x86_64,arm64 --push
 ```
+
+See `./build.sh --help` for usage.
 
 ## Cuda Container Image Automation
 
