@@ -42,7 +42,7 @@ You can remove cached packages by executing 'dnf clean packages'.
 Error: GPG check FAILED
 ```
 
-Cuda images will be updated in the next few days with updated repo keys. Please follow progress using the links below:
+Updated images will be pushed out over the next few days containing the new repo key. Please follow progress using the links below:
 
 * https://forums.developer.nvidia.com/t/notice-cuda-linux-repository-key-rotation/212771h
 * https://gitlab.com/nvidia/container-images/cuda/-/issues/158
