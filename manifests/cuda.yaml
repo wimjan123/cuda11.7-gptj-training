@@ -2671,7 +2671,6 @@ cuda_v11.4.0:
     template_path: templates/ubuntu
     base_image: ubuntu:20.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu2004
     x86_64:
       no_os_suffix: true
       <<: *cuda11_4_0_requires
@@ -2687,7 +2686,6 @@ cuda_v11.4.0:
     template_path: templates/ubuntu
     base_image: ubuntu:18.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804
     x86_64:
       <<: *cuda11_4_0_requires
       components:
@@ -2703,7 +2701,6 @@ cuda_v11.4.0:
     template_path: templates/redhat
     base_image: centos:7
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7/
     x86_64:
       <<: *cuda11_4_0_requires
       components:
@@ -2712,7 +2709,6 @@ cuda_v11.4.0:
     template_path: templates/redhat
     base_image: registry.access.redhat.com/ubi8/ubi:latest
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel8
     x86_64:
       <<: *cuda11_4_0_requires
       components:
@@ -2729,7 +2725,6 @@ cuda_v11.4.0:
     template_path: templates/redhat
     base_image: registry.access.redhat.com/ubi7/ubi:latest
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7
     x86_64:
       <<: *cuda11_4_0_requires
       components:
@@ -2797,7 +2792,6 @@ cuda_v11.3.1:
     template_path: templates/ubuntu
     base_image: ubuntu:20.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu2004
     x86_64:
       no_os_suffix: true
       <<: *cuda11_3_1_requires
@@ -2811,7 +2805,6 @@ cuda_v11.3.1:
     template_path: templates/ubuntu
     base_image: ubuntu:18.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804
     x86_64:
       <<: *cuda11_3_1_requires
       components:
@@ -2827,7 +2820,6 @@ cuda_v11.3.1:
     template_path: templates/ubuntu
     base_image: ubuntu:16.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604
     x86_64:
       <<: *cuda11_3_1_requires
       components:
@@ -2837,7 +2829,6 @@ cuda_v11.3.1:
     template_path: templates/redhat
     base_image: centos:7
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7
     x86_64:
       <<: *cuda11_3_1_requires
       components:
@@ -2846,7 +2837,6 @@ cuda_v11.3.1:
     template_path: templates/redhat
     base_image: registry.access.redhat.com/ubi8/ubi:latest
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel8
     x86_64:
       <<: *cuda11_3_1_requires
       components:
@@ -2863,7 +2853,6 @@ cuda_v11.3.1:
     template_path: templates/redhat
     base_image: registry.access.redhat.com/ubi7/ubi:latest
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7
     x86_64:
       <<: *cuda11_3_1_requires
       components:
@@ -2931,7 +2920,6 @@ cuda_v11.3.0:
     template_path: templates/ubuntu
     base_image: ubuntu:20.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu2004
     x86_64:
       no_os_suffix: True
       <<: *cuda11_3_0_requires
@@ -2945,7 +2933,6 @@ cuda_v11.3.0:
     template_path: templates/ubuntu
     base_image: ubuntu:18.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804
     x86_64:
       <<: *cuda11_3_0_requires
       components:
@@ -2961,7 +2948,6 @@ cuda_v11.3.0:
     template_path: templates/ubuntu
     base_image: ubuntu:16.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604
     x86_64:
       <<: *cuda11_3_0_requires
       components:
@@ -2971,7 +2957,6 @@ cuda_v11.3.0:
     template_path: templates/redhat
     base_image: centos:7
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7
     x86_64:
       <<: *cuda11_3_0_requires
       components:
@@ -2980,7 +2965,6 @@ cuda_v11.3.0:
     template_path: templates/redhat
     base_image: registry.access.redhat.com/ubi8/ubi:latest
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel8
     x86_64:
       <<: *cuda11_3_0_requires
       components:
@@ -2997,7 +2981,6 @@ cuda_v11.3.0:
     template_path: templates/redhat
     base_image: registry.access.redhat.com/ubi7/ubi:latest
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7
     x86_64:
       <<: *cuda11_3_0_requires
       components:
@@ -3061,7 +3044,6 @@ cuda_v11.2.2:
     template_path: templates/ubuntu
     base_image: ubuntu:20.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu2004
     x86_64:
       no_os_suffix: True
       <<: *cuda11_2_2_requires
@@ -3075,7 +3057,6 @@ cuda_v11.2.2:
     template_path: templates/ubuntu
     base_image: ubuntu:18.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804
     x86_64:
       <<: *cuda11_2_2_requires
       components:
@@ -3091,7 +3072,6 @@ cuda_v11.2.2:
     template_path: templates/ubuntu
     base_image: ubuntu:16.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604
     x86_64:
       <<: *cuda11_2_2_requires
       components:
@@ -3101,7 +3081,6 @@ cuda_v11.2.2:
     template_path: templates/redhat
     base_image: centos:7
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7
     x86_64:
       <<: *cuda11_2_2_requires
       components:
@@ -3110,7 +3089,6 @@ cuda_v11.2.2:
     template_path: templates/redhat
     base_image: registry.access.redhat.com/ubi8/ubi:latest
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel8
     x86_64:
       <<: *cuda11_2_2_requires
       components:
@@ -3127,7 +3105,6 @@ cuda_v11.2.2:
     template_path: templates/redhat
     base_image: registry.access.redhat.com/ubi7/ubi:latest
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7
     x86_64:
       <<: *cuda11_2_2_requires
       components:
@@ -3191,7 +3168,6 @@ cuda_v11.2.1:
     template_path: templates/ubuntu
     base_image: ubuntu:20.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu2004
     x86_64:
       no_os_suffix: True
       <<: *cuda11_2_1_requires
@@ -3205,7 +3181,6 @@ cuda_v11.2.1:
     template_path: templates/ubuntu
     base_image: ubuntu:18.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804
     x86_64:
       <<: *cuda11_2_1_requires
       components:
@@ -3221,7 +3196,6 @@ cuda_v11.2.1:
     template_path: templates/ubuntu
     base_image: ubuntu:16.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604
     x86_64:
       <<: *cuda11_2_1_requires
       components:
@@ -3231,7 +3205,6 @@ cuda_v11.2.1:
     template_path: templates/redhat
     base_image: centos:7
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7
     x86_64:
       <<: *cuda11_2_1_requires
       components:
@@ -3240,7 +3213,6 @@ cuda_v11.2.1:
     template_path: templates/redhat
     base_image: registry.access.redhat.com/ubi8/ubi:latest
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel8
     x86_64:
       <<: *cuda11_2_1_requires
       components:
@@ -3257,7 +3229,6 @@ cuda_v11.2.1:
     template_path: templates/redhat
     base_image: registry.access.redhat.com/ubi7/ubi:latest
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7
     x86_64:
       <<: *cuda11_2_1_requires
       components:
@@ -3321,7 +3292,6 @@ cuda_v11.2.0:
     template_path: templates/ubuntu
     base_image: ubuntu:20.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu2004
     x86_64:
       no_os_suffix: True
       <<: *cuda11_2_0_requires
@@ -3335,7 +3305,6 @@ cuda_v11.2.0:
     template_path: templates/ubuntu
     base_image: ubuntu:18.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804
     x86_64:
       <<: *cuda11_2_0_requires
       components:
@@ -3351,7 +3320,6 @@ cuda_v11.2.0:
     template_path: templates/ubuntu
     base_image: ubuntu:16.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604
     x86_64:
       <<: *cuda11_2_0_requires
       components:
@@ -3361,7 +3329,6 @@ cuda_v11.2.0:
     template_path: templates/redhat
     base_image: centos:7
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7
     x86_64:
       <<: *cuda11_2_0_requires
       components:
@@ -3370,7 +3337,6 @@ cuda_v11.2.0:
     template_path: templates/redhat
     base_image: registry.access.redhat.com/ubi8/ubi:latest
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel8
     x86_64:
       <<: *cuda11_2_0_requires
       components:
@@ -3387,7 +3353,6 @@ cuda_v11.2.0:
     template_path: templates/redhat
     base_image: registry.access.redhat.com/ubi7/ubi:latest
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7
     x86_64:
       <<: *cuda11_2_0_requires
       components:
@@ -3451,7 +3416,6 @@ cuda_v11.1.1:
     template_path: templates/ubuntu
     base_image: ubuntu:20.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu2004
     x86_64:
       no_os_suffix: True
       <<: *cuda11_1_1_requires
@@ -3461,7 +3425,6 @@ cuda_v11.1.1:
     template_path: templates/ubuntu
     base_image: ubuntu:18.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804
     x86_64:
       <<: *cuda11_1_1_requires
       components:
@@ -3484,7 +3447,6 @@ cuda_v11.1.1:
     template_path: templates/ubuntu
     base_image: ubuntu:16.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604
     x86_64:
       <<: *cuda11_1_1_requires
       components:
@@ -3497,7 +3459,6 @@ cuda_v11.1.1:
     template_path: templates/redhat
     base_image: centos:7
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7
     x86_64:
       <<: *cuda11_1_1_requires
       components:
@@ -3506,7 +3467,6 @@ cuda_v11.1.1:
     template_path: templates/redhat
     base_image: registry.access.redhat.com/ubi8/ubi:latest
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel8
     x86_64:
       <<: *cuda11_1_1_requires
       components:
@@ -3525,7 +3485,6 @@ cuda_v11.1.1:
     template_path: templates/redhat
     base_image: registry.access.redhat.com/ubi7/ubi:latest
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7
     x86_64:
       <<: *cuda11_1_1_requires
       components:
@@ -3589,7 +3548,6 @@ cuda_v11.0.3:
     template_path: templates/ubuntu
     base_image: ubuntu:20.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu2004
     x86_64:
       no_os_suffix: True
       <<: *cuda11_0_3_requires
@@ -3599,7 +3557,6 @@ cuda_v11.0.3:
     template_path: templates/ubuntu
     base_image: ubuntu:18.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804
     x86_64:
       <<: *cuda11_0_3_requires
       components:
@@ -3624,7 +3581,6 @@ cuda_v11.0.3:
     template_path: templates/ubuntu
     base_image: ubuntu:16.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604
     x86_64:
       <<: *cuda11_0_3_requires
       components:
@@ -3633,7 +3589,6 @@ cuda_v11.0.3:
     template_path: templates/redhat
     base_image: centos:7
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7
     x86_64:
       <<: *cuda11_0_3_requires
       components:
@@ -3642,7 +3597,6 @@ cuda_v11.0.3:
     template_path: templates/redhat
     base_image: registry.access.redhat.com/ubi8/ubi:latest
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel8
     x86_64:
       <<: *cuda11_0_3_requires
       components:
@@ -3661,7 +3615,6 @@ cuda_v11.0.3:
     template_path: templates/redhat
     base_image: registry.access.redhat.com/ubi7/ubi:latest
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7
     x86_64:
       <<: *cuda11_0_3_requires
       components:
@@ -3711,8 +3664,6 @@ cuda_v11.0.3:
     version: 2.12.10-1
   cudnn8:
     version: 8.4.0.27-1
-  cudnn7:
-    version: 7.6.5.32-1
 
 
 cuda_v10.2:
@@ -3728,7 +3679,6 @@ cuda_v10.2:
     template_path: templates/ubuntu/legacy
     base_image: ubuntu:18.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804
     x86_64:
       no_os_suffix: True
       <<: *cuda10_2_requires
@@ -3741,13 +3691,15 @@ cuda_v10.2:
       requires: "cuda>=10.2"
       components:
         <<: *cuda10_2_components
+        libnccl2:
+          version: 2.11.4-1
+        libnccl2_dev:
+          version: 2.11.4-1
         cudnn8:
-          version: 8.0.4.30-1
   ubuntu16.04:
     template_path: templates/ubuntu/legacy
     base_image: ubuntu:16.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604
     x86_64:
       <<: *cuda10_2_requires
       components:
@@ -3756,58 +3708,44 @@ cuda_v10.2:
     template_path: templates/redhat/legacy
     base_image: centos:7
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7
     x86_64:
       <<: *cuda10_2_requires
       components:
         <<: *cuda10_2_components
-        cudnn7:
-          version: 7.6.5.33-1
         cudnn8:
           version: 8.4.0.27-1
     ppc64le:
       requires: "cuda>=10.2"
       components:
         <<: *cuda10_2_components
-        cudnn7:
-          version: 7.6.5.32-1
         cudnn8:
           version: 8.0.5.39-1
   ubi8:
     template_path: templates/redhat/legacy
     base_image: registry.access.redhat.com/ubi8/ubi:latest
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel8
     x86_64:
       <<: *cuda10_2_requires
       components:
         <<: *cuda10_2_components
         # cudnn7 is not in the ML repo for rhel8
-        cudnn7:
-          version: 7.6.5.32
-          sha256sum: 600267f2caaed2fd58eb214ba669d8ea35f396a7d19b94822e6b36f9f7088c20
         cudnn8:
           version: 8.4.0.27-1
   ubi7:
     template_path: templates/redhat/legacy
     base_image: registry.access.redhat.com/ubi7/ubi:latest
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7
     x86_64:
       <<: *cuda10_2_requires
       components:
         <<: *cuda10_2_components
         # TODO: version is different for rhel7
-        cudnn7:
-          version: 7.6.5.33-1
         cudnn8:
           version: 8.4.0.27-1
     ppc64le:
       requires: "cuda>=10.2"
       components:
         <<: *cuda10_2_components
-        cudnn7:
-          version: 7.6.5.32-1
         cudnn8:
           version: 8.0.5.39-1
 
@@ -3872,7 +3810,6 @@ cuda_v10.1:
     template_path: templates/ubuntu/legacy
     base_image: ubuntu:18.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804
     x86_64:
       no_os_suffix: True
       <<: *cuda10_1_requires
@@ -3889,7 +3826,6 @@ cuda_v10.1:
     template_path: templates/ubuntu/legacy
     base_image: ubuntu:16.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604
     x86_64:
       <<: *cuda10_1_requires
       components:
@@ -3898,7 +3834,6 @@ cuda_v10.1:
     template_path: templates/redhat/legacy
     base_image: centos:7
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7
     x86_64:
       <<: *cuda10_1_requires
       components:
@@ -3922,7 +3857,6 @@ cuda_v10.1:
     template_path: templates/redhat/legacy
     base_image: registry.access.redhat.com/ubi8/ubi:latest
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel8
     x86_64:
       <<: *cuda10_1_requires
       components:
@@ -3941,7 +3875,6 @@ cuda_v10.1:
     template_path: templates/redhat/legacy
     base_image: registry.access.redhat.com/ubi7/ubi:latest
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7
     x86_64:
       <<: *cuda10_1_requires
       components:
@@ -4021,7 +3954,6 @@ cuda_v10.0:
     template_path: templates/ubuntu/legacy
     base_image: ubuntu:18.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804
     x86_64:
       no_os_suffix: True
       <<: *cuda10_0_requires
@@ -4036,7 +3968,6 @@ cuda_v10.0:
     template_path: templates/ubuntu/legacy
     base_image: ubuntu:16.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604
     x86_64:
       <<: *cuda10_0_requires
       components:
@@ -4045,7 +3976,6 @@ cuda_v10.0:
     template_path: templates/redhat/legacy
     base_image: centos:7
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7
     x86_64:
       <<: *cuda10_0_requires
       components:
@@ -4061,7 +3991,6 @@ cuda_v10.0:
     template_path: templates/redhat/legacy
     base_image: registry.access.redhat.com/ubi7/ubi:latest
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7
     x86_64:
       <<: *cuda10_0_requires
       components:
@@ -4134,7 +4063,6 @@ cuda_v9.2:
     base_image: ubuntu:18.04
     # Yes, these repo urls are correct in this case...
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1710
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604
     x86_64:
       no_os_suffix: True
       <<: *cuda9_2_requires
@@ -4144,7 +4072,6 @@ cuda_v9.2:
     template_path: templates/ubuntu/legacy
     base_image: ubuntu:16.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604
     x86_64:
       <<: *cuda9_2_requires
       components:
@@ -4153,7 +4080,6 @@ cuda_v9.2:
     template_path: templates/redhat/legacy
     base_image: centos:7
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7
     x86_64:
       <<: *cuda9_2_requires
       components:
@@ -4172,7 +4098,6 @@ cuda_v9.2:
     template_path: templates/redhat/legacy
     base_image: registry.access.redhat.com/ubi7/ubi:latest
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/rhel7
     x86_64:
       <<: *cuda9_2_requires
       components:
@@ -4247,7 +4172,6 @@ cuda_v9.1:
     template_path: templates/ubuntu/legacy
     base_image: ubuntu:16.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604
     x86_64:
       no_os_suffix: True
       <<: *cuda9_1_requires
@@ -4358,7 +4282,6 @@ cuda_v9.0:
     template_path: templates/ubuntu/legacy
     base_image: ubuntu:16.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604
     x86_64:
       no_os_suffix: True
       <<: *cuda9_0_requires
@@ -4475,7 +4398,6 @@ cuda_v8.0:
     template_path: templates/ubuntu/legacy
     base_image: ubuntu:16.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604
-    ml_repo_url: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604
     x86_64:
       no_os_suffix: True
       <<: *cuda8_0_requires

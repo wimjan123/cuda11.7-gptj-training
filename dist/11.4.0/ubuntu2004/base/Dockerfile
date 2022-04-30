@@ -7,17 +7,11 @@ ENV NVIDIA_REQUIRE_CUDA "cuda>=11.4 brand=tesla,driver>=418,driver<419 brand=tes
 ENV NV_CUDA_CUDART_VERSION 11.4.43-1
 ENV NV_CUDA_COMPAT_PACKAGE cuda-compat-11-4
 
-ENV NV_ML_REPO_ENABLED 1
-ENV NV_ML_REPO_URL https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu2004/${NVARCH}
-
 FROM base as base-arm64
 
 ENV NVARCH sbsa
 ENV NVIDIA_REQUIRE_CUDA "cuda>=11.4"
 ENV NV_CUDA_CUDART_VERSION 11.4.43-1
-ENV NV_ML_REPO_ENABLED 1
-ENV NV_ML_REPO_URL https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu2004/${NVARCH}
-
 FROM base-${TARGETARCH}
 
 ARG TARGETARCH

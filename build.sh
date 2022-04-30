@@ -125,6 +125,7 @@ check_vars() {
     elif [[ -z ${ARCHES} ]]; then
         err "ARCHES argument not set!"
     fi
+    OS_PATH_NAME=$OS
     if [[ ! -z ${OS} ]] && [[ "${OS}" =~ .*\..* ]]; then
         # delete the dot in os string
         msg "Setting OS_PATH_NAME to '${OS//.}'"

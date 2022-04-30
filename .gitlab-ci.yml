@@ -10891,19 +10891,7 @@ ubuntu18.04-v10.2-cudnn8:
   variables:
     <<: *ubuntu18_04_10_2_variables
     CUDNN_VERSION: "cudnn8"
-    ARCHES: "x86_64, ppc64le"
-  needs:
-    - job: ubuntu18.04-v10.2
-      artifacts: true
-
-ubuntu18.04-v10.2-cudnn7:
-  <<: *cudnn_definition
-  <<: *ubuntu18_04_10_2_only
-  # Variables overwritten here. Don't move this section.
-  variables:
-    <<: *ubuntu18_04_10_2_variables
-    CUDNN_VERSION: "cudnn7"
-    ARCHES: "x86_64, ppc64le"
+    ARCHES: "x86_64"
   needs:
     - job: ubuntu18.04-v10.2
       artifacts: true
@@ -10991,8 +10979,6 @@ ubuntu18.04-v10.2-deploy:
       optional: true
     - job: ubuntu18.04-v10.2-cudnn8
       optional: true
-    - job: ubuntu18.04-v10.2-cudnn7
-      optional: true
 
 
 .ubuntu16_04_10_2_variables: &ubuntu16_04_10_2_variables
@@ -11024,18 +11010,6 @@ ubuntu16.04-v10.2-cudnn8:
   variables:
     <<: *ubuntu16_04_10_2_variables
     CUDNN_VERSION: "cudnn8"
-    ARCHES: "x86_64"
-  needs:
-    - job: ubuntu16.04-v10.2
-      artifacts: true
-
-ubuntu16.04-v10.2-cudnn7:
-  <<: *cudnn_definition
-  <<: *ubuntu16_04_10_2_only
-  # Variables overwritten here. Don't move this section.
-  variables:
-    <<: *ubuntu16_04_10_2_variables
-    CUDNN_VERSION: "cudnn7"
     ARCHES: "x86_64"
   needs:
     - job: ubuntu16.04-v10.2
@@ -11090,8 +11064,6 @@ ubuntu16.04-v10.2-deploy:
       optional: true
     - job: ubuntu16.04-v10.2-cudnn8
       optional: true
-    - job: ubuntu16.04-v10.2-cudnn7
-      optional: true
 
 
 .centos7_10_2_variables: &centos7_10_2_variables
@@ -11123,18 +11095,6 @@ centos7-v10.2-cudnn8:
   variables:
     <<: *centos7_10_2_variables
     CUDNN_VERSION: "cudnn8"
-    ARCHES: "x86_64, ppc64le"
-  needs:
-    - job: centos7-v10.2
-      artifacts: true
-
-centos7-v10.2-cudnn7:
-  <<: *cudnn_definition
-  <<: *centos7_10_2_only
-  # Variables overwritten here. Don't move this section.
-  variables:
-    <<: *centos7_10_2_variables
-    CUDNN_VERSION: "cudnn7"
     ARCHES: "x86_64, ppc64le"
   needs:
     - job: centos7-v10.2
@@ -11223,8 +11183,6 @@ centos7-v10.2-deploy:
       optional: true
     - job: centos7-v10.2-cudnn8
       optional: true
-    - job: centos7-v10.2-cudnn7
-      optional: true
 
 
 .ubi8_10_2_variables: &ubi8_10_2_variables
@@ -11256,18 +11214,6 @@ ubi8-v10.2-cudnn8:
   variables:
     <<: *ubi8_10_2_variables
     CUDNN_VERSION: "cudnn8"
-    ARCHES: "x86_64"
-  needs:
-    - job: ubi8-v10.2
-      artifacts: true
-
-ubi8-v10.2-cudnn7:
-  <<: *cudnn_definition
-  <<: *ubi8_10_2_only
-  # Variables overwritten here. Don't move this section.
-  variables:
-    <<: *ubi8_10_2_variables
-    CUDNN_VERSION: "cudnn7"
     ARCHES: "x86_64"
   needs:
     - job: ubi8-v10.2
@@ -11322,8 +11268,6 @@ ubi8-v10.2-deploy:
       optional: true
     - job: ubi8-v10.2-cudnn8
       optional: true
-    - job: ubi8-v10.2-cudnn7
-      optional: true
 
 
 .ubi7_10_2_variables: &ubi7_10_2_variables
@@ -11355,18 +11299,6 @@ ubi7-v10.2-cudnn8:
   variables:
     <<: *ubi7_10_2_variables
     CUDNN_VERSION: "cudnn8"
-    ARCHES: "x86_64, ppc64le"
-  needs:
-    - job: ubi7-v10.2
-      artifacts: true
-
-ubi7-v10.2-cudnn7:
-  <<: *cudnn_definition
-  <<: *ubi7_10_2_only
-  # Variables overwritten here. Don't move this section.
-  variables:
-    <<: *ubi7_10_2_variables
-    CUDNN_VERSION: "cudnn7"
     ARCHES: "x86_64, ppc64le"
   needs:
     - job: ubi7-v10.2
@@ -11454,8 +11386,6 @@ ubi7-v10.2-deploy:
     - job: ubi7-v10.2-scan-ppc64le
       optional: true
     - job: ubi7-v10.2-cudnn8
-      optional: true
-    - job: ubi7-v10.2-cudnn7
       optional: true
 
 

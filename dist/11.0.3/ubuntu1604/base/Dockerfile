@@ -7,9 +7,6 @@ ENV NVIDIA_REQUIRE_CUDA "cuda>=11.0 brand=tesla,driver>=418,driver<419 brand=tes
 ENV NV_CUDA_CUDART_VERSION 11.0.221-1
 ENV NV_CUDA_COMPAT_PACKAGE cuda-compat-11-0
 
-ENV NV_ML_REPO_ENABLED 1
-ENV NV_ML_REPO_URL https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604/${NVARCH}
-
 FROM base-${TARGETARCH}
 
 ARG TARGETARCH
@@ -18,13 +15,13 @@ LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates apt-transport-https gnupg-curl && \
-    NVIDIA_GPGKEY_SUM=d1be581509378368edeec8c1eb2958702feedf3bc3d17011adbf24efacce4ab5 && \
-    NVIDIA_GPGKEY_FPR=ae09fe4bbd223a84b2ccfce3f60f4b3d7fa2af80 && \
-    apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/${NVARCH}/7fa2af80.pub && \
+    NVIDIA_GPGKEY_SUM=7eb71103e32e813ea3e1c06bdb01b143f36feb8d83ecac2b0c11c9273f9e6822 && \
+    NVIDIA_GPGKEY_FPR=eb693b3035cd5710e231e123a4b469963bf863cc && \
+    apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/${NVARCH}/3bf863cc.pub && \
     apt-key adv --export --no-emit-version -a $NVIDIA_GPGKEY_FPR | tail -n +5 > cudasign.pub && \
     echo "$NVIDIA_GPGKEY_SUM  cudasign.pub" | sha256sum -c --strict - && rm cudasign.pub && \
     echo "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604/${NVARCH} /" > /etc/apt/sources.list.d/cuda.list && \
-    if [ ! -z ${NV_ML_REPO_ENABLED} ]; then echo "deb https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604/${NVARCH} /" > /etc/apt/sources.list.d/nvidia-ml.list; fi && \
+    if [ ! -z ${NV_ML_REPO_ENABLED} ]; then echo "deb /${NVARCH} /" > /etc/apt/sources.list.d/nvidia-ml.list; fi && \
     apt-get purge --auto-remove -y gnupg-curl \
     && rm -rf /var/lib/apt/lists/*
 
