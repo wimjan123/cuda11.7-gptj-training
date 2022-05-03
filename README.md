@@ -9,6 +9,14 @@ Container images are available from:
 
 ## Announcement
 
+### Tag deprecation
+
+The following tags will no longer be updated.
+
+* `<cuda_version>-base`, `<cuda_version>-runtime`, `<cuda_version>-devel`
+  * These tags will be deleted.
+* All tags for 9.2, 9.1, 9.0, and 8.0
+
 ### Cuda Repo Signing Key has Changed!
 
 This may present itself as the following errors.
