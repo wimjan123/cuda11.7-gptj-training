@@ -7,8 +7,6 @@ ENV NVIDIA_REQUIRE_CUDA cuda>=10.1 brand=tesla,driver>=396,driver<397 brand=tesl
 ENV NV_CUDA_CUDART_VERSION 10.1.243-1
 
 COPY cuda.repo-x86_64 /etc/yum.repos.d/cuda.repo
-COPY nvidia-ml.repo-x86_64 /etc/yum.repos.d/nvidia-ml.repo
-
 
 FROM base as base-ppc64le
 
@@ -17,7 +15,6 @@ ENV NVIDIA_REQUIRE_CUDA cuda>=10.1
 ENV NV_CUDA_CUDART_VERSION 10.1.243-1
 
 COPY cuda.repo-ppc64le /etc/yum.repos.d/cuda.repo
-COPY nvidia-ml.repo-ppc64le /etc/yum.repos.d/nvidia-ml.repo
 
 FROM base-${TARGETARCH}
 
@@ -25,8 +22,8 @@ ARG TARGETARCH
 
 LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 
-RUN NVIDIA_GPGKEY_SUM=d1be581509378368edeec8c1eb2958702feedf3bc3d17011adbf24efacce4ab5 && \
-    curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/rhel7/${NVARCH}/7fa2af80.pub | sed '/^Version/d' > /etc/pki/rpm-gpg/RPM-GPG-KEY-NVIDIA && \
+RUN NVIDIA_GPGKEY_SUM=d0664fbbdb8c32356d45de36c5984617217b2d0bef41b93ccecd326ba3b80c87 && \
+    curl -fsSL https://developer.download.nvidia.com/compute/cuda/repos/rhel7/${NVARCH}/D42D0685.pub | sed '/^Version/d' > /etc/pki/rpm-gpg/RPM-GPG-KEY-NVIDIA && \
     echo "$NVIDIA_GPGKEY_SUM  /etc/pki/rpm-gpg/RPM-GPG-KEY-NVIDIA" | sha256sum -c --strict  -
 
 ENV CUDA_VERSION 10.1
