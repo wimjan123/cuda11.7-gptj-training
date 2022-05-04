@@ -17,24 +17,8 @@ ENV NV_CUDNN_VERSION {{ cuda.x86_64.cudnn.version }}
 ENV NV_CUDNN_PACKAGE libcudnn{{ cuda.x86_64.cudnn.version[0] }}{{ iz_dev }}-${NV_CUDNN_VERSION}.cuda{{ cuda.version.major }}.{{ cuda.version.minor }}
 
 {% if "sha256sum" in cuda.x86_64.cudnn %}
-    {% if cuda.version.major_minor == "9.1" %}
-        {% set cudnn_url_version = cuda.x86_64.cudnn.version %}
-        {% set cudnn_url_version2 = cuda.x86_64.cudnn.version[:cuda.x86_64.cudnn.version.rfind(".")] %}
-    {% elif cuda.version.major_minor == "8.0" %}
-        {% if cudnn_version[0] | int == 5 or cudnn_version[0] | int == 6 %}
-            {% set cudnn_url_version = cuda.x86_64.cudnn.version[:cuda.x86_64.cudnn.version.rfind(".")] %}
-            {% set cudnn_url_version2 = cuda.x86_64.cudnn.version[:cuda.x86_64.cudnn.version.rfind(".")] %}
-        {% elif cudnn_version[0] | int == 7 %}
-            {% set cudnn_url_version = cuda.x86_64.cudnn.version[:cuda.x86_64.cudnn.version.rfind(".")] %}
-            {% set cudnn_url_version2 = cuda.x86_64.cudnn.version[:cuda.x86_64.cudnn.version.rfind(".")-2] %}
-        {% else %}
-            {% set cudnn_url_version = cuda.x86_64.cudnn.version[:3] %}
-            {% set cudnn_url_version2 = cuda.x86_64.cudnn.version[:cuda.x86_64.cudnn.version.rfind(".")] %}
-        {% endif %}
-    {% else %}
-        {% set cudnn_url_version = cuda.x86_64.cudnn.version[:cuda.x86_64.cudnn.version.rfind(".")] %}
-        {% set cudnn_url_version2 = cudnn_version %}
-    {% endif %}
+    {% set cudnn_url_version = cuda.x86_64.cudnn.version[:cuda.x86_64.cudnn.version.rfind(".")] %}
+    {% set cudnn_url_version2 = cudnn_version %}
 ENV NV_CUDNN_DL_SHA256SUM {{ cuda.x86_64.cudnn.sha256sum }}
 ENV NV_CUDNN_DL_BASENAME cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-x64-v{{ cudnn_url_version2 }}.tgz
 ENV NV_CUDNN_DL_URL http://developer.download.nvidia.com/compute/redist/cudnn/v{{ cudnn_url_version }}/${NV_CUDNN_DL_BASENAME}
@@ -56,24 +40,8 @@ ENV NV_CUDNN_VERSION {{ cuda.ppc64le.cudnn.version }}
 ENV NV_CUDNN_PACKAGE libcudnn{{ cuda.ppc64le.cudnn.version[0] }}{{ iz_dev }}-${NV_CUDNN_VERSION}.cuda{{ cuda.version.major }}.{{ cuda.version.minor }}
 
 {% if "sha256sum" in cuda.ppc64le.cudnn %}
-    {% if cuda.version.major_minor == "9.1" %}
-        {% set cudnn_url_version = cuda.ppc64le.cudnn.version %}
-        {% set cudnn_url_version2 = cuda.ppc64le.cudnn.version[0] %}
-    {% elif cuda.version.major_minor == "8.0" %}
-        {% if cudnn_version[0] | int == 5 or cudnn_version[0] | int == 6 %}
-            {% set cudnn_url_version = cuda.ppc64le.cudnn.version[:cuda.ppc64le.cudnn.version.rfind(".")] %}
-            {% set cudnn_url_version2 = cuda.ppc64le.cudnn.version[:cuda.ppc64le.cudnn.version.rfind(".")] %}
-        {% elif cudnn_version[0] | int == 7 %}
-            {% set cudnn_url_version = cuda.ppc64le.cudnn.version[:cuda.ppc64le.cudnn.version.rfind(".")] %}
-            {% set cudnn_url_version2 = cuda.ppc64le.cudnn.version[:cuda.ppc64le.cudnn.version.rfind(".")-4] %}
-        {% else %}
-            {% set cudnn_url_version = cuda.ppc64le.cudnn.version[:3] %}
-            {% set cudnn_url_version2 = cuda.ppc64le.cudnn.version[0] %}
-        {% endif %}
-    {% else %}
-        {% set cudnn_url_version = cuda.ppc64le.cudnn.version[:cuda.ppc64le.cudnn.version.rfind(".")] %}
-        {% set cudnn_url_version2 = cudnn_version %}
-    {% endif %}
+    {% set cudnn_url_version = cuda.ppc64le.cudnn.version[:cuda.ppc64le.cudnn.version.rfind(".")] %}
+    {% set cudnn_url_version2 = cudnn_version %}
 ENV NV_CUDNN_DL_SHA256SUM {{ cuda.ppc64le.cudnn.sha256sum }}
 ENV NV_CUDNN_DL_BASENAME cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-ppc64le-v{{ cudnn_url_version2 }}.tgz
 ENV NV_CUDNN_DL_URL http://developer.download.nvidia.com/compute/redist/cudnn/v{{ cudnn_url_version }}/${NV_CUDNN_DL_BASENAME}

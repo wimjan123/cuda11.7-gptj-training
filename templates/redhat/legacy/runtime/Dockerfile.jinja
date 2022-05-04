@@ -81,12 +81,10 @@ RUN yum install --setopt=obsoletes=0 -y \
 RUN yum install -y \
 {% endif %}
     cuda-libraries-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_CUDA_LIB_VERSION} \
-    {% if cuda.version.major_minor == "9.0" %}
-    cuda-cublas-{{ cuda.version.major }}-{{ cuda.version.minor }}={{ cuda.version.release_label }}.4-1 \
-    {% elif cuda.version.major_minor == "10.0" %}
+    {% if cuda.version.major_minor == "10.0" %}
     cuda-cublas-$CUDA_PKG_VERSION \
     {% endif %}
-    {% if (cuda.version.major_minor == "9.2") or cuda.version.major | int >= 10 %}
+    {% if cuda.version.major | int >= 10 %}
     cuda-nvtx-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_NVTX_VERSION} \
     {% endif %}
     cuda-npp-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBNPP_VERSION} \

@@ -37,11 +37,6 @@ ARG TARGETARCH
 
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 
-{% if cuda.version.major | int == 8 %}
-RUN echo "deb {{ cuda.ml_repo_url }}/${NVARCH} /" > /etc/apt/sources.list.d/nvidia-ml.list
-
-{% endif -%}
-
 {% set cudnn_version = cuda.cudnn.version %}
 {% if "version" in cuda.cudnn and "-" in cuda.cudnn.version %}
     {% set cudnn_version = cuda.cudnn.version[:-2] %}

@@ -915,7 +915,6 @@ class ManagerGenerate(Manager):
             "version": self.cuda["version"],
             "image_tag_suffix": self.cuda["image_tag_suffix"],
             "os": self.cuda["os"],
-            "ml_repo_url": self.ml_repo_url_for_distro(),
         }
         for arch in self.arches:
             if not cudnn_version_name in self.cuda[arch]["components"]:
@@ -979,27 +978,7 @@ class ManagerGenerate(Manager):
         else:
             write_template()
 
-    def ml_repo_url_for_distro(self):
-        """Returns the machine learning repo url for a distro. None if no url is found."""
-        return self.get_data(
-            self.parent.manifest,
-            self.key,
-            f"{self.distro}{self.distro_version}",
-            "ml_repo_url",
-            can_skip=True,
-        )
-
-    def use_ml_repo_for_distro(self):
-        """Returns the machine learning repo url for an arch"""
-        if not self.ml_repo_url_for_distro():
-            log.warning(
-                f"ml_repo_url not set for {self.key}.{self.distro}{self.distro_version} in manifest"
-            )
-            return False
-        return True
-
     def prepare_context(self):
-        # checks the cudnn components and ensures at least one is installed from the public "machine-learning" repo
         conf = self.parent.manifest
         if self.release_label:
             major = self.release_label.split(".")[0]
@@ -1056,7 +1035,6 @@ class ManagerGenerate(Manager):
                 arch,
                 "components",
             )
-            self.cuda[arch]["use_ml_repo"] = self.use_ml_repo_for_distro()
             self.extract_keys(
                 self.get_data(
                     conf,
@@ -1144,11 +1122,6 @@ class ManagerGenerate(Manager):
                 if "dockerfile" in filename.name.lower():
                     continue
                 log.debug("Checking %s", filename)
-                if not self.cuda[self.cuda["arches"][0]][
-                    "use_ml_repo"
-                ] and "nvidia-ml" in str(filename):
-                    log.warning("Not setting ml-repo!")
-                    continue
                 if any(f in filename.name for f in [".j2", ".jinja"]):
                     self.output_template(filename, f"{self.output_path}/{img}")
 

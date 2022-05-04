@@ -11,22 +11,11 @@ ENV NV_LIBCUSPARSE_VERSION {{ cuda.x86_64.components.libcusparse.version }}
 
 {% if "libcublas" in cuda.x86_64.components %}
     {% if cuda.version.major_minor in ["10.1", "10.2"] %}
-        {# {% set l4t = (cuda.arch == "arm64" and cuda.version.build != 89) %} #}
-        {# {% set suffix = "10" if not l4t else "-10-2" %} #}
         {% set suffix = "10" %}
-    {#     {% set cublas_vers = suffix + "=${NV_LIBCUBLAS_VERSION}" %} #}
-    {# {% else %} #}
-    {#     {% set cublas_vers = "-${NV_LIBCUBLAS_VERSION}" %} #}
     {% endif %}
 {% endif %}
 
-{% if cuda.version.major_minor in ["9.0", "9.1", "9.2", "10.0"] %}
-    {# [> This should never change at this point <] #}
-    {# {% if cuda.version.major_minor == "9.0" %} #}
-    {#     {% set cublas_vers = "-9-0=9.0.176.4-1" %} #}
-    {# {% endif %} #}
-    {# {% if cuda.version.major_minor == "9.1" %}{% set cublas_vers = "-9-1=9.1.85.3-1" %}{% endif %} #}
-    {# {% if cuda.version.major_minor == "9.2" %}{% set cublas_vers = "-9-2=9.2.148.1-1" %}{% endif %} #}
+{% if cuda.version.major_minor in ["10.0"] %}
 ENV NV_LIBCUBLAS_PACKAGE_NAME cuda-cublas-{{ cuda.version.major }}-{{ cuda.version.minor }}
 {% else %}
 ENV NV_LIBCUBLAS_PACKAGE_NAME libcublas{{ suffix }}
@@ -34,12 +23,6 @@ ENV NV_LIBCUBLAS_PACKAGE_NAME libcublas{{ suffix }}
 
 ENV NV_LIBCUBLAS_VERSION {{ cuda.x86_64.components.libcublas.version }}
 ENV NV_LIBCUBLAS_PACKAGE ${NV_LIBCUBLAS_PACKAGE_NAME}=${NV_LIBCUBLAS_VERSION}
-
-{# [> L4T uses older packaging name format for libcublas <] #}
-{# {%- if cuda.version.major_minor in ["10.2"] %} #}
-{#     {% set libcublas_pkg_name = "libcublas10" %} #}
-{#     {% set libcublas_component_version = cuda.x86_64.components.libcublas.version %} #}
-{# {% endif -%} #}
 
 {% if "libnccl2" in cuda.x86_64.components and cuda.x86_64.components.libnccl2 %}
     {% set nccl_package = 1 %}
@@ -62,22 +45,11 @@ ENV NV_LIBCUSPARSE_VERSION {{ cuda.ppc64le.components.libcusparse.version }}
 
 {% if "libcublas" in cuda.ppc64le.components %}
     {% if cuda.version.major_minor in ["10.1", "10.2"] %}
-        {# {% set l4t = (cuda.arch == "arm64" and cuda.version.build != 89) %} #}
-        {# {% set suffix = "10" if not l4t else "-10-2" %} #}
         {% set suffix = "10" %}
-    {#     {% set cublas_vers = suffix + "=${NV_LIBCUBLAS_VERSION}" %} #}
-    {# {% else %} #}
-    {#     {% set cublas_vers = "-${NV_LIBCUBLAS_VERSION}" %} #}
     {% endif %}
 {% endif %}
 
-{% if cuda.version.major_minor in ["9.0", "9.1", "9.2", "10.0"] %}
-    {# [> This should never change at this point <] #}
-    {# {% if cuda.version.major_minor == "9.0" %} #}
-    {#     {% set cublas_vers = "-9-0=9.0.176.4-1" %} #}
-    {# {% endif %} #}
-    {# {% if cuda.version.major_minor == "9.1" %}{% set cublas_vers = "-9-1=9.1.85.3-1" %}{% endif %} #}
-    {# {% if cuda.version.major_minor == "9.2" %}{% set cublas_vers = "-9-2=9.2.148.1-1" %}{% endif %} #}
+{% if cuda.version.major_minor in ["10.0"] %}
 ENV NV_LIBCUBLAS_PACKAGE_NAME cuda-cublas-{{ cuda.version.major }}-{{ cuda.version.minor }}
 {% else %}
 ENV NV_LIBCUBLAS_PACKAGE_NAME libcublas{{ suffix }}
@@ -110,7 +82,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     {% elif cuda.version.major | int > 10 %}
     libnpp-{{ cuda.version.major }}-{{ cuda.version.minor }}=${NV_LIBNPP_VERSION} \
     {% endif %}
-    {% if (cuda.version.major_minor == "9.2" ) or cuda.version.major | int >= 10 %}
+    {% if cuda.version.major | int >= 10 %}
     cuda-nvtx-{{ cuda.version.major }}-{{ cuda.version.minor }}=${NV_NVTX_VERSION} \
     {% endif %}
     cuda-cusparse-{{ cuda.version.major }}-{{ cuda.version.minor }}=${NV_LIBCUSPARSE_VERSION} \
