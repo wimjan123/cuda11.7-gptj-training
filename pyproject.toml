@@ -5,7 +5,7 @@ description = "CUDA Docker CI Scripts"
 authors = ["Jesus Alvarez <jesusa@nvidia.com>"]
 
 [tool.poetry.dependencies]
-python = ">3.6"
+python = ">3.6,<4"
 pyyaml = "*"
 plumbum = "*"
 jinja2 = "*"
@@ -22,6 +22,12 @@ setuptools = "^57.0.0"
 packaging = "^20.9"
 beeprint = "^2.4.10"
 six = "^1.16.0"
+urllib3 = "1.26.9"
 
 [tool.poetry.dev-dependencies]
 pytest = ">3.6"
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore:.*U.*mode is deprecated:DeprecationWarning",
+]
