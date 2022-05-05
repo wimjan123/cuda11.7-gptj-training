@@ -5,7 +5,10 @@ FROM ${IMAGE_NAME}:{{ cuda.version.release_label }}-runtime-{{ cuda.os.distro }}
 FROM base as base-amd64
 
 ENV NV_CUDA_LIB_VERSION {{ cuda.version.release_label + "-1" }}
+{% if "nvprof" in cuda.x86_64.components %}
+    {% set has_nvprof_package = true %}
 ENV NV_NVPROF_VERSION {{ cuda.x86_64.components.nvprof.version }}
+{% endif %}
 ENV NV_CUDA_CUDART_DEV_VERSION {{ cuda.x86_64.components.cudart_dev.version }}
 ENV NV_NVML_DEV_VERSION {{ cuda.x86_64.components.nvml_dev.version }}
 ENV NV_LIBCUBLAS_DEV_VERSION {{ cuda.x86_64.components.libcublas_dev.version }}
@@ -32,7 +35,10 @@ ENV NV_CUDA_PROFILER_API_PACKAGE cuda-profiler-api-{{ cuda.version.major }}-{{ c
 FROM base as base-arm64
 
 ENV NV_CUDA_LIB_VERSION {{ cuda.version.release_label + "-1" }}
+{% if "nvprof" in cuda.arm64.components %}
+    {% set has_nvprof_package = true %}
 ENV NV_NVPROF_VERSION {{ cuda.arm64.components.nvprof.version }}
+{% endif %}
 ENV NV_CUDA_CUDART_DEV_VERSION {{ cuda.arm64.components.cudart_dev.version }}
 ENV NV_NVML_DEV_VERSION {{ cuda.arm64.components.nvml_dev.version }}
 ENV NV_LIBCUBLAS_DEV_VERSION {{ cuda.arm64.components.libcublas_dev.version }}
@@ -59,7 +65,10 @@ ENV NV_CUDA_PROFILER_API_PACKAGE cuda-profiler-api-{{ cuda.version.major }}-{{ c
 FROM base as base-ppc64le
 
 ENV NV_CUDA_LIB_VERSION {{ cuda.version.release_label + "-1" }}
+{% if "nvprof" in cuda.ppc64le.components %}
+    {% set has_nvprof_package = true %}
 ENV NV_NVPROF_VERSION {{ cuda.ppc64le.components.nvprof.version }}
+{% endif %}
 ENV NV_CUDA_CUDART_DEV_VERSION {{ cuda.ppc64le.components.cudart_dev.version }}
 ENV NV_NVML_DEV_VERSION {{ cuda.ppc64le.components.nvml_dev.version }}
 ENV NV_LIBCUBLAS_DEV_VERSION {{ cuda.ppc64le.components.libcublas_dev.version }}
@@ -94,7 +103,9 @@ RUN yum install -y \
     cuda-libraries-devel-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_CUDA_LIB_VERSION} \
     cuda-minimal-build-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_CUDA_LIB_VERSION} \
     cuda-cudart-devel-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_CUDA_CUDART_DEV_VERSION} \
+    {% if has_nvprof_package %}
     cuda-nvprof-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_NVPROF_VERSION} \
+    {% endif %}
     cuda-nvml-devel-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_NVML_DEV_VERSION} \
     libcublas-devel-{{ cuda.version.major }}-{{ cuda.version.minor }}-${NV_LIBCUBLAS_DEV_VERSION} \
     {% if has_libnpp_dev_package %}
