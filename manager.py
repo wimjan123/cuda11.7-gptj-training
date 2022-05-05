@@ -1490,6 +1490,29 @@ class ManagerGenerate(Manager):
                 self.targeted()
                 self.cuda_version_is_release_label = False
 
+    def targeted_kitmaker(self):
+        log.debug("Generating all container scripts! (for kitmaker)")
+        key = f"cuda_v{self.release_label}"
+        self.cuda_version = self.release_label
+        for k, _ in self.shipitdata.shipit_manifest[key].items():
+            if any(x in k for x in SUPPORTED_DISTRO_LIST) or "l4t" in k:
+                if f"{self.distro}{self.distro_version}" not in k:
+                    continue
+                log.debug(f"Working on {k}")
+                self.cuda_version_is_release_label = True
+                log.debug(
+                    "Generating distro: '%s' distro_version: '%s' cuda_version: '%s' release_label: '%s' "
+                    % (
+                        self.distro,
+                        self.distro_version,
+                        self.cuda_version,
+                        self.release_label,
+                    )
+                )
+                self.parent.manifest = self.shipitdata.shipit_manifest
+                self.targeted()
+                self.cuda_version_is_release_label = False
+
     def targeted(self):
         self.key = f"cuda_v{self.release_label}"
         if not self.release_label and self.cuda_version:
@@ -1523,7 +1546,10 @@ class ManagerGenerate(Manager):
             self.shipitdata.generate_shipit_manifest(
                 self.dist_base_path, self.cudnn_json_path
             )
-            self.target_all_kitmaker()
+            if self.generate_all:
+                self.target_all_kitmaker()
+            else:
+                self.targeted_kitmaker()
         else:
             if (self.generate_all and not self.parent.shipit_uuid) or self.generate_ci:
                 self.generate_gitlab_pipelines()

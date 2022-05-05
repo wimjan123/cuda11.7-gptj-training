@@ -16,6 +16,12 @@ from plumbum.cmd import rm  # type: ignore
 from beeprint import pp  # type: ignore
 
 
+class ShipitInvalidDataError(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return "Error: %s" % self.value
+
 class ShipitData:
     """Class to wrap shipit data."""
 
@@ -33,9 +39,15 @@ class ShipitData:
 
     push_repo_logged_in = ""
 
-    def __init__(self, shipit_uuid):
+    def __init__(self, shipit_uuid="", shipit_json=""):
         self.shipit_uuid = shipit_uuid
-        self.data = DotDict(self.get_shipit_global_json())
+        if shipit_uuid:
+            self.data = DotDict(self.get_shipit_global_json())
+        elif shipit_json:
+            data = json.loads(shipit_json)
+            self.data = DotDict(data)
+        if not self.data:
+            raise ShipitInvalidDataError("Attempt to initialize ShipitData class without data!")
 
     def get_shipit_funnel_json(self, distro, distro_version, arch):
         funnel_distro = distro
@@ -45,7 +57,7 @@ class ShipitData:
         modified_distro_version = distro_version.replace(".", "")
         modified_arch = self.arch.replace("_", "-")
         if modified_arch == "arm64":
-            log.debug(f"Converting arch '{arch}' into 'arm64' for container images")
+            log.debug(f"Converting arch '{arch}' into 'sbsa' for container images")
             modified_arch = "sbsa"
         shipit_distro = f"{funnel_distro}{modified_distro_version}"
         if "tegra" in self.data.product_name:
@@ -164,13 +176,8 @@ class ShipitData:
             log.debug(f"Setting key '{arch}' to 'ppc64le' for images")
             larch = "ppc64le"
         elif "arm64" in arch:
-            # There are three different names for arm64 at nvidia...
-            larch = "aarch64"
-            if not f"linux-{larch}" in self.data.targets:
-                larch = "sbsa"
-        #  elif any(f in arch for f in ["arm64", "aarch64"]):
-        #      log.debug(f"Setting key '{arch}' to 'sbsa' for images")
-        #      larch = "sbsa"
+            log.debug(f"Setting key '{arch}' to 'sbsa' for images")
+            larch = "sbsa"
         #  pp(self.data.targets)
         if not f"linux-{larch}" in self.data.targets:
             log.debug(f"'linux-{larch}' not found in shipit data!")
@@ -240,10 +247,6 @@ class ShipitData:
             }
         }
 
-        #  pp(self.data.targets)
-        #  pp(reldata)
-        #  log.debug(f"reldata: {pp(reldata)}")
-
         #
         # FIXME: find a better way to do this!
         #
@@ -263,7 +266,6 @@ class ShipitData:
         manifest = DotDict()
         for platform in nested_keys(reldata):
             log.info(f"Inspecting global.json platform: {platform}")
-            #  continue
             os = platform[0]
             self.arch = platform[1]
             distros = platform[2]
@@ -287,16 +289,6 @@ class ShipitData:
                     if not cudnn_json_path:
                         log.error("Argument `--cudnn-json-path` is not set!")
                         sys.exit(1)
-
-                #  print(platform)
-                #  continue
-                #  self.set_output_path(platform)
-
-                #  if delete and output_path.exists:
-                #      #  raise
-                #      log.warning(f"Removing path '{output_path}'")
-                #      rm["-rf", output_path]()
-                #  platform = f"{target}-{self.arch}"
 
                 if "tegra" in self.product_name:
                     platform = f"{platform}-cuda"
@@ -332,7 +324,6 @@ class ShipitData:
                         name = artdir.name
                         if "arm64" in name:
                             if "-dev_" in name:
-                                #  cudnn_comp["cudnn8"]["dev"]["version"] = artf["version"]
                                 cudnn_comp["cudnn8"]["dev"]["source"] = artpath
                                 cudnn_comp["cudnn8"]["dev"]["md5sum"] = artf.md5
                             else:
@@ -347,10 +338,6 @@ class ShipitData:
                 template_path = "templates/ubuntu"
                 if "ubuntu" not in self.distro:
                     template_path = "templates/redhat"
-                #  if all(x in self.product_name for x in ["tegra", "10-2"]):
-                #      template_path = "templates/ubuntu/legacy"
-                #  if not "x86_64" in self.arch:
-                #      image_name = f"gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
                 base_image = f"{self.distro}:{self.distro_version}"
                 if "ubi" in self.distro:
                     base_image = f"registry.access.redhat.com/ubi{self.distro_version}/ubi:latest"
@@ -409,8 +396,6 @@ class ShipitData:
         self.shipit_manifest[release_key] = manifest
         log.info(f"Writing shipit manifest: {self.output_manifest_path}")
         self.generate_shipit_manifest_from_manifest(self.shipit_manifest)
-        #  pp(self.shipit_manifest)
-        #  sys.exit(1)
 
     def generate_shipit_manifest_from_manifest(self, manifest):
         yaml_str = yaml.dump(manifest)

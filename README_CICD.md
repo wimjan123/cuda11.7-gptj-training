@@ -26,6 +26,14 @@ Once in the virtual environment, run the script with:
 python manager.py
 ```
 
+### Running the test suite
+
+With pytest installed and pyenv activated, run pytest with the following command to run the test suite.
+
+```
+python -m pytest test_manager --verbose
+```
+
 # Gitlab Pipelines
 
 ## Triggering pipelines
