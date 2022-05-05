@@ -1061,32 +1061,6 @@ class ManagerGenerate(Manager):
                     output_path=pathlib.Path(f"{self.output_path}/{base_image}/{pkg}"),
                 )
 
-    # CUDA 8 uses a deprecated image layout
-    def generate_containerscripts_cuda_8(self):
-        for img in ["devel", "runtime"]:
-            base = img
-            if img == "runtime":
-                # for CUDA 8, runtime == base
-                base = "base"
-            temp_path = self.cuda["template_path"]
-            log.debug("temp_path: %s, output_path: %s", temp_path, self.output_path)
-            self.output_template(
-                input_template=pathlib.Path(f"{temp_path}/{base}/Dockerfile.jinja"),
-                output_path=pathlib.Path(f"{self.output_path}/{img}"),
-            )
-            # We need files in the base directory
-            for filename in pathlib.Path(f"{temp_path}/{base}").glob("*"):
-                if "Dockerfile" in filename.name:
-                    continue
-                log.debug("Checking %s", filename)
-                if ".jinja" in filename.name:
-                    self.output_template(filename, f"{self.output_path}/{img}")
-                else:
-                    log.info(f"Copying {filename} to {self.output_path}/{img}")
-                    shutil.copy(filename, f"{self.output_path}/{img}")
-            # cudnn image
-            self.generate_cudnn_scripts(img, f"{temp_path}/cudnn/Dockerfile.jinja")
-
     def generate_containerscripts(self):
         for img in ["base", "devel", "runtime"]:
             self.cuda["target"] = img
@@ -1538,13 +1512,8 @@ class ManagerGenerate(Manager):
         #  if not self.output_manifest_path:
         self.set_output_path(f"{self.distro}{self.distro_version}")
         log.debug(f"self.output_manifest_path: {self.output_manifest_path}")
-
         self.prepare_context()
-
-        if self.cuda_version == "8.0":
-            self.generate_containerscripts_cuda_8()
-        else:
-            self.generate_containerscripts()
+        self.generate_containerscripts()
 
     def main(self):
         if self.parent.shipit_uuid:
