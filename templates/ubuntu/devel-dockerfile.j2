@@ -18,14 +18,14 @@ ENV NV_LIBNPP_DEV_PACKAGE libnpp-dev-{{ cuda.version.major }}-{{ cuda.version.mi
 ENV NV_LIBCUBLAS_DEV_VERSION {{ cuda.x86_64.components.libcublas_dev.version }}
 ENV NV_LIBCUBLAS_DEV_PACKAGE_NAME libcublas-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}
 ENV NV_LIBCUBLAS_DEV_PACKAGE ${NV_LIBCUBLAS_DEV_PACKAGE_NAME}=${NV_LIBCUBLAS_DEV_VERSION}
-
 {% if "nvprof" in cuda.x86_64.components %}
     {% set has_nvprof_package = true %}
+
 ENV NV_NVPROF_VERSION {{ cuda.x86_64.components.nvprof.version }}
 {% endif %}
-
 {% if "libnccl2" in cuda.x86_64.components and cuda.x86_64.components.libnccl2 and "libnccl2_dev" in cuda.x86_64.components and cuda.x86_64.components.libnccl2_dev %}
     {% set has_libnccl_dev_package = true %}
+
 ENV NV_LIBNCCL_DEV_PACKAGE_NAME libnccl-dev
 ENV NV_LIBNCCL_DEV_PACKAGE_VERSION {{ cuda.x86_64.components.libnccl2_dev.version }}
 ENV NCCL_VERSION {{ cuda.x86_64.components.libnccl2_dev.version }}
@@ -64,13 +64,14 @@ ENV NV_LIBCUBLAS_DEV_PACKAGE_NAME libcublas-dev-{{ cuda.version.major }}-{{ cuda
 {% endif %}
 ENV NV_LIBCUBLAS_DEV_VERSION {{ cuda.arm64.components.libcublas_dev.version }}
 ENV NV_LIBCUBLAS_DEV_PACKAGE ${NV_LIBCUBLAS_DEV_PACKAGE_NAME}=${NV_LIBCUBLAS_DEV_VERSION}
-
 {% if "nvprof" in cuda.arm64.components %}
     {% set has_nvprof_package = true %}
+
 ENV NV_NVPROF_VERSION {{ cuda.arm64.components.nvprof.version }}
 {% endif %}
 {% if "libnccl2" in cuda.arm64.components and cuda.arm64.components.libnccl2 and "libnccl2_dev" in cuda.arm64.components and cuda.arm64.components.libnccl2_dev %}
     {% set has_libnccl_dev_package = true %}
+
 ENV NV_LIBNCCL_DEV_PACKAGE_NAME libnccl-dev
 ENV NV_LIBNCCL_DEV_PACKAGE_VERSION {{ cuda.arm64.components.libnccl2_dev.version }}
 ENV NCCL_VERSION {{ cuda.arm64.components.libnccl2_dev.version }}
@@ -101,13 +102,14 @@ ENV NV_LIBNPP_DEV_PACKAGE libnpp-dev-{{ cuda.version.major }}-{{ cuda.version.mi
 ENV NV_LIBCUBLAS_DEV_VERSION {{ cuda.ppc64le.components.libcublas_dev.version }}
 ENV NV_LIBCUBLAS_DEV_PACKAGE_NAME libcublas-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}
 ENV NV_LIBCUBLAS_DEV_PACKAGE ${NV_LIBCUBLAS_DEV_PACKAGE_NAME}=${NV_LIBCUBLAS_DEV_VERSION}
-
 {% if "nvprof" in cuda.ppc64le.components %}
     {% set has_nvprof_package = true %}
+
 ENV NV_NVPROF_VERSION {{ cuda.ppc64le.components.nvprof.version }}
 {% endif %}
 {% if "libnccl2" in cuda.ppc64le.components and cuda.ppc64le.components.libnccl2 and "libnccl2_dev" in cuda.ppc64le.components and cuda.ppc64le.components.libnccl2_dev %}
     {% set has_libnccl_dev_package = true %}
+
 ENV NV_LIBNCCL_DEV_PACKAGE_NAME libnccl-dev
 ENV NV_LIBNCCL_DEV_PACKAGE_VERSION {{ cuda.ppc64le.components.libnccl2_dev.version }}
 ENV NCCL_VERSION {{ cuda.ppc64le.components.libnccl2_dev.version }}
@@ -121,7 +123,7 @@ ENV NV_CUDA_PROFILER_API_VERSION {{ cuda.ppc64le.components.cuda_profiler_api.ve
 ENV NV_CUDA_PROFILER_API_PACKAGE cuda-profiler-api-{{ cuda.version.major }}-{{ cuda.version.minor }}=${NV_CUDA_PROFILER_API_VERSION}
 {% endif -%}
 
-{% endif -%}
+{% endif %}
 
 FROM base-${TARGETARCH}
 

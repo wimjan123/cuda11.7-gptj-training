@@ -29,5 +29,5 @@ pytest = ">3.6"
 
 [tool.pytest.ini_options]
 filterwarnings = [
-    "ignore:.*U.*mode is deprecated:DeprecationWarning",
+    'ignore:.*distutils.*:DeprecationWarning',
 ]

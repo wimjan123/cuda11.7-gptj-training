@@ -14,11 +14,7 @@ ENV NV_CUDA_COMPAT_PACKAGE cuda-compat-{{ cuda.version.major }}-{{ cuda.version.
 {% if "arm64" in cuda %}
 FROM base as base-arm64
 
-{% if cuda.flavor == "l4t" %}
-ENV NVARCH arm64
-{% else %}
 ENV NVARCH sbsa
-{% endif %}
 {% if "requires" in cuda.arm64 %}
 ENV NVIDIA_REQUIRE_CUDA "{{ cuda.arm64.requires }}"
 {% endif %}
@@ -50,7 +46,12 @@ ENV NVIDIA_REQUIRE_JETPACK_HOST_MOUNTS ${NVIDIA_REQUIRE_JETPACK_HOST_MOUNTS}
 {% endif -%}
 
 RUN apt-get update &&{% if cuda.flavor == "l4t" %} apt upgrade -y &&{% endif %} apt-get install -y --no-install-recommends \
-{% if cuda.os.version != "16.04" or cuda.flavor == "l4t" %}
+{% if cuda.os.version == "22.04" %}
+    gnupg2 curl ca-certificates && \
+    curl -fsSLO https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb && \
+    dpkg -i cuda-keyring_1.0-1_all.deb && \
+    apt-get purge --autoremove -y curl \
+{% elif cuda.os.version != "16.04" or cuda.flavor == "l4t" %}
     gnupg2 curl ca-certificates && \
     curl -fsSL {{ cuda.repo_url }}/${NVARCH}/3bf863cc.pub | apt-key add - && \
     echo "deb {{ cuda.repo_url }}/${NVARCH} /" > /etc/apt/sources.list.d/cuda.list && \

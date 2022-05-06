@@ -15,6 +15,8 @@ ENV NV_LIBCUBLAS_DEV_VERSION 11.4.1.1026-1
 ENV NV_LIBCUBLAS_DEV_PACKAGE_NAME libcublas-dev-11-2
 ENV NV_LIBCUBLAS_DEV_PACKAGE ${NV_LIBCUBLAS_DEV_PACKAGE_NAME}=${NV_LIBCUBLAS_DEV_VERSION}
 
+ENV NV_NVPROF_VERSION 11.2.135-1
+
 FROM base-${TARGETARCH}
 
 ARG TARGETARCH
@@ -27,6 +29,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-minimal-build-11-2=${NV_CUDA_LIB_VERSION} \
     cuda-libraries-dev-11-2=${NV_CUDA_LIB_VERSION} \
     cuda-nvml-dev-11-2=${NV_NVML_DEV_VERSION} \
+    cuda-nvprof-11-2=${NV_NVPROF_VERSION} \
     ${NV_LIBNPP_DEV_PACKAGE} \
     libcusparse-dev-11-2=${NV_LIBCUSPARSE_DEV_VERSION} \
     ${NV_LIBCUBLAS_DEV_PACKAGE} \
