@@ -110,7 +110,7 @@ prepare:
     - 'echo "PLATFORM_ARG: ${PLATFORM_ARG}"'
     # COPY the NGC DEEP LEARNING CONTAINER LICENSE
     - run_cmd cp -v ./NGC-DL-CONTAINER-LICENSE "${DIST_BASE_PATH}/runtime"
-    - run_cmd retry 3 10 docker buildx create --use ${PLATFORM_ARG} --driver-opt image=moby/buildkit:v0.8.1 --name cuda
+    - run_cmd retry 3 10 docker buildx create --use ${PLATFORM_ARG} --driver-opt image=moby/buildkit:v0.10.3 --name cuda
     - run_cmd retry 3 10 docker buildx build --pull --push ${PLATFORM_ARG} -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}" ${TAG_RUNTIME} "${DIST_BASE_PATH}/runtime"
                           --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain
                           --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}
@@ -168,7 +168,7 @@ prepare:
       # COPY the NGC DEEP LEARNING CONTAINER LICENSE
       run_cmd cp -v ./NGC-DL-CONTAINER-LICENSE "${DIST_BASE_PATH}/base"
       # --driver-opt flag is needed to workaround https://github.com/docker/buildx/issues/386
-      if ! run_cmd retry 3 10 docker buildx create --use ${PLATFORM_ARG} --driver-opt image=moby/buildkit:v0.8.1 --name cuda; then
+      if ! run_cmd retry 3 10 docker buildx create --use ${PLATFORM_ARG} --driver-opt image=moby/buildkit:v0.10.3 --name cuda; then
           echo "Failed creating buildx instance!"
           # kitmaker_webhook_failed
           exit 1
@@ -245,7 +245,7 @@ prepare:
       fi
       export PLATFORM_ARG=`printf '%s ' '--platform'; for var in $(echo $ARCHES | sed "s/,/ /g"); do printf 'linux/%s,' "$var"; done | sed 's/,*$//g'`
       echo "PLATFORM_ARG: ${PLATFORM_ARG}"
-      if ! run_cmd retry 3 10 docker buildx create --use ${PLATFORM_ARG} --driver-opt image=moby/buildkit:v0.8.1 --name cuda; then
+      if ! run_cmd retry 3 10 docker buildx create --use ${PLATFORM_ARG} --driver-opt image=moby/buildkit:v0.10.3 --name cuda; then
           echo "Failed creating buildx instance!"
           # kitmaker_webhook_failed
           exit 1
@@ -411,14 +411,13 @@ trigger:
   rules:
     - if: '$TRIGGER_OVERRIDE'
 
-
 # Need to pass these from the trigger
 .kitmaker_ubuntu22_04_variables: &kitmaker_ubuntu22_04_variables
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
   OS: "ubuntu22.04"
   OS_NAME: "ubuntu"
   OS_VERSION: "22.04"
-  ARCHES: "x86_64, arm64"
+  ARCHES: ""
   # CI_DEBUG_TRACE: "true"
 
 .kitmaker_ubuntu22_04_only: &kitmaker_ubuntu22_04_only
@@ -454,7 +453,7 @@ kitmaker_ubuntu22.04_deploy:
   OS: "ubuntu20.04"
   OS_NAME: "ubuntu"
   OS_VERSION: "20.04"
-  ARCHES: "x86_64, arm64"
+  ARCHES: ""
   # CI_DEBUG_TRACE: "true"
 
 .kitmaker_ubuntu20_04_only: &kitmaker_ubuntu20_04_only
@@ -490,7 +489,7 @@ kitmaker_ubuntu20.04_deploy:
   OS: "ubuntu18.04"
   OS_NAME: "ubuntu"
   OS_VERSION: "18.04"
-  ARCHES: "x86_64"
+  ARCHES: ""
   # CI_DEBUG_TRACE: "true"
 
 .kitmaker_ubuntu18_04_only: &kitmaker_ubuntu18_04_only
@@ -526,7 +525,7 @@ kitmaker_ubuntu18.04_deploy:
   OS: "centos7"
   OS_NAME: "centos"
   OS_VERSION: "7"
-  ARCHES: "x86_64"
+  ARCHES: ""
   # CI_DEBUG_TRACE: "true"
 
 .kitmaker_centos7_only: &kitmaker_centos7_only
@@ -557,12 +556,48 @@ kitmaker_centos7_deploy:
 
 
 # Need to pass these from the trigger
+.kitmaker_ubi9_variables: &kitmaker_ubi9_variables
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
+  OS: "ubi9"
+  OS_NAME: "ubi"
+  OS_VERSION: "9"
+  ARCHES: ""
+  # CI_DEBUG_TRACE: "true"
+
+.kitmaker_ubi9_only: &kitmaker_ubi9_only
+  image: gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
+  variables:
+    <<: *kitmaker_ubi9_variables
+    TAG_MANIFEST_PATH: "tag_manifest_ubi9"
+  rules:
+    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "default"'
+    - if: $UBI9 == "true"
+
+kitmaker_ubi9_base:
+  <<: *cuda_base_definition
+  <<: *kitmaker_ubi9_only
+  # Need to build container images on a multi-arch capable machine
+  <<: *tags_definition_multiarch
+
+kitmaker_ubi9_deploy:
+  <<: *deploy_definition
+  <<: *kitmaker_ubi9_only
+  <<: *tags_definition
+  needs:
+    - job: kitmaker_ubi9_base
+      artifacts: true
+  artifacts:
+    paths:
+      - tag_manifest_ubi9
+
+
+# Need to pass these from the trigger
 .kitmaker_ubi8_variables: &kitmaker_ubi8_variables
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
   OS: "ubi8"
   OS_NAME: "ubi"
   OS_VERSION: "8"
-  ARCHES: "x86_64, arm64, ppc64le"
+  ARCHES: ""
   # CI_DEBUG_TRACE: "true"
 
 .kitmaker_ubi8_only: &kitmaker_ubi8_only
@@ -598,7 +633,7 @@ kitmaker_ubi8_deploy:
   OS: "ubi7"
   OS_NAME: "ubi"
   OS_VERSION: "7"
-  ARCHES: "x86_64"
+  ARCHES: ""
   # CI_DEBUG_TRACE: "true"
 
 .kitmaker_ubi7_only: &kitmaker_ubi7_only
@@ -629,74 +664,114 @@ kitmaker_ubi7_deploy:
 
 
 # Need to pass these from the trigger
-.kitmaker_l4t_cuda_l4t_variables: &kitmaker_l4t_cuda_l4t_variables
-  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/l4t-cuda"
-  OS: "l4t-cuda"
-  OS_NAME: "l4t-cuda"
-  OS_VERSION: ""
-  ARCHES: "arm64"
-  FLAVOR: "l4t"
+.kitmaker_centos7_variables: &kitmaker_centos7_variables
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
+  OS: "centos7"
+  OS_NAME: "centos"
+  OS_VERSION: "7"
+  ARCHES: ""
   # CI_DEBUG_TRACE: "true"
 
-.kitmaker_l4t_cuda_l4t_only: &kitmaker_l4t_cuda_l4t_only
+.kitmaker_centos7_only: &kitmaker_centos7_only
   image: gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
   variables:
-    <<: *kitmaker_l4t_cuda_l4t_variables
-    TAG_MANIFEST_PATH: "tag_manifest_l4t_cuda_l4t"
+    <<: *kitmaker_centos7_variables
+    TAG_MANIFEST_PATH: "tag_manifest_centos7"
   rules:
-    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "l4t"'
-    - if: $L4T_CUDA_L4T == "true"
+    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "default"'
+    - if: $CENTOS7 == "true"
 
-kitmaker_l4t-cuda_l4t_base:
+kitmaker_centos7_base:
   <<: *cuda_base_definition
-  <<: *kitmaker_l4t_cuda_l4t_only
+  <<: *kitmaker_centos7_only
   # Need to build container images on a multi-arch capable machine
   <<: *tags_definition_multiarch
 
-# L4T only, will be removed eventually!
-kitmaker_l4t-cuda_l4t_cudnn:
-  <<: *cudnn_definition
-  <<: *kitmaker_l4t_cuda_l4t_only
-  # Need to build container images on a multi-arch capable machine
-  <<: *tags_definition_multiarch
-  artifacts:
-    reports:
-      dotenv: cudnn_tags.env
-
-kitmaker_l4t-cuda_l4t_deploy:
+kitmaker_centos7_deploy:
   <<: *deploy_definition
-  <<: *kitmaker_l4t_cuda_l4t_only
+  <<: *kitmaker_centos7_only
   <<: *tags_definition
   needs:
-    - job: kitmaker_l4t-cuda_l4t_base
+    - job: kitmaker_centos7_base
       artifacts: true
-    - job: kitmaker_l4t-cuda_l4t_cudnn
-      optional: true
   artifacts:
     paths:
-      - tag_manifest_l4t_cuda_l4t
+      - tag_manifest_centos7
 
-kitmaker_l4t_success:
-  stage: cleanup_success
-  image: gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
-  <<: *tags_definition
-  rules:
-    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "l4t"'
-      when: on_success
-  script:
-    - |
-      kitmaker_cleanup_webhook_success
 
-kitmaker_l4t_failure:
-  stage: cleanup_failure
+# Need to pass these from the trigger
+.kitmaker_ubuntu18_04_jp4_variables: &kitmaker_ubuntu18_04_jp4_variables
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/l4t-cuda"
+  OS: "ubuntu18.04"
+  OS_NAME: "ubuntu"
+  OS_VERSION: "18.04"
+  ARCHES: ""
+  FLAVOR: "jp4"
+  # CI_DEBUG_TRACE: "true"
+
+.kitmaker_ubuntu18_04_jp4_only: &kitmaker_ubuntu18_04_jp4_only
   image: gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
-  <<: *tags_definition
+  variables:
+    <<: *kitmaker_ubuntu18_04_jp4_variables
+    TAG_MANIFEST_PATH: "tag_manifest_ubuntu18_04_jp4"
   rules:
-    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "l4t"'
-      when: on_failure
-  script:
-    - |
-      kitmaker_webhook_failed
+    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "default"'
+    - if: $UBUNTU18_04_JP4 == "true"
+
+kitmaker_ubuntu18.04_jp4_base:
+  <<: *cuda_base_definition
+  <<: *kitmaker_ubuntu18_04_jp4_only
+  # Need to build container images on a multi-arch capable machine
+  <<: *tags_definition_multiarch
+
+kitmaker_ubuntu18.04_jp4_deploy:
+  <<: *deploy_definition
+  <<: *kitmaker_ubuntu18_04_jp4_only
+  <<: *tags_definition
+  needs:
+    - job: kitmaker_ubuntu18.04_jp4_base
+      artifacts: true
+  artifacts:
+    paths:
+      - tag_manifest_ubuntu18_04_jp4
+
+
+# Need to pass these from the trigger
+.kitmaker_ubuntu20_04_jp5_variables: &kitmaker_ubuntu20_04_jp5_variables
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/l4t-cuda"
+  OS: "ubuntu20.04"
+  OS_NAME: "ubuntu"
+  OS_VERSION: "20.04"
+  ARCHES: ""
+  FLAVOR: "jp5"
+  # CI_DEBUG_TRACE: "true"
+
+.kitmaker_ubuntu20_04_jp5_only: &kitmaker_ubuntu20_04_jp5_only
+  image: gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
+  variables:
+    <<: *kitmaker_ubuntu20_04_jp5_variables
+    TAG_MANIFEST_PATH: "tag_manifest_ubuntu20_04_jp5"
+  rules:
+    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "default"'
+    - if: $UBUNTU20_04_JP5 == "true"
+
+kitmaker_ubuntu20.04_jp5_base:
+  <<: *cuda_base_definition
+  <<: *kitmaker_ubuntu20_04_jp5_only
+  # Need to build container images on a multi-arch capable machine
+  <<: *tags_definition_multiarch
+
+kitmaker_ubuntu20.04_jp5_deploy:
+  <<: *deploy_definition
+  <<: *kitmaker_ubuntu20_04_jp5_only
+  <<: *tags_definition
+  needs:
+    - job: kitmaker_ubuntu20.04_jp5_base
+      artifacts: true
+  artifacts:
+    paths:
+      - tag_manifest_ubuntu20_04_jp5
+
 
 
 kitmaker_success:
@@ -707,13 +782,6 @@ kitmaker_success:
     - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "default"'
       when: on_success
   needs:
-    - job: kitmaker_ubuntu22.04_deploy
-      artifacts: true
-    - job: kitmaker_ubuntu20.04_deploy
-    - job: kitmaker_ubuntu18.04_deploy
-    - job: kitmaker_centos7_deploy
-    - job: kitmaker_ubi8_deploy
-    - job: kitmaker_ubi7_deploy
   script:
     - |
       kitmaker_cleanup_webhook_success

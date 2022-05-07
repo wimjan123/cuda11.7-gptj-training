@@ -19,8 +19,18 @@ from beeprint import pp  # type: ignore
 class ShipitInvalidDataError(Exception):
     def __init__(self, value):
         self.value = value
+
     def __str__(self):
         return "Error: %s" % self.value
+
+
+# class ShipitUnknownPackageFormatForDistro(Exception):
+#     def __init__(self, value):
+#         self.value = value
+#
+#     def __str__(self):
+#         return "Error: %s" % self.value
+
 
 class ShipitData:
     """Class to wrap shipit data."""
@@ -47,7 +57,9 @@ class ShipitData:
             data = json.loads(shipit_json)
             self.data = DotDict(data)
         if not self.data:
-            raise ShipitInvalidDataError("Attempt to initialize ShipitData class without data!")
+            raise ShipitInvalidDataError(
+                "Attempt to initialize ShipitData class without data!"
+            )
 
     def get_shipit_funnel_json(self, distro, distro_version, arch):
         funnel_distro = distro
@@ -134,7 +146,10 @@ class ShipitData:
             pkg_rel = self.pkg_rel_from_package_name(name, version)
             if not pkg_rel:
                 raise Exception(
-                    f"Could not get package release version from package name '{name}' using version '{version}'. Perhaps there is an issue in the RC data?"
+                    (
+                        f"Could not get package release version from package name "
+                        "'{name}' using version '{version}'. Perhaps there is an issue in the RC data?"
+                    )
                 )
 
             pkg_no_prefix = pkg[len("cuda_") :] if pkg.startswith("cuda_") else pkg
@@ -143,9 +158,7 @@ class ShipitData:
             if "_devel" in pkg_no_prefix:
                 pkg_no_prefix = pkg_no_prefix.replace("_devel", "_dev")
 
-            log.debug(
-                f"component: {pkg_no_prefix} version: {version} pkg_rel: {pkg_rel}"
-            )
+            log.debug(f"component: {pkg_no_prefix} version: {version} pkg_rel: {pkg_rel}")
 
             components.update({f"{pkg_no_prefix}": {"version": f"{version}-{pkg_rel}"}})
 
@@ -154,18 +167,21 @@ class ShipitData:
     def supported_distros(self):
         """Returns a set of supported distro names for a shipit manifest."""
         distros = set()
-        #  pp(self.data)
-
-        # FIXME: hacky WAR, need a better way to define container "flavors"
         if "tegra" in self.data.product_name:
             log.debug("TEGRA DETECTED")
             distros.add("ubuntu1804")
             return distros
-
         for platform in self.data.targets.items():
+            # print(platform[0])
+            # print(platform[1])
+            # if not any(
+            #     x.match_shipit_arch_to_container_arch(platform[0])
+            #     for x in SUPPORTED_DISTRO_MATRIX
+            # ):
+            #     continue
             for os in platform[1]:
-                if any(x in os for x in SUPPORTED_DISTRO_LIST):
-                    distros.add(os)
+                if supported_platforms.is_supported(os):
+                    distros.update(supported_platforms.translated_name(os))
         return distros
 
     def supported_distros_by_arch(self, arch):
@@ -183,14 +199,8 @@ class ShipitData:
             log.debug(f"'linux-{larch}' not found in shipit data!")
             return
         for distro in self.data.targets[f"linux-{larch}"]:
-            if "wsl" in distro:
-                continue
-            for sdistro in SUPPORTED_DISTRO_LIST:
-                if sdistro in ["ubi", "centos"] and "rhel" in distro:
-                    sdistros.add("ubi" + distro[len(distro) - 1 :])
-                    sdistros.add("centos" + distro[len(distro) - 1 :])
-                elif sdistro in distro:
-                    sdistros.add(distro)
+            if supported_platforms.is_supported(distro):
+                sdistros.update(supported_platforms.translated_name(distro))
         return sdistros
 
     def kitpick_repo_url(self):
@@ -198,7 +208,10 @@ class ShipitData:
         if any(x in repo_distro for x in ["ubi", "centos"]):
             repo_distro = "rhel"
         clean_distro = "{}{}".format(repo_distro, self.distro_version.replace(".", ""))
-        return f"http://cuda-internal.nvidia.com/release-candidates/kitpicks/{self.product_name}/{self.release_label}/{self.candidate_number}/repos/{clean_distro}"
+        return (
+            f"http://cuda-internal.nvidia.com/release-candidates/"
+            "kitpicks/{self.product_name}/{self.release_label}/{self.candidate_number}/repos/{clean_distro}"
+        )
 
     def generate_shipit_manifest(self, output_path, cudnn_json_path=None):
         # 22:31 Tue Jul 13 2021 FIXME: (jesusa) this function is way too long to be considered good practice in python
@@ -271,7 +284,10 @@ class ShipitData:
             distros = platform[2]
             if "tegra" in self.product_name and not "arm64" in self.arch:
                 log.warning(
-                    f"Skipping platform! '{self.arch}' is not supported for L4T Cuda Container Images (yet)"
+                    (
+                        f"Skipping platform! '{self.arch}' "
+                        "is not supported for L4T Cuda Container Images (yet)"
+                    )
                 )
                 continue
 
@@ -340,7 +356,9 @@ class ShipitData:
                     template_path = "templates/redhat"
                 base_image = f"{self.distro}:{self.distro_version}"
                 if "ubi" in self.distro:
-                    base_image = f"registry.access.redhat.com/ubi{self.distro_version}/ubi:latest"
+                    base_image = (
+                        f"registry.access.redhat.com/ubi{self.distro_version}/ubi:latest"
+                    )
                 requires = ""
 
                 key = "push_repos"
@@ -360,9 +378,7 @@ class ShipitData:
                     if self.release_label == "10.2.460":
                         self.l4t_base_image = f"{L4T_BASE_IMAGE_NAME}:r32.7.1"
                     elif self.release_label == "11.4.14":
-                        self.l4t_base_image = (
-                            f"{L4T_BASE_IMAGE_NAME}:r34.1"
-                        )
+                        self.l4t_base_image = f"{L4T_BASE_IMAGE_NAME}:r34.1"
                     elif not self.l4t_base_image:
                         self.l4t_base_image = utils.latest_l4t_base_image()
                     base_image = self.l4t_base_image
@@ -389,7 +405,10 @@ class ShipitData:
 
         if not manifest:
             log.warning(
-                "No manifest to write after parsing Shipit data. Unsupported kitpick as it doesn't contain anything useful for Cuda Image!"
+                (
+                    "No manifest to write after parsing Shipit data. "
+                    "Unsupported kitpick as it doesn't contain anything useful for Cuda Image!"
+                )
             )
             sys.exit(155)
 

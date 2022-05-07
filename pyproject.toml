@@ -31,3 +31,6 @@ pytest = ">3.6"
 filterwarnings = [
     'ignore:.*distutils.*:DeprecationWarning',
 ]
+
+[tool.black]
+line-length = 90

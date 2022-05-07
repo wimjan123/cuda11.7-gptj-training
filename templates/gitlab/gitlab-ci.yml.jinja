@@ -114,7 +114,7 @@ prepare:
     - 'echo "PLATFORM_ARG: ${PLATFORM_ARG}"'
     # COPY the NGC DEEP LEARNING CONTAINER LICENSE
     - run_cmd cp -v ./NGC-DL-CONTAINER-LICENSE "${DIST_BASE_PATH}/runtime"
-    - run_cmd retry 3 10 docker buildx create --use ${PLATFORM_ARG} --driver-opt image=moby/buildkit:v0.8.1 --name cuda
+    - run_cmd retry 3 10 docker buildx create --use ${PLATFORM_ARG} --driver-opt image=moby/buildkit:{{ cuda.moby_buildkit_version }} --name cuda
     - run_cmd retry 3 10 docker buildx build --pull --push ${PLATFORM_ARG} -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}" ${TAG_RUNTIME} "${DIST_BASE_PATH}/runtime"
                           --build-arg BUILDKIT_INLINE_CACHE=1 --progress plain
                           --cache-from=type=registry,ref=${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}
@@ -172,7 +172,7 @@ prepare:
       # COPY the NGC DEEP LEARNING CONTAINER LICENSE
       run_cmd cp -v ./NGC-DL-CONTAINER-LICENSE "${DIST_BASE_PATH}/base"
       # --driver-opt flag is needed to workaround https://github.com/docker/buildx/issues/386
-      if ! run_cmd retry 3 10 docker buildx create --use ${PLATFORM_ARG} --driver-opt image=moby/buildkit:v0.8.1 --name cuda; then
+      if ! run_cmd retry 3 10 docker buildx create --use ${PLATFORM_ARG} --driver-opt image=moby/buildkit:{{ cuda.moby_buildkit_version }} --name cuda; then
           echo "Failed creating buildx instance!"
           # kitmaker_webhook_failed
           exit 1
@@ -249,7 +249,7 @@ prepare:
       fi
       export PLATFORM_ARG=`printf '%s ' '--platform'; for var in $(echo $ARCHES | sed "s/,/ /g"); do printf 'linux/%s,' "$var"; done | sed 's/,*$//g'`
       echo "PLATFORM_ARG: ${PLATFORM_ARG}"
-      if ! run_cmd retry 3 10 docker buildx create --use ${PLATFORM_ARG} --driver-opt image=moby/buildkit:v0.8.1 --name cuda; then
+      if ! run_cmd retry 3 10 docker buildx create --use ${PLATFORM_ARG} --driver-opt image=moby/buildkit:{{ cuda.moby_buildkit_version }} --name cuda; then
           echo "Failed creating buildx instance!"
           # kitmaker_webhook_failed
           exit 1
@@ -419,38 +419,27 @@ trigger:
   rules:
     - if: '$TRIGGER_OVERRIDE'
 
-{# FIXME: Get this data from the global config #}
-{% set kitmaker_distro_data = [
-  {"distro": "ubuntu", "version": "22.04", "arches": ["x86_64", "arm64"]},
-  {"distro": "ubuntu", "version": "20.04", "arches": ["x86_64", "arm64"]},
-  {"distro": "ubuntu", "version": "18.04", "arches": ["x86_64"]},
-  {"distro": "centos", "version": "7", "arches": ["x86_64"]},
-  {"distro": "ubi", "version": "8", "arches": ["x86_64", "arm64", "ppc64le"]},
-  {"distro": "ubi", "version": "7", "arches": ["x86_64"]},
-  {"distro": "l4t-cuda", "version": "", "arches": ["arm64"], "flavor": "l4t", "image_name": "gitlab-master.nvidia.com:5005/cuda-installer/cuda/l4t-cuda"},
-] %}
-
-{% for data in  kitmaker_distro_data %}
+{% for data in cuda.supported_distro_matrix %}
     {% set flavor = "" %}
-    {% set kitmaker_distro = data["distro"] + data["version"] %}
-    {% set kitmaker_distro_clean = data["distro"] + data["version"].replace(".", "_") %}
-    {% if "flavor" in data %}
-        {% set flavor = data["flavor"] + "_" %}
-        {% set kitmaker_distro_clean = data["distro"].replace("-", "_") + data["version"].replace(".", "_") + "_" + data["flavor"] %}
+    {% set kitmaker_distro = data.distro + data.version %}
+    {% set kitmaker_distro_clean = data.distro + data.version.replace(".", "_") %}
+    {% if data.flavor %}
+        {% set flavor = data.flavor + "_" %}
+        {% set kitmaker_distro_clean = data.distro.replace("-", "_") + data.version.replace(".", "_") + "_" + data.flavor %}
     {% endif %}
 # Need to pass these from the trigger
 .kitmaker_{{ kitmaker_distro_clean }}_variables: &kitmaker_{{ kitmaker_distro_clean }}_variables
-    {% if "image_name" in data %}
-  IMAGE_NAME: "{{ data["image_name"] }}"
+    {% if data.image_name %}
+  IMAGE_NAME: "{{ data.image_name }}"
     {% else %}
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
     {% endif %}
-  OS: "{{ data["distro"] }}{{ data["version"] }}"
-  OS_NAME: "{{ data["distro"] }}"
-  OS_VERSION: "{{ data["version"] }}"
-  ARCHES: "{{ data["arches"] | join(", ") }}"
-    {% if "flavor" in data %}
-  FLAVOR: "{{ data["flavor"] }}"
+  OS: "{{ data.distro }}{{ data.version }}"
+  OS_NAME: "{{ data.distro }}"
+  OS_VERSION: "{{ data.version }}"
+  ARCHES: "{{ data.arches.common_arches_csv }}"
+    {% if data.flavor %}
+  FLAVOR: "{{ data.flavor }}"
     {% endif %}
   # CI_DEBUG_TRACE: "true"
 
@@ -472,7 +461,7 @@ kitmaker_{{ kitmaker_distro }}_{{ flavor }}base:
   <<: *kitmaker_{{ kitmaker_distro_clean }}_only
   # Need to build container images on a multi-arch capable machine
   <<: *tags_definition_multiarch
-{% if "flavor" in data and data["flavor"] == "l4t" %}
+{% if data.flavor == "l4t" %}
 
 # L4T only, will be removed eventually!
 kitmaker_{{ kitmaker_distro }}_{{ flavor }}cudnn:
@@ -492,7 +481,7 @@ kitmaker_{{ kitmaker_distro }}_{{ flavor }}deploy:
   needs:
     - job: kitmaker_{{ kitmaker_distro }}_{{ flavor }}base
       artifacts: true
-    {% if "flavor" in data and data["flavor"] == "l4t" %}
+    {% if data.flavor == "l4t" %}
     - job: kitmaker_{{ kitmaker_distro }}_{{ flavor }}cudnn
       optional: true
     {% endif %}
@@ -500,7 +489,7 @@ kitmaker_{{ kitmaker_distro }}_{{ flavor }}deploy:
     paths:
       - tag_manifest_{{ kitmaker_distro_clean }}
 
-{% if "flavor" in data and data["flavor"] == "l4t" %}
+{% if data.flavor == "l4t" %}
 kitmaker_{{ flavor }}success:
   stage: cleanup_success
   image: {{ gitlab_builder_image }}
@@ -535,12 +524,12 @@ kitmaker_success:
       when: on_success
   needs:
 {% set stahp = { 'flag': True } %}
-{% for data in  kitmaker_distro_data %}
-    {% if "flavor" in data %}
+{% for data in kitmaker_distro_data %}
+    {% if data.flavor %}
         {% continue %}
     {% endif %}
-  {% set kitmaker_distro = data["distro"] + data["version"] %}
-  {% set kitmaker_distro_clean = data["distro"] + data["version"].replace(".", "_") %}
+  {% set kitmaker_distro = data.distro + data.version %}
+  {% set kitmaker_distro_clean = data.distro + data.version.replace(".", "_") %}
     - job: kitmaker_{{ kitmaker_distro }}_{{ flavor }}deploy
     {% if stahp.flag %}
       artifacts: true
@@ -564,6 +553,7 @@ kitmaker_failure:
 
 {% for cuda_version in cuda if not cuda_version.startswith("manifest") %}
 {% for pipeline in cuda[cuda_version] %}
+{% if "distros" in cuda[cuda_version][pipeline] %}
 {% for distro in cuda[cuda_version][pipeline]["distros"] %}
 
 {% set cuda_version_yaml_safe = cuda[cuda_version][pipeline]["cuda_version_yaml_safe"] %}
@@ -713,5 +703,6 @@ kitmaker_failure:
   {% endfor %}
 
 {% endfor -%}
+{% endif %}
 {% endfor %}
 {% endfor %}
