@@ -24,6 +24,7 @@ LABEL maintainer "NVIDIA CORPORATION <sw-cuda-installer@nvidia.com>"
 
 LABEL com.nvidia.cudnn.version="${NV_CUDNN_VERSION}"
 
-RUN yum install -y ${NV_CUDNN_PACKAGE} \
+RUN yum install -y \
+    ${NV_CUDNN_PACKAGE} \
     && yum clean all \
     && rm -rf /var/cache/yum/*

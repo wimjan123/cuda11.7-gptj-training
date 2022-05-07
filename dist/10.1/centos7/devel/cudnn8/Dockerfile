@@ -4,14 +4,15 @@ FROM ${IMAGE_NAME}:10.1-devel-centos7 as base
 FROM base as base-amd64
 
 ENV NV_CUDNN_VERSION 8.0.5.39-1
-ENV NV_CUDNN_PACKAGE libcudnn8-devel-${NV_CUDNN_VERSION}.cuda10.1
-
+ENV NV_CUDNN_PACKAGE libcudnn8-${NV_CUDNN_VERSION}.cuda10.1
+ENV NV_CUDNN_PACKAGE_DEV libcudnn8-devel-${NV_CUDNN_VERSION}.cuda10.1
 
 FROM base as base-ppc64le
 
 ENV NV_CUDNN_VERSION 8.0.5.39-1
-ENV NV_CUDNN_PACKAGE libcudnn8-devel-${NV_CUDNN_VERSION}.cuda10.1
-
+ENV NV_CUDNN_VERSION 8.0.5.39-1
+ENV NV_CUDNN_PACKAGE libcudnn8-${NV_CUDNN_VERSION}.cuda10.1
+ENV NV_CUDNN_PACKAGE_DEV libcudnn8-devel-${NV_CUDNN_VERSION}.cuda10.1
 
 FROM base-${TARGETARCH}
 
@@ -24,6 +25,7 @@ LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
 
 RUN yum install -y \
     ${NV_CUDNN_PACKAGE} \
+    ${NV_CUDNN_PACKAGE_DEV} \
     && yum clean all \
     && rm -rf /var/cache/yum/*
 

@@ -4,12 +4,11 @@ FROM ${IMAGE_NAME}:10.1-devel-ubi8 as base
 FROM base as base-amd64
 
 ENV NV_CUDNN_VERSION 7.6.5.32
-ENV NV_CUDNN_PACKAGE libcudnn7-devel-${NV_CUDNN_VERSION}.cuda10.1
-
+ENV NV_CUDNN_PACKAGE libcudnn7-${NV_CUDNN_VERSION}.cuda10.1
+ENV NV_CUDNN_PACKAGE_DEV libcudnn7-devel-${NV_CUDNN_VERSION}.cuda10.1
 ENV NV_CUDNN_DL_SHA256SUM 7eaec8039a2c30ab0bc758d303588767693def6bf49b22485a2c00bf2e136cb3
 ENV NV_CUDNN_DL_BASENAME cudnn-10.1-linux-x64-v7.6.5.32.tgz
 ENV NV_CUDNN_DL_URL http://developer.download.nvidia.com/compute/redist/cudnn/v7.6.5/${NV_CUDNN_DL_BASENAME}
-
 
 FROM base-${TARGETARCH}
 

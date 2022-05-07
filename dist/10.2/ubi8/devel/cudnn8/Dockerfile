@@ -4,9 +4,8 @@ FROM ${IMAGE_NAME}:10.2-devel-ubi8 as base
 FROM base as base-amd64
 
 ENV NV_CUDNN_VERSION 8.4.0.27-1
-ENV NV_CUDNN_PACKAGE libcudnn8-devel-${NV_CUDNN_VERSION}.cuda10.2
-
-
+ENV NV_CUDNN_PACKAGE libcudnn8-${NV_CUDNN_VERSION}.cuda10.2
+ENV NV_CUDNN_PACKAGE_DEV libcudnn8-devel-${NV_CUDNN_VERSION}.cuda10.2
 
 FROM base-${TARGETARCH}
 
@@ -19,6 +18,7 @@ LABEL com.nvidia.cudnn.version="${CUDNN_VERSION}"
 
 RUN yum install -y \
     ${NV_CUDNN_PACKAGE} \
+    ${NV_CUDNN_PACKAGE_DEV} \
     && yum clean all \
     && rm -rf /var/cache/yum/*
 
