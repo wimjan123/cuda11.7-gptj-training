@@ -8,7 +8,7 @@ import pytest
 from manager import Manager, ManagerGenerate
 
 
-def test_check_nvprof():
+def test_check_arches():
     """Sanity checks for the generated Dockerfile templates for arm64
 
     The NVARCH environment variable should be set to "sbsa" and not "arm64" in the Dockerfiles.
