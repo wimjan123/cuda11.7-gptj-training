@@ -191,7 +191,7 @@ class SupportedPlatformsList:
         assert name
         return name
 
-    def by_distro(self, distro: str) -> TSupportedPlatform:
+    def by_distro(self: TSupportedPlatform, distro: str) -> TSupportedPlatform:
         """ """
         for x in self.list:
             if distro in x.shipit_distro_name():
