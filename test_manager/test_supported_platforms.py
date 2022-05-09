@@ -10,3 +10,13 @@ def test_arches_csv():
         supported_platforms.by_distro("ubi8").common_arches_csv()
         == "x86_64, arm64, ppc64le"
     )
+
+
+def test_all_architectures():
+    """ """
+    assert supported_platforms.all_architectures() == [
+        "arm64",
+        "jetson",
+        "ppc64le",
+        "x86_64",
+    ]

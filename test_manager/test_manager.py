@@ -19,6 +19,7 @@ def test_check_arches():
     # pp(rc)
     # assert rc == 0
     arches = []
+
     def get_arches(filepath):
         narches = []
         with open(filepath) as file:
@@ -38,6 +39,7 @@ def test_check_arches():
     assert any("x86_64" in arg for arg in arches)
     assert any("sbsa" in arg for arg in arches)
 
+
 def haz_nvprof(filepath):
     with open(filepath) as file:
         lines = file.readlines()
@@ -46,17 +48,24 @@ def haz_nvprof(filepath):
                 return True
     return False
 
+
 def get_dockefiles(distro):
     files = []
     for root, _, _ in os.walk("dist"):
-        if any(x in root for x in ["deprecated", "base", "runtime", "cudnn"]) or "devel" not in root:
+        if (
+            any(x in root for x in ["deprecated", "base", "runtime", "cudnn"])
+            or "devel" not in root
+        ):
             continue
         if "rhel" not in distro and distro not in root:
             continue
-        if "rhel" in distro and not any(d in root for d in ["ubi", "centos", "rockylinux"]):
+        if "rhel" in distro and not any(
+            d in root for d in ["ubi", "centos", "rockylinux"]
+        ):
             continue
         files.append(pathlib.Path(f"{root}/Dockerfile"))
     return files
+
 
 def test_check_nvprof_install_ubuntu():
     """Checks that ubuntu generated output contain nvprof"""
@@ -83,6 +92,7 @@ def test_check_nvprof_install_rhel():
     if failed:
         pytest.fail("nvprof is not being installed in some rhel-based docker files!")
 
+
 def get_cudnn_dockefiles(distro):
     files = []
     for root, _, _ in os.walk("dist"):
@@ -92,10 +102,13 @@ def get_cudnn_dockefiles(distro):
             continue
         if "rhel" not in distro and distro not in root:
             continue
-        if "rhel" in distro and not any(d in root for d in ["ubi", "centos", "rockylinux"]):
+        if "rhel" in distro and not any(
+            d in root for d in ["ubi", "centos", "rockylinux"]
+        ):
             continue
         files.append(pathlib.Path(f"{root}/Dockerfile"))
     return files
+
 
 def arches_in_dockerfile(df):
     count = 0
@@ -105,6 +118,7 @@ def arches_in_dockerfile(df):
             if "base as base-" in line:
                 count = count + 1
     return count
+
 
 def cudnn_package_check(distro):
     failed = False
@@ -122,9 +136,12 @@ def cudnn_package_check(distro):
                     ref_count = ref_count + 1
         if ref_count != num_arch * 2:
             failed = True
-            print(f"imbalance detected for cudnn: '{df}'...balance calculation is {ref_count} != {num_arch * 2}")
+            print(
+                f"imbalance detected for cudnn: '{df}'...balance calculation is {ref_count} != {num_arch * 2}"
+            )
     if failed:
         pytest.fail("cudnn explicit install imbalance detected!")
+
 
 def test_cudnn_devel_has_correct_runtime_package_rhel():
     """Checks the cudnn devel dockerfile for balanced cudnn packages.
@@ -140,6 +157,7 @@ def test_cudnn_devel_has_correct_runtime_package_rhel():
     Implemented for https://gitlab.com/nvidia/container-images/cuda/-/issues/160
     """
     cudnn_package_check("rhel")
+
 
 def test_cudnn_devel_has_correct_runtime_package_ubuntu():
     """Checks the cudnn devel dockerfile for balanced cudnn packages.

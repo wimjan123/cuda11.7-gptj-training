@@ -14,6 +14,7 @@ import re
 
 from plumbum import local
 from plumbum.cmd import find, cut, sort  # type: ignore
+import glom
 
 
 @retry(
@@ -189,3 +190,27 @@ def latest_l4t_base_image():
         if re.match("^r[\\d]*\\.", tag):
             tag_list2.append(tag)
     return f"{L4T_BASE_IMAGE_NAME}:{sorted(tag_list2, reverse=True)[0]}"
+
+
+def supported_distro_list_by_cuda_version(
+    manifest: dict[str, dict[str, str]], version: str
+) -> List[str]:
+    """ """
+    keys: dict[str, str] = manifest[f"cuda_v{version}"].keys()
+    theset = set()
+    for f in supported_platforms.list:
+        theset.add(f.full_name())
+    return list(sorted(theset))
+
+
+def supported_arch_list(
+    manifest: dict[str, dict[str, str]], distro: str, cuda_version: str
+) -> List[str]:
+    ls = []
+    for k in glom.glom(
+        manifest,
+        glom.Path(f"cuda_v{cuda_version}", distro),
+    ):
+        if k in supported_platforms.all_architectures():
+            ls.append(k)
+    return ls

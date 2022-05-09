@@ -44,6 +44,11 @@ class SupportedPlatform:
     image_name: str = ""
     common_name: str = ""
 
+    def full_name(self) -> str:
+        """ """
+        # print(self.distro + self.version)
+        return f"{self.distro}{self.version}"
+
     def shipit_distro_name(self) -> str:
         """ """
         # print(self.distro + self.version)
@@ -80,15 +85,17 @@ _package_repo_arch_repr = namedtuple("repo_name", ["deb", "rpm"])
 _arches = DotDict(
     {
         "arm64": SupportedArchitecture(
-            arch="sbsa",
+            arch="arm64",
             common_name="arm64",
             repo_name=_package_repo_arch_repr(deb="sbsa", rpm="sbsa"),
+            real_name="sbsa",
         ),
         "x86_64": SupportedArchitecture(
             arch="x86_64",
             # common name is really amd64, but only containers use that in our world
             common_name="x86_64",
             repo_name=_package_repo_arch_repr(deb="x86_64", rpm="x86_64"),
+            real_name="amd64",
         ),
         "ppc64le": SupportedArchitecture(
             arch="ppc64le",
@@ -196,6 +203,14 @@ class SupportedPlatformsList:
         for x in self.list:
             if distro in x.shipit_distro_name():
                 return x
+
+    def all_architectures(self) -> List[str]:
+        """ """
+        theset = set()
+        for x in self.list:
+            for y in x.arches:
+                theset.add(y.arch)
+        return list(sorted(theset))
 
 
 supported_platforms = SupportedPlatformsList()
