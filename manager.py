@@ -61,7 +61,7 @@ class Manager(cli.Application):
     PROGNAME: str = "manager.py"
     VERSION: str = "0.0.1"
 
-    manifest: dict[str, list[str]] = {}
+    manifest: dict[str, dict[str, str]] = {}
     ci = None
 
     manifest_path: Any = cli.SwitchAttr(
@@ -380,12 +380,10 @@ class ManagerTrigger(Manager):
 
             # Any or all of the variables passed to this function can be None
             for cvar in self.ci_pipelines(version, distro, distro_version):
-                #  log.debug(f"self.pipeline_name: {self.pipeline_name} cvar: {cvar}")
                 if self.pipeline_name and not "default" in self.pipeline_name:
                     pipeline_vars = self.ci_pipeline_by_name(self.pipeline_name)
                 else:
                     pipeline_vars = self.ci_pipelines(version, distro, distro_version)
-                #  sys.exit(1)
 
                 for cvar in pipeline_vars:
                     if not cvar in self.trigger_explicit:
@@ -501,7 +499,6 @@ class ManagerTrigger(Manager):
             self.kickoff_from_kitmaker()
         else:
             if self.populate_triggers():
-                # if self.trigger_all or self.trigger_explicit or self.rebuildb:
                 self.kickoff()
 
 
@@ -626,7 +623,6 @@ class ManagerContainerPush(Manager):
                 "Could not retrieve container image repo credentials. Environment not set?"
             )
             sys.exit(1)
-        #  sys.exit(1)
 
     @retry(
         (ImagePushRetry),
@@ -642,7 +638,6 @@ class ManagerContainerPush(Manager):
             if not tag:
                 continue
             log.info("Processing image: %s:%s", self.image_name, tag)
-            #  pp(self.repo_creds)
             for repo in self.repos:
                 log.info("COPYING to: %s:%s", repo, tag)
                 if self.dry_run:
@@ -713,17 +708,19 @@ class ManagerGenerate(Manager):
     DESCRIPTION = "Generate Dockerfiles from templates."
 
     cuda = {}
+    output_path = {}  # The product of parsing the input templates
+
     dist_base_path = None  # pathlib object. The parent "base" path of output_path.
     output_manifest_path = None  # pathlib object. The path to save the shipit manifest.
-    output_path = {}  # The product of parsing the input templates
-    key = ""
+
+    key: str = ""
     cuda_version_is_release_label = False
     cuda_version_regex = re.compile(r"cuda_v([\d\.]+)(?:_(\w+))?$")
 
-    product_name = ""
-    candidate_number = ""
+    product_name: str = ""
+    candidate_number: str = ""
 
-    template_env = Environment(
+    template_env: Any = Environment(
         extensions=["jinja2.ext.do", "jinja2.ext.loopcontrols"],
         trim_blocks=True,
         lstrip_blocks=True,
@@ -834,9 +831,7 @@ class ManagerGenerate(Manager):
                 "exclude_repos",
                 "components",
                 *self.arches,
-                *supported_distro_list_by_cuda_version(
-                    self.cuda_version or self.release_label
-                ),
+                *supported_distro_list_by_cuda_version(self.manifest, self.cuda_version),
             ]:
                 continue
             newv = v
@@ -906,7 +901,6 @@ class ManagerGenerate(Manager):
                 log.info(f"Writing {new_output_path}/{new_filename}")
                 with open(f"{new_output_path}/{new_filename}", "w") as f2:
                     f2.write(template.render(cuda=ctx))
-                #  sys.exit(1)
 
         if any(f in input_template.as_posix() for f in ["cuda.repo", "ml.repo"]):
             for arch in self.arches:
@@ -986,8 +980,6 @@ class ManagerGenerate(Manager):
 
         log.debug(f"template context {pp(self.cuda, output=False)}")
 
-        #  sys.exit(1)
-
     def generate_cudnn_scripts(self, base_image, input_template):
         for arch in self.arches:
             for pkg in self.cudnn_versions(arch):
@@ -1055,7 +1047,6 @@ class ManagerGenerate(Manager):
             comps = {}
             for comp, val in manifest[key][distro][arch]["components"].items():
                 if "cudnn" in comp and val:
-                    #  print(comp, val)
                     comps[comp] = {}
                     comps[comp]["version"] = val["version"]
             return comps
@@ -1121,8 +1112,6 @@ class ManagerGenerate(Manager):
                 for arch, _ in manifest[key][distro].items():
                     if arch not in ["arm64", "ppc64le", "x86_64"]:
                         continue
-
-                    #  log.debug("arch: '%s'" % arch)
                     no_os_suffix = self.get_data(
                         manifest, key, distro, "no_os_suffix", can_skip=True
                     )
@@ -1161,7 +1150,6 @@ class ManagerGenerate(Manager):
             template = self.template_env.from_string(f.read())
             with open(output_path, "w") as f2:
                 f2.write(template.render(cuda=ctx))
-            #  sys.exit(1)
 
     def generate_readmes(self):
 
@@ -1229,7 +1217,6 @@ class ManagerGenerate(Manager):
         platforms = DotDict()
 
         def get_arches_for_platform(os):
-            #  log.debug(f"os: {pp(os, output=False)}")
             ls = []
             for k in glom.glom(
                 self.parent.manifest,
@@ -1240,7 +1227,6 @@ class ManagerGenerate(Manager):
             return ls
 
         for OS in distros:
-            #  log.debug(f"OS: {pp(OS, output=False)}")
             platforms[OS] = DotDict()
             if "centos" in OS:
                 distro = OS.split("centos")
@@ -1353,7 +1339,6 @@ class ManagerGenerate(Manager):
                     cuda_releases[tag[0]] = label
                 else:
                     cuda_releases[(tag[0] + "." + tag[len(tag) - 1])] = label
-        # log.debug(cuda_releases)
 
         supported = {
             "cuda_tags": tag_list,
@@ -1399,10 +1384,8 @@ class ManagerGenerate(Manager):
             # use regex101.com to debug with gitlab-ci.yml as the search text
             r"^(?P<distro>[a-zA-Z]*)(?P<distro_version>[\d\.]*)-v(?P<cuda_version>[\d\.]*)(?:-(?!cudnn|test|scan|deploy)(?P<pipeline_name>\w+))?$"
         )
-
         for ci_job, _ in self.parent.ci.items():
             if (match := rgx.match(ci_job)) is None:
-                #  log.debug("continuing")
                 continue
             self.distro = match.group("distro")
             self.distro_version = match.group("distro_version")
@@ -1520,7 +1503,6 @@ class ManagerGenerate(Manager):
             )
         )
         log.debug(f"self.dist_base_path: {self.dist_base_path}")
-        #  if not self.output_manifest_path:
         self.set_output_path(f"{self.distro}{self.distro_version}")
         log.debug(f"self.output_manifest_path: {self.output_manifest_path}")
         self.prepare_context()
