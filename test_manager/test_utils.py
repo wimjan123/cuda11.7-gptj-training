@@ -12,10 +12,8 @@ def test_supported_distro_list_by_cuda_version():
         "centos7",
         "ubi7",
         "ubi8",
-        "ubi9",
         "ubuntu18.04",
         "ubuntu20.04",
-        "ubuntu22.04",
     ]
 
 

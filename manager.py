@@ -92,16 +92,18 @@ class Manager(cli.Application):
             logging.config.dictConfig(yaml.safe_load(f.read())["logging"])
 
     # Get data from a object by dotted path. Example "cuda."v10.0".cuda_requires"
-    def get_data(self, obj, *path, can_skip=False):
+    def get_data(
+        self, obj: Any, *path: str, can_skip: bool = False
+    ) -> dict[str, dict[str, str]]:
+        data: Any = {}
         try:
             data = glom.glom(obj, glom.Path(*path))
         except glom.PathAccessError:
             if can_skip:
-                return
+                return {}
             # raise glom.PathAccessError
             log.error(f'get_data path: "{path}" not found!')
-        else:
-            return data
+        return data
 
     def main(self):
         self._load_app_config()
@@ -151,13 +153,6 @@ class ManagerTrigger(Manager):
     rebuildb: Any = cli.Flag(
         ["--rebuild-builder"],
         help="Force rebuild of the builder image used to build the cuda images.",
-    )
-
-    branch: Any = cli.SwitchAttr(
-        "--branch",
-        str,
-        help="The branch to trigger against on Gitlab.",
-        default="master",
     )
 
     distro: Any = cli.SwitchAttr(
@@ -507,6 +502,8 @@ class ManagerContainerPush(Manager):
         "Use either --image-name, --os-name, --os-version, --cuda-version 'to push images' or --readme 'to push readmes'."
     )
 
+    parent: Manager
+
     dry_run = cli.Flag(["-n", "--dry-run"], help="Show output but don't do anything!")
 
     image_name: Any = cli.SwitchAttr(
@@ -574,7 +571,7 @@ class ManagerContainerPush(Manager):
     repos_dict = {}
     tags = []
     key = ""
-    push_repos = {}
+    push_repos: dict[str, dict[str, str]] = {}
     target_repos = []
     repo_creds = {}
 
@@ -676,7 +673,6 @@ class ManagerContainerPush(Manager):
                     "docker",
                     ("pushrm", "-f", f"doc/{readme}", f"{repo}"),
                     printOutput=False,
-                    returnOut=True,
                 )
                 if result.returncode > 0:
                     log.error(result.stderr)
@@ -704,6 +700,8 @@ class ManagerContainerPush(Manager):
 @Manager.subcommand("generate")  # type: ignore
 class ManagerGenerate(Manager):
     DESCRIPTION = "Generate Dockerfiles from templates."
+
+    parent: Manager
 
     cuda = {}
     output_path = {}  # The product of parsing the input templates
@@ -1281,7 +1279,6 @@ class ManagerGenerate(Manager):
                 "skopeo",
                 ("list-tags", f"docker://{repo}"),
                 printOutput=False,
-                returnOut=True,
             )
 
         try:
@@ -1580,7 +1577,6 @@ class ManagerStaging(Manager):
             "skopeo",
             ("list-tags", f"docker://{repo}"),
             printOutput=False,
-            returnOut=True,
         )
 
     def delete_all_tags(self):
@@ -1605,7 +1601,6 @@ class ManagerStaging(Manager):
                 "skopeo",
                 ("delete", f"docker://{repo}:{tag}"),
                 printOutput=False,
-                returnOut=True,
             )
             if out2.returncode > 0:
                 log.info(f"deleted {repo}:{tag}")

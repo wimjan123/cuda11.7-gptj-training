@@ -1,12 +1,12 @@
 import logging
 
 from dataclasses import dataclass, field
-from typing import List, TypeVar
+from typing import List, Optional
 from collections import namedtuple
 
 from dotdict import DotDict
 
-from beeprint import pp  # type: ignore
+# from beeprint import pp
 
 log = logging.getLogger()
 
@@ -19,7 +19,7 @@ L4T_BASE_IMAGE_NAME = "nvcr.io/nvidian/nvidia-l4t-base"
 MOBY_BUILDKIT_VERSION = "v0.10.3"
 
 # Can be removed with python 3.11 https://peps.python.org/pep-0673/
-TSupportedPlatform = TypeVar("TSupportedPlatform", bound="SupportedPlatform")
+# TSupportedPlatform = TypeVar("TSupportedPlatform", bound="SupportedPlatform")
 
 
 @dataclass(frozen=True)
@@ -69,7 +69,7 @@ class SupportedPlatform:
         return ", ".join(csv)
 
 
-_package_repo_arch_repr = namedtuple("repo_name", ["deb", "rpm"])
+_package_repo_arch_repr = namedtuple("_package_repo_arch_repr", ["deb", "rpm"])
 
 _arches = DotDict(
     {
@@ -187,11 +187,13 @@ class SupportedPlatformsList:
         assert name
         return name
 
-    def by_distro(self: TSupportedPlatform, distro: str) -> TSupportedPlatform:
+    # def by_distro(self, distro: str) -> TSupportedPlatform:
+    def by_distro(self, distro: str) -> Optional[SupportedPlatform]:
         """ """
         for x in self.list:
             if distro in x.shipit_distro_name():
                 return x
+        return None
 
     def all_architectures(self) -> List[str]:
         """ """
