@@ -86,8 +86,6 @@ class Manager(cli.Application):
     def load_ci_yaml(self):
         with open(".gitlab-ci.yml", "r") as f:
             self.ci = yaml.load(f, yaml.Loader)
-        print(self.ci)
-        sys.exit()
 
     def _load_app_config(self):
         with open("manager-config.yaml", "r") as f:
@@ -831,7 +829,9 @@ class ManagerGenerate(Manager):
                 "exclude_repos",
                 "components",
                 *self.arches,
-                *supported_distro_list_by_cuda_version(self.manifest, self.cuda_version),
+                *supported_distro_list_by_cuda_version(
+                    self.manifest or self.shipitdata.shipit_manifest, self.cuda_version
+                ),
             ]:
                 continue
             newv = v
@@ -1430,56 +1430,53 @@ class ManagerGenerate(Manager):
         key = f"cuda_v{self.release_label}"
         self.cuda_version = self.release_label
         for k, _ in self.shipitdata.shipit_manifest[key].items():
-            pass
-            # if any(x in k for x in SUPPORTED_DISTRO_MATRIX) or "l4t" in k:
-            #     log.debug(f"Working on {k}")
-            #     if "l4t" in k:
-            #         # FIXME: Code smell. Refactoring this to make it cleaner would take a long time...
-            #         self.distro = "l4t"
-            #         self.distro_version = "-cuda"
-            #     else:
-            #         rgx = re.search(r"(\D*)([\d\.]*)", k)
-            #         self.distro = rgx.group(1)
-            #         self.distro_version = rgx.group(2)
-            #     self.cuda_version_is_release_label = True
-            #
-            #     log.debug(
-            #         "Generating distro: '%s' distro_version: '%s' cuda_version: '%s' release_label: '%s' "
-            #         % (
-            #             self.distro,
-            #             self.distro_version,
-            #             self.cuda_version,
-            #             self.release_label,
-            #         )
-            #     )
-            #     self.parent.manifest = self.shipitdata.shipit_manifest
-            #     self.targeted()
-            #     self.cuda_version_is_release_label = False
+            if any(x.full_name() in k for x in supported_platforms.list) or "l4t" in k:
+                log.debug(f"Working on {k}")
+                if "l4t" in k:
+                    # FIXME: Code smell. Refactoring this to make it cleaner would take a long time...
+                    self.distro = "l4t"
+                    self.distro_version = "-cuda"
+                else:
+                    rgx = re.search(r"(\D*)([\d\.]*)", k)
+                    self.distro = rgx.group(1)
+                    self.distro_version = rgx.group(2)
+                self.cuda_version_is_release_label = True
+
+                log.debug(
+                    "Generating distro: '%s' distro_version: '%s' cuda_version: '%s' release_label: '%s' "
+                    % (
+                        self.distro,
+                        self.distro_version,
+                        self.cuda_version,
+                        self.release_label,
+                    )
+                )
+                self.parent.manifest = self.shipitdata.shipit_manifest
+                self.targeted()
+                self.cuda_version_is_release_label = False
 
     def targeted_kitmaker(self):
         log.debug("Generating all container scripts! (for kitmaker)")
         key = f"cuda_v{self.release_label}"
         self.cuda_version = self.release_label
         for k, _ in self.shipitdata.shipit_manifest[key].items():
-            pass
-            # if any(x in k for x in SUPPORTED_DISTRO_MATRIX) or "l4t" in k:
-            #     if f"{self.distro}{self.distro_version}" not in k:
-            #         continue
-            #     log.debug(f"Working on {k}")
-            #     self.cuda_version_is_release_label = True
-            #     log.debug(
-            #         "Generating distro: '%s' distro_version: '%s' cuda_version: '%s' release_label: '%s' "
-            #         % (
-            #             self.distro,
-            #             self.distro_version,
-            #             self.cuda_version,
-            #             self.release_label,
-            #         )
-            #     )
-            #     self.parent.manifest = self.shipitdata.shipit_manifest
-            #     self.targeted()
-            #     self.cuda_version_is_release_label = False
-            #
+            if any(x.full_name() in k for x in supported_platforms.list) or "l4t" in k:
+                if f"{self.distro}{self.distro_version}" not in k:
+                    continue
+                log.debug(f"Working on {k}")
+                self.cuda_version_is_release_label = True
+                log.debug(
+                    "Generating distro: '%s' distro_version: '%s' cuda_version: '%s' release_label: '%s' "
+                    % (
+                        self.distro,
+                        self.distro_version,
+                        self.cuda_version,
+                        self.release_label,
+                    )
+                )
+                self.parent.manifest = self.shipitdata.shipit_manifest
+                self.targeted()
+                self.cuda_version_is_release_label = False
 
     def targeted(self):
         # TODO: CLEAN THIS UP

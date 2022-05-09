@@ -172,13 +172,6 @@ class ShipitData:
             distros.add("ubuntu1804")
             return distros
         for platform in self.data.targets.items():
-            # print(platform[0])
-            # print(platform[1])
-            # if not any(
-            #     x.match_shipit_arch_to_container_arch(platform[0])
-            #     for x in SUPPORTED_DISTRO_MATRIX
-            # ):
-            #     continue
             for os in platform[1]:
                 if supported_platforms.is_supported(os):
                     distros.update(supported_platforms.translated_name(os))

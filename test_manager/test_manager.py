@@ -1,9 +1,12 @@
 import pathlib
 import os
+import json
 
 from beeprint import pp  # type: ignore
-
 import pytest
+import requests
+from plumbum import local
+from deepdiff import DeepDiff
 
 from manager import Manager, ManagerGenerate
 
@@ -15,8 +18,7 @@ def test_check_arches():
 
     This variable is used for the repo paths.
     """
-    # _, rc = Manager.run(["prog", "--manifest=manifests/cuda.yaml", "generate", "--os-name=ubuntu", "--os-version=20.04", "--cuda-version=11.4.0", "--release-label=11.4.0"], exit=False)
-    # pp(rc)
+    # _, rc = Manager.run(["prog", "--manifest=manifests/cuda.yaml", "generate", "--os-name=ubuntu", "--os-version=20.04", "--cuda-version=11.4.0", "--release-label=11.4.0"], exit=False) pp(rc)
     # assert rc == 0
     arches = []
 
@@ -173,3 +175,34 @@ def test_cudnn_devel_has_correct_runtime_package_ubuntu():
     Implemented for https://gitlab.com/nvidia/container-images/cuda/-/issues/160
     """
     cudnn_package_check("ubuntu")
+
+
+def test_all_kitmaker_script_generation(tmp_path):
+    """Tests kitpick generation.
+
+    The tree command is used to output the directory structure to json and this
+    is compared to a previously reviewed sample.
+    """
+    _, rc = Manager.run(
+        [
+            "prog",
+            "--shipit-uuid=146A3758-A6DA-11EC-B4B9-BA92743E8BA1",
+            "generate",
+            "--all",
+            "--release-label=11.6.2",
+        ],
+        exit=False,
+    )
+    pp(rc)
+    assert rc == 0
+    tree = local["tree"]
+    actual_json = tree("-J", "kitpick")
+    expect: str = ""
+    with pathlib.Path(
+        "test_manager/data/kitmaker_generate_expected_directory_structure.json"
+    ).open(encoding="UTF-8") as source:
+        expect = json.load(source)
+    actual = json.loads(actual_json)
+    ddiff = DeepDiff(expect, actual)
+    pp(ddiff)
+    assert not ddiff, "File and directory structure for expected output has changed!!"

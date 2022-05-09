@@ -46,12 +46,10 @@ class SupportedPlatform:
 
     def full_name(self) -> str:
         """ """
-        # print(self.distro + self.version)
         return f"{self.distro}{self.version}"
 
     def shipit_distro_name(self) -> str:
         """ """
-        # print(self.distro + self.version)
         return f"{self.distro}{self.version.replace('.','')}"
 
     def shipit_distro_arch(self, shipit_arch_key: str) -> bool:
@@ -59,15 +57,6 @@ class SupportedPlatform:
         return any(x.arch in shipit_arch_key for x in self.arches)
 
     def rhel_based_supported(self, distro: str) -> bool:
-        if "rhel7" in distro:
-            print(distro)
-            print(self.distro)
-            # print(self.arches)
-            print(
-                "rhel" in distro
-                and "rpm" in self.package_format
-                and self.version in distro
-            )
         return (
             "rhel" in distro and "rpm" in self.package_format and self.version in distro
         )
