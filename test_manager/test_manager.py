@@ -206,3 +206,39 @@ def test_all_kitmaker_script_generation(tmp_path):
     ddiff = DeepDiff(expect, actual)
     pp(ddiff)
     assert not ddiff, "File and directory structure for expected output has changed!!"
+
+
+def test_all_kitmaker_script_generation_l4t(tmp_path):
+    """Tests kitpick generation for l4t.
+
+    The tree command is used to output the directory structure to json and this
+    is compared to a previously reviewed sample.
+    """
+
+    # Generation of l4t images requires pre-set cudnn data
+
+    _, rc = Manager.run(
+        [
+            "prog",
+            "--shipit-uuid=032042B0-7428-11EC-86E3-4D91743E8BA1",
+            "generate",
+            "--all",
+            "--release-label=11.4.14",
+            "--cudnn-json-path=test_manager/data/l4t_cudnn_data.json",
+            "--flavor=l4t",
+        ],
+        exit=False,
+    )
+    pp(rc)
+    assert rc == 0
+    tree = local["tree"]
+    actual_json = tree("-J", "kitpick")
+    expect: str = ""
+    with pathlib.Path(
+        "test_manager/data/kitmaker_generate_expected_directory_structure_l4t.json"
+    ).open(encoding="UTF-8") as source:
+        expect = json.load(source)
+    actual = json.loads(actual_json)
+    ddiff = DeepDiff(expect, actual)
+    pp(ddiff)
+    assert not ddiff, "File and directory structure for expected output has changed!!"

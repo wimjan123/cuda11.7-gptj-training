@@ -4,6 +4,7 @@ FROM {{ cuda.base_image }} as base
 FROM base as base-amd64
 
 ENV NVARCH x86_64
+
 {% if "requires" in cuda.x86_64 %}
 ENV NVIDIA_REQUIRE_CUDA "{{ cuda.x86_64.requires }}"
 {% endif %}
@@ -14,7 +15,11 @@ ENV NV_CUDA_COMPAT_PACKAGE cuda-compat-{{ cuda.version.major }}-{{ cuda.version.
 {% if "arm64" in cuda %}
 FROM base as base-arm64
 
+{% if "flavor" in cuda and cuda.flavor == "l4t" %}
+ENV NVARCH {{ cuda.supported_arches.tegra.repo_name.deb }}
+{% else %}
 ENV NVARCH sbsa
+{% endif %}
 {% if "requires" in cuda.arm64 %}
 ENV NVIDIA_REQUIRE_CUDA "{{ cuda.arm64.requires }}"
 {% endif %}
@@ -31,7 +36,7 @@ ENV NV_CUDA_CUDART_VERSION {{ cuda.ppc64le.components.cudart.version }}
 ENV NV_CUDA_COMPAT_PACKAGE cuda-compat-{{ cuda.version.major }}-{{ cuda.version.minor }}
 
 
-{% endif -%}
+{% endif %}
 
 FROM base-${TARGETARCH}
 

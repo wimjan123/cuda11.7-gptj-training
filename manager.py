@@ -718,6 +718,8 @@ class ManagerGenerate(Manager):
 
     shipitdata = None
 
+    tegra: bool = False
+
     template_env: Any = Environment(
         extensions=["jinja2.ext.do", "jinja2.ext.loopcontrols"],
         trim_blocks=True,
@@ -855,9 +857,12 @@ class ManagerGenerate(Manager):
             "os": self.cuda["os"],
         }
         for arch in self.arches:
-            if not cudnn_version_name in self.cuda[arch]["components"]:
+            larch = arch
+            if self.tegra:
+                larch = arches.tegra.container_arch
+            if not cudnn_version_name in self.cuda[larch]["components"]:
                 continue
-            cudnn_manifest = self.cuda[arch]["components"][cudnn_version_name]
+            cudnn_manifest = self.cuda[larch]["components"][cudnn_version_name]
             if cudnn_manifest:
                 if "source" in cudnn_manifest:
                     cudnn_manifest["basename"] = os.path.basename(
@@ -866,8 +871,8 @@ class ManagerGenerate(Manager):
                     cudnn_manifest["dev"]["basename"] = os.path.basename(
                         cudnn_manifest["dev"]["source"]
                     )
-                new_ctx[arch] = {}
-                new_ctx[arch]["cudnn"] = cudnn_manifest
+                new_ctx[larch] = {}
+                new_ctx[larch]["cudnn"] = cudnn_manifest
 
         log.debug(f"cudnn template context {pp(new_ctx, output=False)}")
         self.output_template(
@@ -906,12 +911,12 @@ class ManagerGenerate(Manager):
                 with open(f"{new_output_path}/{new_filename}", "w") as f2:
                     f2.write(template.render(cuda=ctx))
 
-        if any(f in input_template.as_posix() for f in ["cuda.repo", "ml.repo"]):
+        if "cuda.repo" in input_template.as_posix():
             for arch in self.arches:
-                ctx["target_arch"] = arch
-                if "arm64" in arch:
-                    ctx["target_arch"] = "sbsa"
-                write_template(arch)
+                if self.tegra:
+                    # ( ͡° ͜ʖ ͡°)
+                    arch = "tegra"
+                write_template(arches.get(arch).common_name)
         else:
             write_template()
 
@@ -934,8 +939,13 @@ class ManagerGenerate(Manager):
         if not self.image_tag_suffix:
             self.image_tag_suffix = ""
 
+        larch = self.arches
+        if self.tegra:
+            larch = arches.tegra.container_arch
+
         # The templating context. This data structure is used to fill the templates.
         self.cuda = {
+            "supported_arches": arches,
             "flavor": self.flavor,
             "version": {
                 "release_label": self.cuda_version,
@@ -943,7 +953,7 @@ class ManagerGenerate(Manager):
                 "minor": minor,
                 "major_minor": f"{major}.{minor}",
             },
-            "arches": self.arches,
+            "arches": larch,
             "os": {"distro": self.distro, "version": self.distro_version},
             "image_tag_suffix": self.image_tag_suffix,
         }
@@ -957,7 +967,14 @@ class ManagerGenerate(Manager):
         )
 
         for arch in self.arches:
-            self.cuda[arch] = {}
+            pp(arch)
+            if arch in arches:
+                translated_arch = arches.get(arch).container_arch
+            elif self.tegra:
+                translated_arch = arches.tegra.container_arch
+            if self.tegra:
+                larch = arches.tegra.common_name
+            self.cuda[translated_arch] = {}
             # Only set in version < 11.0
             self.cuda["version"]["build_version"] = self.get_data(
                 conf,
@@ -965,7 +982,7 @@ class ManagerGenerate(Manager):
                 "build_version",
                 can_skip=True,
             )
-            self.cuda[arch]["components"] = self.get_data(
+            self.cuda[translated_arch]["components"] = self.get_data(
                 conf,
                 self.key,
                 f"{self.distro}{self.distro_version}",
@@ -979,14 +996,17 @@ class ManagerGenerate(Manager):
                     f"{self.distro}{self.distro_version}",
                     arch,
                 ),
-                arch=arch,
+                arch=translated_arch,
             )
 
         log.debug(f"template context {pp(self.cuda, output=False)}")
 
     def generate_cudnn_scripts(self, base_image, input_template):
         for arch in self.arches:
-            for pkg in self.cudnn_versions(arch):
+            larch = arch
+            if self.tegra:
+                larch = arches.tegra.container_arch
+            for pkg in self.cudnn_versions(larch):
                 if not "cudnn" in self.cuda:
                     self.cuda["cudnn"] = {}
                 self.cuda["cudnn"]["target"] = base_image
@@ -1436,9 +1456,9 @@ class ManagerGenerate(Manager):
             if any(x.full_name() in k for x in supported_platforms.list) or "l4t" in k:
                 log.debug(f"Working on {k}")
                 if "l4t" in k:
-                    # FIXME: Code smell. Refactoring this to make it cleaner would take a long time...
-                    self.distro = "l4t"
-                    self.distro_version = "-cuda"
+                    self.tegra = True
+                    self.distro = "l4t-cuda"
+                    self.distro_version = ""
                 else:
                     rgx = re.search(r"(\D*)([\d\.]*)", k)
                     self.distro = rgx.group(1)
@@ -1482,7 +1502,6 @@ class ManagerGenerate(Manager):
                 self.cuda_version_is_release_label = False
 
     def targeted(self):
-        # TODO: CLEAN THIS UP
         self.key = f"cuda_v{self.release_label}"
         if not self.release_label and self.cuda_version:
             self.key = f"cuda_v{self.cuda_version}"
@@ -1492,6 +1511,7 @@ class ManagerGenerate(Manager):
         self.arches = supported_arch_list(
             self.parent.manifest, f"{self.distro}{self.distro_version}", self.cuda_version
         )
+
         log.debug(f"self.arches: {self.arches}")
 
         self.dist_base_path = pathlib.Path(

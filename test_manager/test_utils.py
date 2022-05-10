@@ -27,3 +27,11 @@ def test_supported_arch_list():
         "ppc64le",
         "x86_64",
     ]
+
+
+def test_supported_arch_list_l4t():
+    """ """
+    manifest: dict[str, dict[str, dict[str, str]]] = {}
+    with open(pathlib.Path("test_manager/data/l4t_manifest.yml"), "r") as f:
+        manifest = yaml.load(f, yaml.Loader)
+    assert supported_arch_list(manifest, "l4t-cuda", "11.4.14") == ["tegra"]

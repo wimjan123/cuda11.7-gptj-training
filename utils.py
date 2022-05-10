@@ -210,6 +210,6 @@ def supported_arch_list(
         manifest,
         glom.Path(f"cuda_v{cuda_version}", distro),
     ):
-        if k in supported_platforms.all_architectures():
+        if k in supported_platforms.all_architectures_by_common_name():
             ls.append(k)
     return ls

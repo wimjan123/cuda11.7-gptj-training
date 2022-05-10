@@ -18,9 +18,6 @@ L4T_BASE_IMAGE_NAME = "nvcr.io/nvidian/nvidia-l4t-base"
 # Increased buildkit version from 0.8.1 to 0.10.3 to overcome ubuntu 22.04 build failures
 MOBY_BUILDKIT_VERSION = "v0.10.3"
 
-# Can be removed with python 3.11 https://peps.python.org/pep-0673/
-# TSupportedPlatform = TypeVar("TSupportedPlatform", bound="SupportedPlatform")
-
 
 @dataclass(frozen=True)
 class SupportedArchitecture:
@@ -29,7 +26,8 @@ class SupportedArchitecture:
     arch: str
     common_name: str
     repo_name: tuple
-    real_name: str = ""
+    nv_name: str = ""
+    container_arch: str = ""
 
 
 @dataclass(frozen=True)
@@ -71,31 +69,35 @@ class SupportedPlatform:
 
 _package_repo_arch_repr = namedtuple("_package_repo_arch_repr", ["deb", "rpm"])
 
-_arches = DotDict(
+arches = DotDict(
     {
         "arm64": SupportedArchitecture(
             arch="arm64",
             common_name="arm64",
             repo_name=_package_repo_arch_repr(deb="sbsa", rpm="sbsa"),
-            real_name="sbsa",
+            container_arch="arm64",
+            nv_name="sbsa",
         ),
         "x86_64": SupportedArchitecture(
             arch="x86_64",
-            # common name is really amd64, but only containers use that in our world
             common_name="x86_64",
             repo_name=_package_repo_arch_repr(deb="x86_64", rpm="x86_64"),
-            real_name="amd64",
+            container_arch="x86_64",
+            nv_name="x86_64",
         ),
         "ppc64le": SupportedArchitecture(
             arch="ppc64le",
             common_name="ppc64le",
             repo_name=_package_repo_arch_repr(deb="ppc64el", rpm="ppc64le"),
+            container_arch="ppc64le",
+            nv_name="ppc64le",
         ),
-        "jetson": SupportedArchitecture(
-            arch="jetson",
-            common_name="arm64",
+        "tegra": SupportedArchitecture(
+            arch="aarch64",
+            common_name="tegra",
             repo_name=_package_repo_arch_repr(deb="arm64", rpm="arm64"),
-            real_name="aarch64",
+            container_arch="arm64",
+            nv_name="tegra",
         ),
     }
 )
@@ -106,55 +108,46 @@ def _pop_supported_platforms():
         SupportedPlatform(
             distro="ubuntu",
             version="22.04",
-            arches=[_arches.arm64, _arches.x86_64],
+            arches=[arches.arm64, arches.x86_64],
             package_format="deb",
         ),
         SupportedPlatform(
             distro="ubuntu",
             version="20.04",
-            arches=[_arches.arm64, _arches.x86_64],
+            arches=[arches.arm64, arches.x86_64],
             package_format="deb",
         ),
         SupportedPlatform(
             distro="ubuntu",
             version="18.04",
-            arches=[_arches.x86_64],
+            arches=[arches.x86_64],
             package_format="deb",
         ),
         SupportedPlatform(
-            distro="centos", version="7", arches=[_arches.x86_64], package_format="rpm"
+            distro="centos", version="7", arches=[arches.x86_64], package_format="rpm"
         ),
         SupportedPlatform(
             distro="ubi",
             version="9",
-            arches=[_arches.x86_64, _arches.arm64, _arches.ppc64le],
+            arches=[arches.x86_64, arches.arm64, arches.ppc64le],
             package_format="rpm",
         ),
         SupportedPlatform(
             distro="ubi",
             version="8",
-            arches=[_arches.x86_64, _arches.arm64, _arches.ppc64le],
+            arches=[arches.x86_64, arches.arm64, arches.ppc64le],
             package_format="rpm",
         ),
         SupportedPlatform(
-            distro="ubi", version="7", arches=[_arches.x86_64], package_format="rpm"
+            distro="ubi", version="7", arches=[arches.x86_64], package_format="rpm"
         ),
         SupportedPlatform(
-            distro="ubuntu",
-            version="18.04",
-            arches=[_arches.jetson],
+            distro="l4t",
+            version="",
+            arches=[arches.tegra],
             package_format="deb",
             common_name="l4t",
-            flavor="jp4",
-            image_name="gitlab-master.nvidia.com:5005/cuda-installer/cuda/l4t-cuda",
-        ),
-        SupportedPlatform(
-            distro="ubuntu",
-            version="20.04",
-            arches=[_arches.jetson],
-            package_format="deb",
-            common_name="l4t",
-            flavor="jp5",
+            flavor="jetpack",
             image_name="gitlab-master.nvidia.com:5005/cuda-installer/cuda/l4t-cuda",
         ),
     ]
@@ -192,12 +185,20 @@ class SupportedPlatformsList:
                 return x
         return None
 
-    def all_architectures(self) -> List[str]:
+    def all_architectures_by_nvidia_name(self) -> List[str]:
         """ """
         theset = set()
         for x in self.list:
             for y in x.arches:
-                theset.add(y.arch)
+                theset.add(y.nv_name)
+        return list(sorted(theset))
+
+    def all_architectures_by_common_name(self) -> List[str]:
+        """ """
+        theset = set()
+        for x in self.list:
+            for y in x.arches:
+                theset.add(y.common_name)
         return list(sorted(theset))
 
 

@@ -100,3 +100,41 @@ def test_supported_distros_by_arch_arm64():
     sd = ShipitData(shipit_json=input_json)
     pp(sd)
     assert sd.supported_distros_by_arch("arm64") == {"ubi8", "ubuntu2004"}
+
+
+def test_supported_distros_by_arch_l4t():
+    """Ensure distros for "l4t" are pulled from sbsa shipit data."""
+
+    input_json = """{
+   "cand_number" : "009",
+   "product_name" : "cuda-r11-4-tegra",
+   "rel_label" : "11.4.14",
+   "targets" : {
+      "eb-x86_64" : [
+         "eb"
+      ],
+      "l4t-aarch64" : [
+         "archives"
+      ],
+      "linux-aarch64" : [
+         "archives",
+         "l4t",
+         "ubuntu1804",
+         "ubuntu2004"
+      ],
+      "linux-x86_64" : [
+         "archives",
+         "ubuntu1804",
+         "ubuntu2004"
+      ],
+      "qnx-standard-aarch64" : [
+         "qnx-standard"
+      ]
+   },
+   "web_user" : "foo"
+}"""
+    sd = ShipitData(shipit_json=input_json)
+    pp(sd)
+    # Yes, l4t is an aarch64 arch not arm64, this is not accurate in our repos because everyone outside of Nvidia uses arm64
+    # Including container images...
+    assert sd.supported_distros_by_arch("aarch64") == {"l4t", "ubuntu1804", "ubuntu2004"}

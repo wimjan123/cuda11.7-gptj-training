@@ -12,11 +12,21 @@ def test_arches_csv():
     )
 
 
-def test_all_architectures():
+def test_all_architectures_by_nvidia_name():
     """ """
-    assert supported_platforms.all_architectures() == [
-        "arm64",
-        "jetson",
+    assert supported_platforms.all_architectures_by_nvidia_name() == [
         "ppc64le",
+        "sbsa",
+        "tegra",
+        "x86_64",
+    ]
+
+
+def test_all_architectures_by_common_name():
+    """ """
+    assert supported_platforms.all_architectures_by_common_name() == [
+        "arm64",
+        "ppc64le",
+        "tegra",
         "x86_64",
     ]
