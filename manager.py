@@ -716,6 +716,8 @@ class ManagerGenerate(Manager):
     product_name: str = ""
     candidate_number: str = ""
 
+    shipitdata = None
+
     template_env: Any = Environment(
         extensions=["jinja2.ext.do", "jinja2.ext.loopcontrols"],
         trim_blocks=True,
@@ -823,12 +825,16 @@ class ManagerGenerate(Manager):
                 # Do not copy cuda version keys
                 continue
             # These top level keys should be ignored since they are processed elsewhere
+            data = self.parent.manifest
+            if self.shipitdata:
+                data = self.shipitdata.shipit_manifest
             if k in [
                 "exclude_repos",
                 "components",
                 *self.arches,
                 *supported_distro_list_by_cuda_version(
-                    self.manifest or self.shipitdata.shipit_manifest, self.cuda_version
+                    data,
+                    self.cuda_version,
                 ),
             ]:
                 continue
