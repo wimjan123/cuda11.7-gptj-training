@@ -140,9 +140,6 @@ def _pop_supported_platforms():
             distro="ubi", version="7", arches=[_arches.x86_64], package_format="rpm"
         ),
         SupportedPlatform(
-            distro="centos", version="7", arches=[_arches.x86_64], package_format="rpm"
-        ),
-        SupportedPlatform(
             distro="ubuntu",
             version="18.04",
             arches=[_arches.jetson],

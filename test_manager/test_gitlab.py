@@ -1,10 +1,22 @@
 import pathlib
 
 from beeprint import pp  # type: ignore
+import yaml
 
 from manager import Manager, ManagerGenerate
 
 import config
+
+
+def test_gitlab_ci_yaml_load():
+    """Generates and attempts to load yaml."""
+    _, rc = Manager.run(
+        ["prog", "--manifest=manifests/cuda.yaml", "generate", "--ci"], exit=False
+    )
+    assert rc == 0
+    with open(pathlib.Path(".gitlab-ci.yml")) as f:
+        out = yaml.load(f, yaml.Loader)
+    assert out
 
 
 def test_check_moby_buildkit_set():

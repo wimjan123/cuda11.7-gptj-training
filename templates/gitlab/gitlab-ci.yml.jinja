@@ -421,8 +421,8 @@ trigger:
 
 {% for data in cuda.supported_distro_matrix %}
     {% set flavor = "" %}
-    {% set kitmaker_distro = data.distro + data.version %}
-    {% set kitmaker_distro_clean = data.distro + data.version.replace(".", "_") %}
+    {% set kitmaker_distro = data.full_name() %}
+    {% set kitmaker_distro_clean = data.shipit_distro_name() %}
     {% if data.flavor %}
         {% set flavor = data.flavor + "_" %}
         {% set kitmaker_distro_clean = data.distro.replace("-", "_") + data.version.replace(".", "_") + "_" + data.flavor %}
