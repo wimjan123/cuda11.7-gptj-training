@@ -718,6 +718,7 @@ class ManagerGenerate(Manager):
 
     shipitdata = None
 
+    # ( ͡° ͜ʖ ͡°)
     tegra: bool = False
 
     template_env: Any = Environment(
@@ -913,8 +914,8 @@ class ManagerGenerate(Manager):
 
         if "cuda.repo" in input_template.as_posix():
             for arch in self.arches:
+                ctx["target_arch"] = arches.get(arch).repo_name.rpm
                 if self.tegra:
-                    # ( ͡° ͜ʖ ͡°)
                     arch = "tegra"
                 write_template(arches.get(arch).common_name)
         else:

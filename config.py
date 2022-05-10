@@ -38,7 +38,6 @@ class SupportedPlatform:
     version: str
     arches: List[SupportedArchitecture]
     package_format: str
-    flavor: str = ""
     image_name: str = ""
     common_name: str = ""
 
@@ -147,7 +146,6 @@ def _pop_supported_platforms():
             arches=[arches.tegra],
             package_format="deb",
             common_name="l4t",
-            flavor="jetpack",
             image_name="gitlab-master.nvidia.com:5005/cuda-installer/cuda/l4t-cuda",
         ),
     ]

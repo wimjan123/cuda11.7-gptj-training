@@ -664,77 +664,39 @@ kitmaker_ubi7_deploy:
 
 
 # Need to pass these from the trigger
-.kitmaker_ubuntu18_04_jp4_variables: &kitmaker_ubuntu18_04_jp4_variables
+.kitmaker_l4t_variables: &kitmaker_l4t_variables
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/l4t-cuda"
-  OS: "ubuntu18.04"
-  OS_NAME: "ubuntu"
-  OS_VERSION: "18.04"
+  OS: "l4t"
+  OS_NAME: "l4t"
+  OS_VERSION: ""
   ARCHES: ""
-  FLAVOR: "jp4"
   # CI_DEBUG_TRACE: "true"
 
-.kitmaker_ubuntu18_04_jp4_only: &kitmaker_ubuntu18_04_jp4_only
+.kitmaker_l4t_only: &kitmaker_l4t_only
   image: gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
   variables:
-    <<: *kitmaker_ubuntu18_04_jp4_variables
-    TAG_MANIFEST_PATH: "tag_manifest_ubuntu18_04_jp4"
+    <<: *kitmaker_l4t_variables
+    TAG_MANIFEST_PATH: "tag_manifest_l4t"
   rules:
     - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "default"'
-    - if: $UBUNTU18_04_JP4 == "true"
+    - if: $L4T == "true"
 
-kitmaker_ubuntu18.04_jp4_base:
+kitmaker_l4t_base:
   <<: *cuda_base_definition
-  <<: *kitmaker_ubuntu18_04_jp4_only
+  <<: *kitmaker_l4t_only
   # Need to build container images on a multi-arch capable machine
   <<: *tags_definition_multiarch
 
-kitmaker_ubuntu18.04_jp4_deploy:
+kitmaker_l4t_deploy:
   <<: *deploy_definition
-  <<: *kitmaker_ubuntu18_04_jp4_only
+  <<: *kitmaker_l4t_only
   <<: *tags_definition
   needs:
-    - job: kitmaker_ubuntu18.04_jp4_base
+    - job: kitmaker_l4t_base
       artifacts: true
   artifacts:
     paths:
-      - tag_manifest_ubuntu18_04_jp4
-
-
-# Need to pass these from the trigger
-.kitmaker_ubuntu20_04_jp5_variables: &kitmaker_ubuntu20_04_jp5_variables
-  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/l4t-cuda"
-  OS: "ubuntu20.04"
-  OS_NAME: "ubuntu"
-  OS_VERSION: "20.04"
-  ARCHES: ""
-  FLAVOR: "jp5"
-  # CI_DEBUG_TRACE: "true"
-
-.kitmaker_ubuntu20_04_jp5_only: &kitmaker_ubuntu20_04_jp5_only
-  image: gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
-  variables:
-    <<: *kitmaker_ubuntu20_04_jp5_variables
-    TAG_MANIFEST_PATH: "tag_manifest_ubuntu20_04_jp5"
-  rules:
-    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "default"'
-    - if: $UBUNTU20_04_JP5 == "true"
-
-kitmaker_ubuntu20.04_jp5_base:
-  <<: *cuda_base_definition
-  <<: *kitmaker_ubuntu20_04_jp5_only
-  # Need to build container images on a multi-arch capable machine
-  <<: *tags_definition_multiarch
-
-kitmaker_ubuntu20.04_jp5_deploy:
-  <<: *deploy_definition
-  <<: *kitmaker_ubuntu20_04_jp5_only
-  <<: *tags_definition
-  needs:
-    - job: kitmaker_ubuntu20.04_jp5_base
-      artifacts: true
-  artifacts:
-    paths:
-      - tag_manifest_ubuntu20_04_jp5
+      - tag_manifest_l4t
 
 
 

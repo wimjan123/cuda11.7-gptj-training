@@ -24,7 +24,8 @@ ENV NVARCH sbsa
 ENV NVIDIA_REQUIRE_CUDA "{{ cuda.arm64.requires }}"
 {% endif %}
 ENV NV_CUDA_CUDART_VERSION {{ cuda.arm64.components.cudart.version }}
-{% endif -%}
+
+{% endif %}
 {% if "ppc64le" in cuda %}
 FROM base as base-ppc64le
 
@@ -35,8 +36,7 @@ ENV NVIDIA_REQUIRE_CUDA "{{ cuda.ppc64le.requires }}"
 ENV NV_CUDA_CUDART_VERSION {{ cuda.ppc64le.components.cudart.version }}
 ENV NV_CUDA_COMPAT_PACKAGE cuda-compat-{{ cuda.version.major }}-{{ cuda.version.minor }}
 
-
-{% endif %}
+{% endif -%}
 
 FROM base-${TARGETARCH}
 
