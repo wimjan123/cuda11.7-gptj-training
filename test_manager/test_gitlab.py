@@ -1,7 +1,13 @@
 import pathlib
+import json
+import os
+from typing import List
 
 from beeprint import pp  # type: ignore
+from plumbum import local
 import yaml
+import requests
+import pytest
 
 from manager import Manager, ManagerGenerate
 
@@ -33,3 +39,22 @@ def test_check_moby_buildkit_set():
             if f"image=moby/buildkit:{config.MOBY_BUILDKIT_VERSION}" in line:
                 count = count + 1
     assert count == 3
+
+
+def test_gitlab_ci_yaml_lint():
+    """Lints the gitlab pipeline using the gitlab api."""
+    y: List[str]
+    with open(pathlib.Path(".gitlab-ci.yml")) as f:
+        y = f.readlines()
+    obj = {"content": y}
+    cleans = json.dumps(obj)
+    token = os.getenv("GITLAB_ACCESS_TOKEN")
+    if not token:
+        pytest.fail("CI_JOB_TOKEN is unset!")
+    x = requests.post(
+        "https://gitlab-master.nvidia.com/api/v4/ci/lint",
+        data=obj,
+        headers={"CI_PROJECT_ID": "12064", "PRIVATE-TOKEN": token},
+    )
+    pp(x)
+    assert x
