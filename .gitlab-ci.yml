@@ -812,6 +812,125 @@ centos7-v11.6.2-deploy:
       optional: true
 
 
+.rockylinux8_11_6_2_variables: &rockylinux8_11_6_2_variables
+  DIST_BASE_PATH: "dist/11.6.2"
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
+  MANIFEST: "manifests/cuda.yaml"
+  ARCHES: "arm64, x86_64"
+  OS: "rockylinux8"
+  OS_NAME: "rockylinux"
+  OS_VERSION: "8"
+  CUDA_VERSION: "11.6.2"
+
+.rockylinux8_11_6_2_only: &rockylinux8_11_6_2_only
+  <<: *tags_definition_multiarch
+  variables:
+    <<: *rockylinux8_11_6_2_variables
+  rules:
+    - if: '$rockylinux8_11_6_2 == "true"'
+    - if: '$all == "true"'
+
+rockylinux8-v11.6.2:
+  <<: *cuda_base_definition
+  <<: *rockylinux8_11_6_2_only
+
+rockylinux8-v11.6.2-cudnn8:
+  <<: *cudnn_definition
+  <<: *rockylinux8_11_6_2_only
+  # Variables overwritten here. Don't move this section.
+  variables:
+    <<: *rockylinux8_11_6_2_variables
+    CUDNN_VERSION: "cudnn8"
+    ARCHES: "arm64, x86_64"
+  needs:
+    - job: rockylinux8-v11.6.2
+      artifacts: true
+
+rockylinux8-v11.6.2-test-arm64:
+  needs: ["rockylinux8-v11.6.2"]
+  <<: *rockylinux8_11_6_2_only
+  <<: *test_definition
+  variables:
+    <<: *rockylinux8_11_6_2_variables
+    ARCH: "arm64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$rockylinux8_11_6_2 == "true"'
+    - if: '$all == "true"'
+
+rockylinux8-v11.6.2-scan-arm64:
+  <<: *scan_definition
+  <<: *rockylinux8_11_6_2_only
+  needs:
+    - job: rockylinux8-v11.6.2
+    - job: rockylinux8-v11.6.2-test-arm64
+      optional: true
+  variables:
+    <<: *rockylinux8_11_6_2_variables
+    ARCH: "arm64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$rockylinux8_11_6_2 == "true"'
+    - if: '$all == "true"'
+
+rockylinux8-v11.6.2-test-x86_64:
+  needs: ["rockylinux8-v11.6.2"]
+  <<: *rockylinux8_11_6_2_only
+  <<: *test_definition
+  variables:
+    <<: *rockylinux8_11_6_2_variables
+    ARCH: "x86_64"
+  rules:
+    - if: '$NO_TEST == "true"'
+      when: never
+    - if: '$rockylinux8_11_6_2 == "true"'
+    - if: '$all == "true"'
+
+rockylinux8-v11.6.2-scan-x86_64:
+  <<: *scan_definition
+  <<: *rockylinux8_11_6_2_only
+  needs:
+    - job: rockylinux8-v11.6.2
+    - job: rockylinux8-v11.6.2-test-x86_64
+      optional: true
+  variables:
+    <<: *rockylinux8_11_6_2_variables
+    ARCH: "x86_64"
+  # Override rules from only definition
+  rules:
+    - if: '$NO_SCAN == "true" || $NO_TEST == "true"'
+      when: never
+    - if: '$rockylinux8_11_6_2 == "true"'
+    - if: '$all == "true"'
+
+
+rockylinux8-v11.6.2-deploy:
+  <<: *deploy_definition
+  <<: *rockylinux8_11_6_2_only
+  # Override rules from only definition
+  rules:
+    - if: '($NO_TEST == "true" || $NO_SCAN == "true") && $NO_PUSH == "false"'
+      when: never
+    - if: '$rockylinux8_11_6_2 == "true"'
+    - if: '$all == "true"'
+  needs:
+    - job: rockylinux8-v11.6.2
+      artifacts: true
+    - job: rockylinux8-v11.6.2-test-arm64
+      optional: true
+    - job: rockylinux8-v11.6.2-scan-arm64
+      optional: true
+    - job: rockylinux8-v11.6.2-test-x86_64
+      optional: true
+    - job: rockylinux8-v11.6.2-scan-x86_64
+      optional: true
+    - job: rockylinux8-v11.6.2-cudnn8
+      optional: true
+
+
 .ubi7_11_6_2_variables: &ubi7_11_6_2_variables
   DIST_BASE_PATH: "dist/11.6.2"
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda"
