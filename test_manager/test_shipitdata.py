@@ -63,6 +63,7 @@ def test_supported_distros():
         "ubuntu1804",
         "ubi9",
         "ubi8",
+        "rockylinux8",
         "ubi7",
         "centos7",
     }
@@ -99,7 +100,7 @@ def test_supported_distros_by_arch_arm64():
 }"""
     sd = ShipitData(shipit_json=input_json)
     pp(sd)
-    assert sd.supported_distros_by_arch("arm64") == {"ubi8", "ubuntu2004"}
+    assert sd.supported_distros_by_arch("arm64") == {"ubi8", "rockylinux8", "ubuntu2004"}
 
 
 def test_supported_distros_by_arch_l4t():

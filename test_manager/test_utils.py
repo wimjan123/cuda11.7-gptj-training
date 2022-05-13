@@ -8,13 +8,17 @@ def test_supported_distro_list_by_cuda_version():
     manifest: dict[str, dict[str, dict[str, str]]] = {}
     with open(pathlib.Path("manifests/cuda.yaml"), "r") as f:
         manifest = yaml.load(f, yaml.Loader)
-    assert supported_distro_list_by_cuda_version(manifest, "11.0.3") == [
-        "centos7",
-        "ubi7",
-        "ubi8",
-        "ubuntu18.04",
-        "ubuntu20.04",
-    ]
+    assert all(
+        x in supported_distro_list_by_cuda_version(manifest, "11.0.3")
+        for x in [
+            "centos7",
+            "ubi7",
+            "ubi8",
+            "rockylinux8",
+            "ubuntu18.04",
+            "ubuntu20.04",
+        ]
+    )
 
 
 def test_supported_arch_list():

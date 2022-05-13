@@ -13,6 +13,20 @@
       ]}
     ]},
     {"type":"file","name":"manifest.yml"},
+    {"type":"directory","name":"rockylinux8","contents":[
+      {"type":"directory","name":"base","contents":[
+        {"type":"file","name":"cuda.repo-arm64"},
+        {"type":"file","name":"cuda.repo-ppc64le"},
+        {"type":"file","name":"cuda.repo-x86_64"},
+        {"type":"file","name":"Dockerfile"}
+      ]},
+      {"type":"directory","name":"devel","contents":[
+        {"type":"file","name":"Dockerfile"}
+      ]},
+      {"type":"directory","name":"runtime","contents":[
+        {"type":"file","name":"Dockerfile"}
+      ]}
+    ]},
     {"type":"directory","name":"ubi7","contents":[
       {"type":"directory","name":"base","contents":[
         {"type":"file","name":"cuda.repo-x86_64"},
@@ -62,5 +76,5 @@
       ]}
     ]}
   ]},
-  {"type":"report","directories":20,"files":21}
+  {"type":"report","directories":24,"files":27}
 ]

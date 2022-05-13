@@ -58,3 +58,28 @@ def test_gitlab_ci_yaml_lint():
     )
     pp(x)
     assert x
+
+
+def test_gitlab_ci_kitmaker_arches():
+    """Generates ci yaml and then checks kitmaker pipelines for correctly set arches."""
+    _, rc = Manager.run(
+        ["prog", "--manifest=manifests/cuda.yaml", "generate", "--ci"], exit=False
+    )
+    assert rc == 0
+    with open(pathlib.Path(".gitlab-ci.yml")) as f:
+        out = yaml.load(f, yaml.Loader)
+    # pp(out)
+    assert out
+    assert out["kitmaker_l4t_base"]["variables"]["ARCHES"] == "tegra"
+    assert all(
+        x in out["kitmaker_ubuntu22.04_base"]["variables"]["ARCHES"]
+        for x in ["arm64", "x86_64"]
+    )
+    assert all(
+        x in out["kitmaker_rockylinux8_base"]["variables"]["ARCHES"]
+        for x in ["arm64", "x86_64"]
+    )
+    assert all(
+        x in out["kitmaker_ubi8_base"]["variables"]["ARCHES"]
+        for x in ["arm64", "x86_64", "ppc64le"]
+    )

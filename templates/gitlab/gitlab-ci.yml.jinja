@@ -419,10 +419,13 @@ trigger:
   rules:
     - if: '$TRIGGER_OVERRIDE'
 
-{% for data in cuda.supported_distro_matrix %}
+{% for data in cuda.supported_distro_matrix.list %}
     {% set flavor = "" %}
     {% set kitmaker_distro = data.full_name() %}
     {% set kitmaker_distro_clean = data.shipit_distro_name() %}
+    {% if cuda.supported_distro_matrix.by_distro(kitmaker_distro_clean) %}
+        {% set arches = cuda.supported_distro_matrix.by_distro(kitmaker_distro_clean).common_arches_csv() %}
+    {% endif %}
     {% if data.flavor %}
         {% set flavor = data.flavor + "_" %}
         {% set kitmaker_distro_clean = data.distro.replace("-", "_") + data.version.replace(".", "_") + "_" + data.flavor %}
@@ -437,7 +440,7 @@ trigger:
   OS: "{{ data.distro }}{{ data.version }}"
   OS_NAME: "{{ data.distro }}"
   OS_VERSION: "{{ data.version }}"
-  ARCHES: "{{ data.arches.common_arches_csv }}"
+  ARCHES: "{{ arches }}"
     {% if data.flavor %}
   FLAVOR: "{{ data.flavor }}"
     {% endif %}
@@ -551,7 +554,7 @@ kitmaker_failure:
     - |
       kitmaker_webhook_failed
 
-{% for cuda_version in cuda if not cuda_version.startswith("manifest") %}
+{% for cuda_version in cuda if cuda_version is iterable and "." in cuda_version %}
 {% for pipeline in cuda[cuda_version] %}
 {% if "distros" in cuda[cuda_version][pipeline] %}
 {% for distro in cuda[cuda_version][pipeline]["distros"] %}

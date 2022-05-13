@@ -417,7 +417,7 @@ trigger:
   OS: "ubuntu22.04"
   OS_NAME: "ubuntu"
   OS_VERSION: "22.04"
-  ARCHES: ""
+  ARCHES: "arm64, x86_64"
   # CI_DEBUG_TRACE: "true"
 
 .kitmaker_ubuntu2204_only: &kitmaker_ubuntu2204_only
@@ -453,7 +453,7 @@ kitmaker_ubuntu22.04_deploy:
   OS: "ubuntu20.04"
   OS_NAME: "ubuntu"
   OS_VERSION: "20.04"
-  ARCHES: ""
+  ARCHES: "arm64, x86_64"
   # CI_DEBUG_TRACE: "true"
 
 .kitmaker_ubuntu2004_only: &kitmaker_ubuntu2004_only
@@ -489,7 +489,7 @@ kitmaker_ubuntu20.04_deploy:
   OS: "ubuntu18.04"
   OS_NAME: "ubuntu"
   OS_VERSION: "18.04"
-  ARCHES: ""
+  ARCHES: "x86_64"
   # CI_DEBUG_TRACE: "true"
 
 .kitmaker_ubuntu1804_only: &kitmaker_ubuntu1804_only
@@ -525,7 +525,7 @@ kitmaker_ubuntu18.04_deploy:
   OS: "centos7"
   OS_NAME: "centos"
   OS_VERSION: "7"
-  ARCHES: ""
+  ARCHES: "x86_64"
   # CI_DEBUG_TRACE: "true"
 
 .kitmaker_centos7_only: &kitmaker_centos7_only
@@ -561,7 +561,7 @@ kitmaker_centos7_deploy:
   OS: "ubi9"
   OS_NAME: "ubi"
   OS_VERSION: "9"
-  ARCHES: ""
+  ARCHES: "x86_64, arm64, ppc64le"
   # CI_DEBUG_TRACE: "true"
 
 .kitmaker_ubi9_only: &kitmaker_ubi9_only
@@ -597,7 +597,7 @@ kitmaker_ubi9_deploy:
   OS: "ubi8"
   OS_NAME: "ubi"
   OS_VERSION: "8"
-  ARCHES: ""
+  ARCHES: "x86_64, arm64, ppc64le"
   # CI_DEBUG_TRACE: "true"
 
 .kitmaker_ubi8_only: &kitmaker_ubi8_only
@@ -633,7 +633,7 @@ kitmaker_ubi8_deploy:
   OS: "rockylinux8"
   OS_NAME: "rockylinux"
   OS_VERSION: "8"
-  ARCHES: ""
+  ARCHES: "x86_64, arm64"
   # CI_DEBUG_TRACE: "true"
 
 .kitmaker_rockylinux8_only: &kitmaker_rockylinux8_only
@@ -669,7 +669,7 @@ kitmaker_rockylinux8_deploy:
   OS: "ubi7"
   OS_NAME: "ubi"
   OS_VERSION: "7"
-  ARCHES: ""
+  ARCHES: "x86_64"
   # CI_DEBUG_TRACE: "true"
 
 .kitmaker_ubi7_only: &kitmaker_ubi7_only
@@ -705,7 +705,7 @@ kitmaker_ubi7_deploy:
   OS: "l4t"
   OS_NAME: "l4t"
   OS_VERSION: ""
-  ARCHES: ""
+  ARCHES: "tegra"
   # CI_DEBUG_TRACE: "true"
 
 .kitmaker_l4t_only: &kitmaker_l4t_only

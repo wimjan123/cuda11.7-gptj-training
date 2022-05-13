@@ -968,7 +968,6 @@ class ManagerGenerate(Manager):
         )
 
         for arch in self.arches:
-            pp(arch)
             if arch in arches:
                 translated_arch = arches.get(arch).container_arch
             elif self.tegra:
@@ -1063,7 +1062,7 @@ class ManagerGenerate(Manager):
 
         manifest = self.parent.manifest
         ctx = {
-            "supported_distro_matrix": supported_platforms.list,
+            "supported_distro_matrix": supported_platforms,
             "moby_buildkit_version": MOBY_BUILDKIT_VERSION,
             "manifest_path": self.parent.manifest_path,
         }
