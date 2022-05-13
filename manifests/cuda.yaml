@@ -2091,6 +2091,8 @@ cuda_v11.5.0:
           version: 11.5.1.53-1
         nvml_dev:
           version: 11.5.50-1
+        nvprof:
+          version: 11.5.50-1
         nvtx:
           version: 11.5.50-1
         libnccl2:

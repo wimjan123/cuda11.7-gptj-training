@@ -5,6 +5,7 @@ FROM base as base-amd64
 
 ENV NV_CUDA_LIB_VERSION 11.6.1-1
 ENV NV_NVPROF_VERSION 11.6.112-1
+ENV NV_NVPROF_DEV_PACKAGE cuda-nvprof-11-6-${NV_NVPROF_VERSION}
 ENV NV_CUDA_CUDART_DEV_VERSION 11.6.55-1
 ENV NV_NVML_DEV_VERSION 11.6.55-1
 ENV NV_LIBCUBLAS_DEV_VERSION 11.8.1.74-1
@@ -29,7 +30,7 @@ RUN yum install -y \
     cuda-libraries-devel-11-6-${NV_CUDA_LIB_VERSION} \
     cuda-minimal-build-11-6-${NV_CUDA_LIB_VERSION} \
     cuda-cudart-devel-11-6-${NV_CUDA_CUDART_DEV_VERSION} \
-    cuda-nvprof-11-6-${NV_NVPROF_VERSION} \
+    ${NV_NVPROF_DEV_PACKAGE} \
     cuda-nvml-devel-11-6-${NV_NVML_DEV_VERSION} \
     libcublas-devel-11-6-${NV_LIBCUBLAS_DEV_VERSION} \
     ${NV_LIBNPP_DEV_PACKAGE} \

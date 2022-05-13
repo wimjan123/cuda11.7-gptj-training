@@ -22,6 +22,7 @@ ENV NV_LIBCUBLAS_DEV_PACKAGE ${NV_LIBCUBLAS_DEV_PACKAGE_NAME}=${NV_LIBCUBLAS_DEV
     {% set has_nvprof_package = true %}
 
 ENV NV_NVPROF_VERSION {{ cuda.x86_64.components.nvprof.version }}
+ENV NV_NVPROF_DEV_PACKAGE cuda-nvprof-{{ cuda.version.major }}-{{ cuda.version.minor }}=${NV_NVPROF_VERSION}
 {% endif %}
 {% if "libnccl2" in cuda.x86_64.components and cuda.x86_64.components.libnccl2 and "libnccl2_dev" in cuda.x86_64.components and cuda.x86_64.components.libnccl2_dev %}
     {% set has_libnccl_dev_package = true %}
@@ -68,6 +69,7 @@ ENV NV_LIBCUBLAS_DEV_PACKAGE ${NV_LIBCUBLAS_DEV_PACKAGE_NAME}=${NV_LIBCUBLAS_DEV
     {% set has_nvprof_package = true %}
 
 ENV NV_NVPROF_VERSION {{ cuda.arm64.components.nvprof.version }}
+ENV NV_NVPROF_DEV_PACKAGE cuda-nvprof-{{ cuda.version.major }}-{{ cuda.version.minor }}=${NV_NVPROF_VERSION}
 {% endif %}
 {% if "libnccl2" in cuda.arm64.components and cuda.arm64.components.libnccl2 and "libnccl2_dev" in cuda.arm64.components and cuda.arm64.components.libnccl2_dev %}
     {% set has_libnccl_dev_package = true %}
@@ -106,6 +108,7 @@ ENV NV_LIBCUBLAS_DEV_PACKAGE ${NV_LIBCUBLAS_DEV_PACKAGE_NAME}=${NV_LIBCUBLAS_DEV
     {% set has_nvprof_package = true %}
 
 ENV NV_NVPROF_VERSION {{ cuda.ppc64le.components.nvprof.version }}
+ENV NV_NVPROF_DEV_PACKAGE cuda-nvprof-{{ cuda.version.major }}-{{ cuda.version.minor }}=${NV_NVPROF_VERSION}
 {% endif %}
 {% if "libnccl2" in cuda.ppc64le.components and cuda.ppc64le.components.libnccl2 and "libnccl2_dev" in cuda.ppc64le.components and cuda.ppc64le.components.libnccl2_dev %}
     {% set has_libnccl_dev_package = true %}
@@ -141,7 +144,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-libraries-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}=${NV_CUDA_LIB_VERSION} \
     cuda-nvml-dev-{{ cuda.version.major }}-{{ cuda.version.minor }}=${NV_NVML_DEV_VERSION} \
     {% if has_nvprof_package %}
-    cuda-nvprof-{{ cuda.version.major }}-{{ cuda.version.minor }}=${NV_NVPROF_VERSION} \
+    ${NV_NVPROF_DEV_PACKAGE} \
     {% endif %}
     {% if has_libnpp_dev_package %}
     ${NV_LIBNPP_DEV_PACKAGE} \
