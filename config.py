@@ -139,6 +139,12 @@ def _pop_supported_platforms():
             package_format="rpm",
         ),
         SupportedPlatform(
+            distro="rockylinux",
+            version="8",
+            arches=[arches.x86_64, arches.arm64, arches.ppc64le],
+            package_format="rpm",
+        ),
+        SupportedPlatform(
             distro="ubi", version="7", arches=[arches.x86_64], package_format="rpm"
         ),
         SupportedPlatform(

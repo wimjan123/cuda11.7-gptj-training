@@ -5,7 +5,7 @@ logging:
   disable_existing_loggers: true
   root:
     # Configuring the default (root) logger is highly recommended
-    level: WARNING
+    level: INFO
     handlers: [console]
     formatter: coloredFormatter
   # loggers:

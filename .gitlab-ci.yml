@@ -628,6 +628,42 @@ kitmaker_ubi8_deploy:
 
 
 # Need to pass these from the trigger
+.kitmaker_rockylinux8_variables: &kitmaker_rockylinux8_variables
+  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
+  OS: "rockylinux8"
+  OS_NAME: "rockylinux"
+  OS_VERSION: "8"
+  ARCHES: ""
+  # CI_DEBUG_TRACE: "true"
+
+.kitmaker_rockylinux8_only: &kitmaker_rockylinux8_only
+  image: gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
+  variables:
+    <<: *kitmaker_rockylinux8_variables
+    TAG_MANIFEST_PATH: "tag_manifest_rockylinux8"
+  rules:
+    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "default"'
+    - if: $ROCKYLINUX8 == "true"
+
+kitmaker_rockylinux8_base:
+  <<: *cuda_base_definition
+  <<: *kitmaker_rockylinux8_only
+  # Need to build container images on a multi-arch capable machine
+  <<: *tags_definition_multiarch
+
+kitmaker_rockylinux8_deploy:
+  <<: *deploy_definition
+  <<: *kitmaker_rockylinux8_only
+  <<: *tags_definition
+  needs:
+    - job: kitmaker_rockylinux8_base
+      artifacts: true
+  artifacts:
+    paths:
+      - tag_manifest_rockylinux8
+
+
+# Need to pass these from the trigger
 .kitmaker_ubi7_variables: &kitmaker_ubi7_variables
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
   OS: "ubi7"
