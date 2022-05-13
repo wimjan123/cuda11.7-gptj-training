@@ -191,9 +191,9 @@ class ShipitData:
     def kitpick_repo_url(self):
         repo_distro = self.distro
         if (
-            foo := supported_platforms.by_distro(funnel_distro)
+            foo := supported_platforms.by_distro(repo_distro)
         ) and "rpm" in foo.package_format:
-            funnel_distro = "rhel"
+            repo_distro = "rhel"
         clean_distro = "{}{}".format(repo_distro, self.distro_version.replace(".", ""))
         return (
             f"http://cuda-internal.nvidia.com/release-candidates/"
