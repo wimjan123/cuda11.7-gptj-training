@@ -57,7 +57,9 @@ class ShipitData:
 
     def get_shipit_funnel_json(self, distro, distro_version, arch):
         funnel_distro = distro
-        if any(distro in funnel_distro for distro in ["centos", "ubi"]):
+        if (
+            foo := supported_platforms.by_distro(funnel_distro)
+        ) and "rpm" in foo.package_format:
             funnel_distro = "rhel"
         self.arch = arch
         modified_distro_version = distro_version.replace(".", "")
@@ -188,8 +190,10 @@ class ShipitData:
 
     def kitpick_repo_url(self):
         repo_distro = self.distro
-        if any(x in repo_distro for x in ["ubi", "centos"]):
-            repo_distro = "rhel"
+        if (
+            foo := supported_platforms.by_distro(funnel_distro)
+        ) and "rpm" in foo.package_format:
+            funnel_distro = "rhel"
         clean_distro = "{}{}".format(repo_distro, self.distro_version.replace(".", ""))
         return (
             f"http://cuda-internal.nvidia.com/release-candidates/"
