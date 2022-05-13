@@ -714,7 +714,7 @@ kitmaker_ubi7_deploy:
     <<: *kitmaker_l4t_variables
     TAG_MANIFEST_PATH: "tag_manifest_l4t"
   rules:
-    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "default"'
+    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "l4t"'
     - if: $L4T == "true"
 
 kitmaker_l4t_base:

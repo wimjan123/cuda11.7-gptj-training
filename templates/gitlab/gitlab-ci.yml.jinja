@@ -449,7 +449,7 @@ trigger:
     <<: *kitmaker_{{ kitmaker_distro_clean }}_variables
     TAG_MANIFEST_PATH: "tag_manifest_{{ kitmaker_distro_clean }}"
   rules:
-    {% if "l4t" in flavor %}
+    {% if "l4t" in kitmaker_distro_clean %}
     - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "l4t"'
     {% else %}
     - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "default"'
