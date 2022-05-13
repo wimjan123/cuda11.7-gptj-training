@@ -6,13 +6,15 @@ ENV DOCKER_TLS_CERTDIR "/certs"
 
 ENV DOCKER_CLI_EXPERIMENTAL enabled
 
-ENV BUILDX_URL https://github.com/docker/buildx/releases/download/v0.5.1/buildx-v0.5.1.linux-amd64
+ENV BUILDX_URL https://github.com/docker/buildx/releases/download/v0.8.2/buildx-v0.8.2.linux-amd64
 
-RUN apk add --no-cache wget git bash findutils python3 python3-dev curl g++ libmagic skopeo jq
+RUN apk add --no-cache wget git bash findutils curl g++ libmagic skopeo jq
+
+RUN apk add python3 python3-dev --repository=http://dl-cdn.alpinelinux.org/alpine/edge/main
 
 RUN mkdir -p $HOME/.docker/cli-plugins/
 
-RUN wget -O $HOME/.docker/cli-plugins/docker-buildx $BUILDX_URL
+RUN wget -q -O $HOME/.docker/cli-plugins/docker-buildx $BUILDX_URL
 
 RUN chmod a+x $HOME/.docker/cli-plugins/docker-buildx
 
