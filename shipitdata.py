@@ -19,8 +19,10 @@ from beeprint import pp  # type: ignore
 class ShipitInvalidDataError(Exception):
     def __init__(self, value):
         self.value = value
+
     def __str__(self):
         return "Error: %s" % self.value
+
 
 class ShipitData:
     """Class to wrap shipit data."""
@@ -37,6 +39,8 @@ class ShipitData:
 
     l4t_base_image = ""
 
+    tegra: bool = False
+
     push_repo_logged_in = ""
 
     def __init__(self, shipit_uuid="", shipit_json=""):
@@ -47,7 +51,9 @@ class ShipitData:
             data = json.loads(shipit_json)
             self.data = DotDict(data)
         if not self.data:
-            raise ShipitInvalidDataError("Attempt to initialize ShipitData class without data!")
+            raise ShipitInvalidDataError(
+                "Attempt to initialize ShipitData class without data!"
+            )
 
     def get_shipit_funnel_json(self, distro, distro_version, arch):
         funnel_distro = distro
@@ -60,9 +66,9 @@ class ShipitData:
             log.debug(f"Converting arch '{arch}' into 'sbsa' for container images")
             modified_arch = "sbsa"
         shipit_distro = f"{funnel_distro}{modified_distro_version}"
-        if "tegra" in self.data.product_name:
+        if self.tegra:
             shipit_distro = "l4t"
-            modified_arch = "aarch64"
+            modified_arch = arches.tegra.arch
 
         platform_name = (
             f"{shipit_distro}-{self.data.product_name}-linux-{modified_arch}.json"
@@ -80,7 +86,6 @@ class ShipitData:
         log.info(f"Retrieving global json from: {global_json}")
         ldata = self.get_http_json(global_json)
         if ldata:
-            #  pp(ldata)
             return ldata
 
     # Returns a unmarshalled json object
@@ -115,7 +120,6 @@ class ShipitData:
 
         def fragment_by_name(name):
             name_with_hyphens = name.replace("_", "-")
-            #  pp(fragments)
             for _, v in fragments.items():
                 for _, v2 in v.items():
                     if any(x in v2["name"] for x in [name, name_with_hyphens]):
@@ -134,7 +138,10 @@ class ShipitData:
             pkg_rel = self.pkg_rel_from_package_name(name, version)
             if not pkg_rel:
                 raise Exception(
-                    f"Could not get package release version from package name '{name}' using version '{version}'. Perhaps there is an issue in the RC data?"
+                    (
+                        f"Could not get package release version from package name "
+                        "'{name}' using version '{version}'. Perhaps there is an issue in the RC data?"
+                    )
                 )
 
             pkg_no_prefix = pkg[len("cuda_") :] if pkg.startswith("cuda_") else pkg
@@ -143,9 +150,7 @@ class ShipitData:
             if "_devel" in pkg_no_prefix:
                 pkg_no_prefix = pkg_no_prefix.replace("_devel", "_dev")
 
-            log.debug(
-                f"component: {pkg_no_prefix} version: {version} pkg_rel: {pkg_rel}"
-            )
+            log.debug(f"component: {pkg_no_prefix} version: {version} pkg_rel: {pkg_rel}")
 
             components.update({f"{pkg_no_prefix}": {"version": f"{version}-{pkg_rel}"}})
 
@@ -154,43 +159,31 @@ class ShipitData:
     def supported_distros(self):
         """Returns a set of supported distro names for a shipit manifest."""
         distros = set()
-        #  pp(self.data)
-
-        # FIXME: hacky WAR, need a better way to define container "flavors"
-        if "tegra" in self.data.product_name:
+        if self.tegra:
             log.debug("TEGRA DETECTED")
             distros.add("ubuntu1804")
             return distros
-
         for platform in self.data.targets.items():
             for os in platform[1]:
-                if any(x in os for x in SUPPORTED_DISTRO_LIST):
-                    distros.add(os)
+                if supported_platforms.is_supported(os):
+                    distros.update(supported_platforms.translated_name(os))
         return distros
 
-    def supported_distros_by_arch(self, arch):
+    def supported_distros_by_arch(self, arch: str):
         sdistros = set()
         larch = arch
-        #  log.debug(f"arch: {arch}")
         if "ppc64el" in arch:
             log.debug(f"Setting key '{arch}' to 'ppc64le' for images")
             larch = "ppc64le"
         elif "arm64" in arch:
             log.debug(f"Setting key '{arch}' to 'sbsa' for images")
             larch = "sbsa"
-        #  pp(self.data.targets)
         if not f"linux-{larch}" in self.data.targets:
             log.debug(f"'linux-{larch}' not found in shipit data!")
             return
         for distro in self.data.targets[f"linux-{larch}"]:
-            if "wsl" in distro:
-                continue
-            for sdistro in SUPPORTED_DISTRO_LIST:
-                if sdistro in ["ubi", "centos"] and "rhel" in distro:
-                    sdistros.add("ubi" + distro[len(distro) - 1 :])
-                    sdistros.add("centos" + distro[len(distro) - 1 :])
-                elif sdistro in distro:
-                    sdistros.add(distro)
+            if supported_platforms.is_supported(distro):
+                sdistros.update(supported_platforms.translated_name(distro))
         return sdistros
 
     def kitpick_repo_url(self):
@@ -198,13 +191,17 @@ class ShipitData:
         if any(x in repo_distro for x in ["ubi", "centos"]):
             repo_distro = "rhel"
         clean_distro = "{}{}".format(repo_distro, self.distro_version.replace(".", ""))
-        return f"http://cuda-internal.nvidia.com/release-candidates/kitpicks/{self.product_name}/{self.release_label}/{self.candidate_number}/repos/{clean_distro}"
+        return (
+            f"http://cuda-internal.nvidia.com/release-candidates/"
+            f"kitpicks/{self.product_name}/{self.release_label}/{self.candidate_number}/repos/{clean_distro}"
+        )
 
     def generate_shipit_manifest(self, output_path, cudnn_json_path=None):
         # 22:31 Tue Jul 13 2021 FIXME: (jesusa) this function is way too long to be considered good practice in python
         log.debug("Building the shipit manifest")
 
         self.product_name = self.data["product_name"]
+        self.tegra = "tegra" in self.product_name
         self.candidate_number = self.data["cand_number"]
         self.release_label = self.data["rel_label"]
         self.distros = self.supported_distros()
@@ -223,7 +220,7 @@ class ShipitData:
                 # At the moment, platforms needed by cuda image only contain a name and arch separated by a single hyphen
                 continue
             os, arch = splat[0], splat[1]
-            if any(a in arch for a in ["aarch64", "sbsa"]):
+            if any(a in arch for a in ["sbsa"]):
                 log.debug(f"Converting arch '{arch}' into 'arm64' for container images")
                 arch = "arm64"
             if not os in reldata:
@@ -265,33 +262,45 @@ class ShipitData:
 
         manifest = DotDict()
         for platform in nested_keys(reldata):
-            log.info(f"Inspecting global.json platform: {platform}")
             os = platform[0]
             self.arch = platform[1]
+            if self.tegra:
+                self.arch = arches.tegra.common_name
             distros = platform[2]
-            if "tegra" in self.product_name and not "arm64" in self.arch:
+            if self.tegra and ("l4t" not in platform):
                 log.warning(
-                    f"Skipping platform! '{self.arch}' is not supported for L4T Cuda Container Images (yet)"
+                    (
+                        f"Skipping platform! '{os}-{self.arch}' "
+                        "is not supported for L4T Cuda Container Images (yet)"
+                    )
                 )
                 continue
-
+            log.info(f"Inspecting global.json platform: {platform}")
             for distro in distros:
+                if self.tegra and not "l4t" in distro:
+                    # filters out the ubuntu distros in the shipitdata
+                    continue
                 rgx = re.search(r"(\D*)(\d*)", distro)
-                if rgx:
-                    self.distro = rgx.group(1)
-                    self.distro_version = rgx.group(2).replace("04", ".04")
+                if not self.tegra:
+                    if rgx:
+                        self.distro = rgx.group(1)
+                        self.distro_version = rgx.group(2).replace("04", ".04")
+                    else:
+                        raise UnknownCudaRCDistro(
+                            "Distro '{distro}' has an unknown format"
+                        )
+                    platform = f"{self.distro}{self.distro_version}"
                 else:
-                    raise UnknownCudaRCDistro("Distro '{distro}' has an unknown format")
-
-                platform = f"{self.distro}{self.distro_version}"
-                if "tegra" in self.product_name:
+                    # Now that we are ready to render the template, change the arch if tegra
+                    self.arch == "arm64"
+                    self.distro = "l4t"
+                    self.distro_version = ""
                     platform = "l4t"
                     if not cudnn_json_path:
                         log.error("Argument `--cudnn-json-path` is not set!")
                         sys.exit(1)
-
-                if "tegra" in self.product_name:
                     platform = f"{platform}-cuda"
+
                 self.output_path = pathlib.Path(f"{output_path}/{platform}")
 
                 sjson = self.get_shipit_funnel_json(
@@ -304,7 +313,7 @@ class ShipitData:
                 components = self.shipit_components(sjson, pkgs)
 
                 # TEMP WAR: populate cudnn component for L4T
-                if "l4t" in platform:
+                if self.tegra:
                     cudnn_comp = {
                         "cudnn8": {
                             "version": "",
@@ -315,7 +324,6 @@ class ShipitData:
                     log.debug(f"cudnn_json_path: {cudnn_json_path}")
                     with open(pathlib.Path(cudnn_json_path), "r") as f:
                         cudnn = json.loads(f.read())
-                    #  pp(type(cudnn))
                     for rawObj in cudnn:
                         artf = DotDict(rawObj)
                         log.debug(f"cudnn json loop item\n{pp(artf, output=False)}")
@@ -336,15 +344,17 @@ class ShipitData:
 
                 image_name = "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
                 template_path = "templates/ubuntu"
-                if "ubuntu" not in self.distro:
+                if not self.tegra and "ubuntu" not in self.distro:
                     template_path = "templates/redhat"
                 base_image = f"{self.distro}:{self.distro_version}"
                 if "ubi" in self.distro:
-                    base_image = f"registry.access.redhat.com/ubi{self.distro_version}/ubi:latest"
+                    base_image = (
+                        f"registry.access.redhat.com/ubi{self.distro_version}/ubi:latest"
+                    )
                 requires = ""
 
                 key = "push_repos"
-                if "tegra" in self.product_name:
+                if self.tegra:
                     key = "l4t_push_repos"
                 prepos = utils.load_rc_push_repos_manifest_yaml()[key]
                 if not self.push_repo_logged_in:
@@ -352,21 +362,21 @@ class ShipitData:
                     utils.auth_registries(prepos)
                     self.push_repo_logged_in = True
 
-                if "tegra" in self.product_name:
-
+                if self.tegra:
                     log.debug(f"Show me the object!!\n{pp(self, output=False)}")
-
                     # Ugh... hardcoded values suck! This will be changed in the future.
                     if self.release_label == "10.2.460":
                         self.l4t_base_image = f"{L4T_BASE_IMAGE_NAME}:r32.7.1"
+                        requires = "cuda>=10.2"
                     elif self.release_label == "11.4.14":
-                        self.l4t_base_image = (
-                            f"{L4T_BASE_IMAGE_NAME}:r34.1"
-                        )
+                        self.l4t_base_image = f"{L4T_BASE_IMAGE_NAME}:r34.1"
+                        requires = "cuda>=11.4"
                     elif not self.l4t_base_image:
+                        # 21:29 Mon May 09 2022: jesusa: This is not used much
+                        # for release because sometimes latest is not the
+                        # correct image...
                         self.l4t_base_image = utils.latest_l4t_base_image()
                     base_image = self.l4t_base_image
-                    requires = "cuda>=10.2"
                     image_name = (
                         f"gitlab-master.nvidia.com:5005/cuda-installer/cuda/l4t-cuda"
                     )
@@ -389,7 +399,10 @@ class ShipitData:
 
         if not manifest:
             log.warning(
-                "No manifest to write after parsing Shipit data. Unsupported kitpick as it doesn't contain anything useful for Cuda Image!"
+                (
+                    "No manifest to write after parsing Shipit data. "
+                    "Unsupported kitpick as it doesn't contain anything useful for Cuda Image!"
+                )
             )
             sys.exit(155)
 

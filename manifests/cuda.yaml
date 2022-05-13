@@ -2165,15 +2165,9 @@ cuda_v11.4.3:
         libnpp_dev:
           version: 11.4.0.110-1
         nvml_dev:
-<<<<<<< HEAD
           version: 11.4.120-1
         nvprof:
           version: 11.4.120-1
-=======
-          version: 11.5.50-1
-        nvprof:
-          version: 11.5.50-1
->>>>>>> fa6def4190ff1f278410cbac1cb85228a02ab9ba
         nvtx:
           version: 11.4.120-1
         libnccl2:
@@ -2184,6 +2178,8 @@ cuda_v11.4.3:
           version: 8.2.4.15-1
       requires: 'cuda>=11.4'
     base_image: rockylinux:8
+    template_path: templates/redhat
+    repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8
     x86_64:
       components:
         cudart:
@@ -2501,7 +2497,7 @@ cuda_v11.4.2:
         cudnn8:
           version: 8.2.4.15-1
       <<: *cuda11_4_2_requires
-  rocky8:
+  rockylinux8:
     arm64:
       components:
         cudart:

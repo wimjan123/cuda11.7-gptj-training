@@ -29,7 +29,6 @@ import os
 import pathlib
 import logging
 import logging.config
-import shutil
 
 import sys
 
@@ -43,10 +42,11 @@ from plumbum.cmd import rm  # type: ignore
 import yaml
 import glom
 import docker
-import git
 
 import requests
 from retry import retry
+
+from typing import Any
 
 from config import *
 from error import *
@@ -58,20 +58,20 @@ from dotdict import *
 class Manager(cli.Application):
     """CUDA CI Manager"""
 
-    PROGNAME = "manager.py"
-    VERSION = "0.0.1"
+    PROGNAME: str = "manager.py"
+    VERSION: str = "0.0.1"
 
-    manifest = None
+    manifest: dict[str, dict[str, str]] = {}
     ci = None
 
-    manifest_path = cli.SwitchAttr(
+    manifest_path: Any = cli.SwitchAttr(
         "--manifest",
         str,
         excludes=["--shipit-uuid"],
         help="Select a manifest to use.",
     )
 
-    shipit_uuid = cli.SwitchAttr(
+    shipit_uuid: Any = cli.SwitchAttr(
         "--shipit-uuid",
         str,
         excludes=["--manifest"],
@@ -92,16 +92,18 @@ class Manager(cli.Application):
             logging.config.dictConfig(yaml.safe_load(f.read())["logging"])
 
     # Get data from a object by dotted path. Example "cuda."v10.0".cuda_requires"
-    def get_data(self, obj, *path, can_skip=False):
+    def get_data(
+        self, obj: Any, *path: str, can_skip: bool = False
+    ) -> dict[str, dict[str, str]]:
+        data: Any = {}
         try:
             data = glom.glom(obj, glom.Path(*path))
         except glom.PathAccessError:
             if can_skip:
-                return
+                return {}
             # raise glom.PathAccessError
             log.error(f'get_data path: "{path}" not found!')
-        else:
-            return data
+        return data
 
     def main(self):
         self._load_app_config()
@@ -127,40 +129,33 @@ class Manager(cli.Application):
 class ManagerTrigger(Manager):
     DESCRIPTION = "Trigger for changes."
 
-    repo = None
+    trigger_all: bool = False
+    trigger_explicit: List[str] = []
 
-    trigger_all = False
-    trigger_explicit = []
+    key: str = ""
+    pipeline_name: str = "default"
 
-    key = ""
-    pipeline_name = "default"
+    parent: Manager
 
     CI_API_V4_URL = "https://gitlab-master.nvidia.com/api/v4"
     CI_PROJECT_ID = 12064
 
-    dry_run = cli.Flag(
+    dry_run: Any = cli.Flag(
         ["-n", "--dry-run"], help="Show output but don't make any changes."
     )
 
-    no_test = cli.Flag(["--no-test"], help="Don't run smoke tests")
+    no_test: Any = cli.Flag(["--no-test"], help="Don't run smoke tests")
 
-    no_scan = cli.Flag(["--no-scan"], help="Don't run security scans")
+    no_scan: Any = cli.Flag(["--no-scan"], help="Don't run security scans")
 
-    no_push = cli.Flag(["--no-push"], help="Don't push images to the registries")
+    no_push: Any = cli.Flag(["--no-push"], help="Don't push images to the registries")
 
-    rebuildb = cli.Flag(
+    rebuildb: Any = cli.Flag(
         ["--rebuild-builder"],
         help="Force rebuild of the builder image used to build the cuda images.",
     )
 
-    branch = cli.SwitchAttr(
-        "--branch",
-        str,
-        help="The branch to trigger against on Gitlab.",
-        default="master",
-    )
-
-    distro = cli.SwitchAttr(
+    distro: Any = cli.SwitchAttr(
         "--os-name",
         str,
         group="Targeted",
@@ -169,7 +164,7 @@ class ManagerTrigger(Manager):
         default=None,
     )
 
-    distro_version = cli.SwitchAttr(
+    distro_version: Any = cli.SwitchAttr(
         "--os-version",
         str,
         group="Targeted",
@@ -178,7 +173,7 @@ class ManagerTrigger(Manager):
         default=None,
     )
 
-    release_label = cli.SwitchAttr(
+    release_label: Any = cli.SwitchAttr(
         "--release-label",
         str,
         group="Targeted",
@@ -187,7 +182,7 @@ class ManagerTrigger(Manager):
         default=None,
     )
 
-    arch = cli.SwitchAttr(
+    arch: Any = cli.SwitchAttr(
         "--arch",
         cli.Set("x86_64", "ppc64le", "arm64", case_sensitive=False),
         group="Targeted",
@@ -195,7 +190,7 @@ class ManagerTrigger(Manager):
         help="Generate container scripts for a particular architecture",
     )
 
-    candidate_number = cli.SwitchAttr(
+    candidate_number: Any = cli.SwitchAttr(
         "--candidate-number",
         str,
         group="Targeted",
@@ -204,7 +199,7 @@ class ManagerTrigger(Manager):
         default=None,
     )
 
-    candidate_url = cli.SwitchAttr(
+    candidate_url: Any = cli.SwitchAttr(
         "--candidate-url",
         str,
         group="Targeted",
@@ -213,7 +208,7 @@ class ManagerTrigger(Manager):
         default=None,
     )
 
-    webhook_url = cli.SwitchAttr(
+    webhook_url: Any = cli.SwitchAttr(
         "--webhook-url",
         str,
         group="Targeted",
@@ -222,7 +217,7 @@ class ManagerTrigger(Manager):
         default=None,
     )
 
-    branch = cli.SwitchAttr(
+    branch: Any = cli.SwitchAttr(
         "--branch",
         str,
         group="Targeted",
@@ -230,7 +225,7 @@ class ManagerTrigger(Manager):
         default=None,
     )
 
-    trigger_override = cli.SwitchAttr(
+    trigger_override: Any = cli.SwitchAttr(
         "--trigger-override",
         str,
         excludes=["--shipit-uuid"],
@@ -238,7 +233,7 @@ class ManagerTrigger(Manager):
         default=None,
     )
 
-    flavor = cli.SwitchAttr(
+    flavor: Any = cli.SwitchAttr(
         "--flavor",
         str,
         help="The container configuration to build (limited support).",
@@ -298,135 +293,96 @@ class ManagerTrigger(Manager):
                     ci_vars.append(match.groups(0)[0])
         return ci_vars
 
-    def get_cuda_version_from_trigger(self, trigger):
+    def get_cuda_version_from_trigger(self, trigger: str) -> str:
         rgx = re.compile(r".*cuda-?([\d\.]+).*$")
         match = rgx.match(trigger)
         if (match := rgx.match(trigger)) is not None:
             return match.group(1)
         else:
             log.info(f"Cuda version not found in trigger!")
+        return ""
 
-    def get_pipeline_name_from_trigger(self, trigger):
+    def get_pipeline_name_from_trigger(self, trigger: str) -> str:
         rgx = re.compile(r".*name:(\w+)$")
         if (match := rgx.match(trigger)) is not None:
             return match.group(1)
+        return ""
 
-    def get_distro_version_from_trigger(self, trigger):
+    def get_distro_version_from_trigger(self, trigger: str) -> str:
         rgx = re.compile(r".*cuda([\d\.]+).*$")
         match = rgx.match(trigger)
         if match is not None:
             return match.group(1)
         else:
             log.warning(f"Could not extract version from trigger: '{trigger}'!")
-
-    def supported_distro_list_by_cuda_version(self, version):
-        if not version:
-            return
-        distros = ["ubuntu", "ubi", "centos"]
-        keys = self.parent.manifest[self.key].keys()
-
-        # There are other keys in the cuda field other than distros, we need to strip those out
-        def get_distro_name(name):
-            r = re.compile("[a-zA-Z]+")
-            return r.findall(name)[0]
-
-        return [f for f in keys if get_distro_name(f) in distros]
+        return ""
 
     def check_explicit_trigger(self):
-        """Checks for a pipeline trigger command and builds a list of pipelines to trigger.
+        """Checks for a pipeline trigger command and builds a list of pipelines to trigger."""
+        if not re.search(
+            r"^(?:[cuda]+[\d\.]*(?:[_a-z0-9]*)?,?)+$", self.trigger_override
+        ):
+            raise Exception(
+                (
+                    "Regex match for trigger override failed! "
+                    "Allowed format is 'cuda<version>(_<distro_with_version>)[,...]' "
+                    "ex: 'cuda11.0.3' or 'cuda10.2_centos8`"
+                )
+            )
 
-        Checks for a trigger command in the following order:
+    def populate_triggers(self) -> bool:
+        """Builds a list of gitlab pipelines to trigger.
 
-        - git commit message
-        - trigger_override command line flag
+        The list is stored is trigger_explicit member variable.
 
         Returns True if pipelines have been found matching the trigger command.
         """
-        self.repo = git.Repo(pathlib.Path("."))
-        commit = self.repo.commit("HEAD")
-        rgx = re.compile(r"ci\.trigger = (.*)")
-        log.debug("Commit message: %s", repr(commit.message))
-
-        if self.trigger_override:
-            log.info("Using trigger override!")
-            # check for illegal characters
-            if not re.search(
-                r"^(?:[cuda]+[\d\.]*(?:[_a-z0-9]*)?,?)+$", self.trigger_override
-            ):
-                raise Exception(
-                    "Regex match for trigger override failed! Allowed format is 'cuda<version>(_<distro_with_version>)[,...]' ex: 'cuda11.0.3' or 'cuda10.2_centos8`"
-                )
-            pipeline = self.trigger_override
-        else:
-            match = rgx.search(commit.message)
-            if not match:
-                log.debug("No explicit trigger found in commit message.")
-                return False
-            else:
-                log.info("Explicit trigger found in commit message")
-                pipeline = match.groups(0)[0].lower()
-
+        self.check_explicit_trigger()
+        pipeline: str = self.trigger_override
         if "all" in pipeline:
             log.info("Triggering ALL of the jobs!")
             self.trigger_all = True
             return True
-        else:
-            jobs = []
-            jobs.append(pipeline)
-            log.debug(f"jobs: {jobs}")
 
-            if "," in pipeline:
-                jobs = [x.strip() for x in pipeline.split(",")]
+        jobs = []
+        jobs.append(pipeline)
+        log.debug(f"jobs: {jobs}")
 
-            for job in jobs:
-                version = self.get_cuda_version_from_trigger(job)
-                if not version:
-                    self.pipeline_name = self.get_pipeline_name_from_trigger(job)
+        if "," in pipeline:
+            jobs = [x.strip() for x in pipeline.split(",")]
 
-                log.debug("cuda_version: %s" % version)
-                log.debug("pipeline_name: %s" % self.pipeline_name)
+        for job in jobs:
+            version = self.get_cuda_version_from_trigger(job)
+            if not version:
+                self.pipeline_name = self.get_pipeline_name_from_trigger(job)
 
-                self.key = f"cuda_v{version}"
-                if self.pipeline_name != "default":
-                    self.key = f"cuda_v{version}_{self.pipeline_name}"
+            log.debug("cuda_version: %s" % version)
+            log.debug("pipeline_name: %s" % self.pipeline_name)
 
-                distro = next((d for d in SUPPORTED_DISTRO_LIST if d in job), None)
-                distro_version = None
-                if distro:
-                    # The trigger specifies a distro
-                    assert not any(  # distro should not contain digits
-                        char.isdigit() for char in distro
-                    )
-                    distro_version = (
-                        re.match(rf"^.*{distro}([\d\.]*)", job).groups(0)[0] or None
-                    )
+            self.key = f"cuda_v{version}"
+            if self.pipeline_name != "default":
+                self.key = f"cuda_v{version}_{self.pipeline_name}"
 
-                arch = next(
-                    (arch for arch in ["x86_64", "ppc64le", "arm64"] if arch in job),
-                    None,
-                )
+            distro = next(
+                (d.distro for d in supported_platforms.list if d.distro in job),
+                None,
+            )
+            distro_version = next(
+                (d.version for d in supported_platforms.list if d.version in job), None
+            )
 
-                log.debug(
-                    f"job: '{job}' name: '{self.pipeline_name}' version: '{version}' distro: '{distro}' distro_version: '{distro_version}' arch: '{arch}'"
-                )
+            # Any or all of the variables passed to this function can be None
+            for cvar in self.ci_pipelines(version, distro, distro_version):
+                if self.pipeline_name and not "default" in self.pipeline_name:
+                    pipeline_vars = self.ci_pipeline_by_name(self.pipeline_name)
+                else:
+                    pipeline_vars = self.ci_pipelines(version, distro, distro_version)
 
-                # Any or all of the variables passed to this function can be None
-                for cvar in self.ci_pipelines(version, distro, distro_version):
-                    #  log.debug(f"self.pipeline_name: {self.pipeline_name} cvar: {cvar}")
-                    if self.pipeline_name and not "default" in self.pipeline_name:
-                        pipeline_vars = self.ci_pipeline_by_name(self.pipeline_name)
-                    else:
-                        pipeline_vars = self.ci_pipelines(
-                            version, distro, distro_version
-                        )
-                    #  sys.exit(1)
-
-                    for cvar in pipeline_vars:
-                        if not cvar in self.trigger_explicit:
-                            log.info("Triggering '%s'", cvar)
-                            self.trigger_explicit.append(cvar)
-
-            return True
+                for cvar in pipeline_vars:
+                    if not cvar in self.trigger_explicit:
+                        log.info("Triggering '%s'", cvar)
+                        self.trigger_explicit.append(cvar)
+        return True
 
     def kickoff(self):
         url = os.getenv("CI_API_V4_URL") or self.CI_API_V4_URL
@@ -535,8 +491,7 @@ class ManagerTrigger(Manager):
             log.debug("Triggering gitlab kitmaker pipeline using shipit source")
             self.kickoff_from_kitmaker()
         else:
-            self.check_explicit_trigger()
-            if self.trigger_all or self.trigger_explicit or self.rebuildb:
+            if self.populate_triggers():
                 self.kickoff()
 
 
@@ -547,9 +502,11 @@ class ManagerContainerPush(Manager):
         "Use either --image-name, --os-name, --os-version, --cuda-version 'to push images' or --readme 'to push readmes'."
     )
 
+    parent: Manager
+
     dry_run = cli.Flag(["-n", "--dry-run"], help="Show output but don't do anything!")
 
-    image_name = cli.SwitchAttr(
+    image_name: Any = cli.SwitchAttr(
         "--image-name",
         str,
         excludes=["--readme"],
@@ -557,52 +514,52 @@ class ManagerContainerPush(Manager):
         default="",
     )
 
-    distro = cli.SwitchAttr(
+    distro: Any = cli.SwitchAttr(
         "--os-name",
         str,
         help="The distro to use",
         default=None,
     )
 
-    distro_version = cli.SwitchAttr(
+    distro_version: Any = cli.SwitchAttr(
         "--os-version",
         str,
         help="The distro version",
         default=None,
     )
 
-    cuda_version = cli.SwitchAttr(
+    cuda_version: Any = cli.SwitchAttr(
         "--cuda-version",
         str,
         help="The cuda version to use. Example: '10.1'",
         default=None,
     )
 
-    image_tag_suffix = cli.SwitchAttr(
+    image_tag_suffix: Any = cli.SwitchAttr(
         "--tag-suffix",
         str,
         help="The suffix to append to the tag name. Example 10.1-base-centos6<suffix>",
         default="",
     )
 
-    pipeline_name = cli.SwitchAttr(
+    pipeline_name: Any = cli.SwitchAttr(
         "--pipeline-name",
         str,
         help="The name of the pipeline the deploy is coming from",
     )
 
-    tag_manifest = cli.SwitchAttr(
+    tag_manifest: Any = cli.SwitchAttr(
         "--tag-manifest",
         str,
         help="A list of tags to push",
     )
 
-    readme = cli.Flag(
+    readme: Any = cli.Flag(
         "--readme",
         help="Path to the README.md",
     )
 
-    flavor = cli.SwitchAttr(
+    flavor: Any = cli.SwitchAttr(
         "--flavor",
         str,
         help="The container configuration to build (limited support).",
@@ -614,7 +571,7 @@ class ManagerContainerPush(Manager):
     repos_dict = {}
     tags = []
     key = ""
-    push_repos = {}
+    push_repos: dict[str, dict[str, str]] = {}
     target_repos = []
     repo_creds = {}
 
@@ -632,10 +589,7 @@ class ManagerContainerPush(Manager):
         )
 
         for repo, metadata in self.push_repos.items():
-            #  log.debug(repo)
-            #  log.debug(self.target_repos)
             if repo not in self.target_repos:
-                log.debug(f"IN HERE: {repo}")
                 continue
             if "gitlab-master" in repo:
                 # Images have already been pushed to gitlab by this point
@@ -664,7 +618,6 @@ class ManagerContainerPush(Manager):
                 "Could not retrieve container image repo credentials. Environment not set?"
             )
             sys.exit(1)
-        #  sys.exit(1)
 
     @retry(
         (ImagePushRetry),
@@ -680,7 +633,6 @@ class ManagerContainerPush(Manager):
             if not tag:
                 continue
             log.info("Processing image: %s:%s", self.image_name, tag)
-            #  pp(self.repo_creds)
             for repo in self.repos:
                 log.info("COPYING to: %s:%s", repo, tag)
                 if self.dry_run:
@@ -721,7 +673,6 @@ class ManagerContainerPush(Manager):
                     "docker",
                     ("pushrm", "-f", f"doc/{readme}", f"{repo}"),
                     printOutput=False,
-                    returnOut=True,
                 )
                 if result.returncode > 0:
                     log.error(result.stderr)
@@ -750,44 +701,53 @@ class ManagerContainerPush(Manager):
 class ManagerGenerate(Manager):
     DESCRIPTION = "Generate Dockerfiles from templates."
 
+    parent: Manager
+
     cuda = {}
+    output_path = {}  # The product of parsing the input templates
+
     dist_base_path = None  # pathlib object. The parent "base" path of output_path.
     output_manifest_path = None  # pathlib object. The path to save the shipit manifest.
-    output_path = {}  # The product of parsing the input templates
-    key = ""
+
+    key: str = ""
     cuda_version_is_release_label = False
     cuda_version_regex = re.compile(r"cuda_v([\d\.]+)(?:_(\w+))?$")
 
-    product_name = ""
-    candidate_number = ""
+    product_name: str = ""
+    candidate_number: str = ""
 
-    template_env = Environment(
+    shipitdata = None
+
+    # ( ͡° ͜ʖ ͡°)
+    tegra: bool = False
+
+    template_env: Any = Environment(
         extensions=["jinja2.ext.do", "jinja2.ext.loopcontrols"],
         trim_blocks=True,
         lstrip_blocks=True,
     )
 
-    generate_ci = cli.Flag(
+    generate_ci: Any = cli.Flag(
         ["--ci"],
         help="Generate the gitlab pipelines only.",
     )
 
-    generate_all = cli.Flag(
+    generate_all: Any = cli.Flag(
         ["--all"],
         help="Generate all of the templates.",
     )
 
-    generate_readme = cli.Flag(
+    generate_readme: Any = cli.Flag(
         ["--readme"],
         help="Generate all readmes.",
     )
 
-    generate_tag = cli.Flag(
+    generate_tag: Any = cli.Flag(
         ["--tags"],
         help="Generate all supported and unsupported tag lists.",
     )
 
-    distro = cli.SwitchAttr(
+    distro: Any = cli.SwitchAttr(
         "--os-name",
         str,
         group="Targeted",
@@ -796,7 +756,7 @@ class ManagerGenerate(Manager):
         default=None,
     )
 
-    distro_version = cli.SwitchAttr(
+    distro_version: Any = cli.SwitchAttr(
         "--os-version",
         str,
         group="Targeted",
@@ -805,7 +765,7 @@ class ManagerGenerate(Manager):
         default=None,
     )
 
-    cuda_version = cli.SwitchAttr(
+    cuda_version: Any = cli.SwitchAttr(
         "--cuda-version",
         str,
         excludes=["--all", "--readme", "--tags"],
@@ -814,7 +774,7 @@ class ManagerGenerate(Manager):
         default=None,
     )
 
-    release_label = cli.SwitchAttr(
+    release_label: Any = cli.SwitchAttr(
         "--release-label",
         str,
         excludes=["--readme", "--tags"],
@@ -823,7 +783,7 @@ class ManagerGenerate(Manager):
         default=None,
     )
 
-    pipeline_name = cli.SwitchAttr(
+    pipeline_name: Any = cli.SwitchAttr(
         "--pipeline-name",
         str,
         excludes=["--all", "--readme", "--tags"],
@@ -832,7 +792,7 @@ class ManagerGenerate(Manager):
         default="default",
     )
 
-    flavor = cli.SwitchAttr(
+    flavor: Any = cli.SwitchAttr(
         "--flavor",
         str,
         help="Identifier passed to template context.",
@@ -841,37 +801,14 @@ class ManagerGenerate(Manager):
     #
     # WAR ONLY USED FOR L4T and will be removed in the future
     #
-    cudnn_json_path = cli.SwitchAttr(
+    cudnn_json_path: Any = cli.SwitchAttr(
         "--cudnn-json-path",
         str,
         group="L4T",
         help="File path to json encoded file containing cudnn package metadata.",
     )
 
-    def supported_distro_list_by_cuda_version(self, version):
-        if not version:
-            return
-        distros = ["ubuntu", "ubi", "centos"]
-        keys = self.parent.manifest[self.key].keys()
-
-        # There are other keys in the cuda field other than distros, we need to strip those out
-        def get_distro_name(name):
-            r = re.compile("[a-zA-Z]+")
-            return r.findall(name)[0]
-
-        return [f for f in keys if get_distro_name(f) in distros]
-
-    def supported_arch_list(self):
-        ls = []
-        for k in glom.glom(
-            self.parent.manifest,
-            glom.Path(self.key, f"{self.distro}{self.distro_version}"),
-        ):
-            if k in ["x86_64", "ppc64le", "arm64"]:
-                ls.append(k)
-        return ls
-
-    def cudnn_versions(self, arch):
+    def cudnn_versions(self, arch: str) -> list[str]:
         obj = []
         for k, v in self.cuda[arch]["components"].items():
             if k.startswith("cudnn") and v:
@@ -891,12 +828,16 @@ class ManagerGenerate(Manager):
                 # Do not copy cuda version keys
                 continue
             # These top level keys should be ignored since they are processed elsewhere
+            data = self.parent.manifest
+            if self.shipitdata:
+                data = self.shipitdata.shipit_manifest
             if k in [
                 "exclude_repos",
                 "components",
-                *self.supported_arch_list(),
-                *self.supported_distro_list_by_cuda_version(
-                    self.cuda_version or self.release_label
+                *self.arches,
+                *supported_distro_list_by_cuda_version(
+                    data,
+                    self.cuda_version,
                 ),
             ]:
                 continue
@@ -917,9 +858,12 @@ class ManagerGenerate(Manager):
             "os": self.cuda["os"],
         }
         for arch in self.arches:
-            if not cudnn_version_name in self.cuda[arch]["components"]:
+            larch = arch
+            if self.tegra:
+                larch = arches.tegra.container_arch
+            if not cudnn_version_name in self.cuda[larch]["components"]:
                 continue
-            cudnn_manifest = self.cuda[arch]["components"][cudnn_version_name]
+            cudnn_manifest = self.cuda[larch]["components"][cudnn_version_name]
             if cudnn_manifest:
                 if "source" in cudnn_manifest:
                     cudnn_manifest["basename"] = os.path.basename(
@@ -928,8 +872,8 @@ class ManagerGenerate(Manager):
                     cudnn_manifest["dev"]["basename"] = os.path.basename(
                         cudnn_manifest["dev"]["source"]
                     )
-                new_ctx[arch] = {}
-                new_ctx[arch]["cudnn"] = cudnn_manifest
+                new_ctx[larch] = {}
+                new_ctx[larch]["cudnn"] = cudnn_manifest
 
         log.debug(f"cudnn template context {pp(new_ctx, output=False)}")
         self.output_template(
@@ -967,14 +911,13 @@ class ManagerGenerate(Manager):
                 log.info(f"Writing {new_output_path}/{new_filename}")
                 with open(f"{new_output_path}/{new_filename}", "w") as f2:
                     f2.write(template.render(cuda=ctx))
-                #  sys.exit(1)
 
-        if any(f in input_template.as_posix() for f in ["cuda.repo", "ml.repo"]):
+        if "cuda.repo" in input_template.as_posix():
             for arch in self.arches:
-                ctx["target_arch"] = arch
-                if "arm64" in arch:
-                    ctx["target_arch"] = "sbsa"
-                write_template(arch)
+                ctx["target_arch"] = arches.get(arch).repo_name.rpm
+                if self.tegra:
+                    arch = "tegra"
+                write_template(arches.get(arch).common_name)
         else:
             write_template()
 
@@ -997,8 +940,13 @@ class ManagerGenerate(Manager):
         if not self.image_tag_suffix:
             self.image_tag_suffix = ""
 
+        larch = self.arches
+        if self.tegra:
+            larch = arches.tegra.container_arch
+
         # The templating context. This data structure is used to fill the templates.
         self.cuda = {
+            "supported_arches": arches,
             "flavor": self.flavor,
             "version": {
                 "release_label": self.cuda_version,
@@ -1006,7 +954,7 @@ class ManagerGenerate(Manager):
                 "minor": minor,
                 "major_minor": f"{major}.{minor}",
             },
-            "arches": self.arches,
+            "arches": larch,
             "os": {"distro": self.distro, "version": self.distro_version},
             "image_tag_suffix": self.image_tag_suffix,
         }
@@ -1020,7 +968,14 @@ class ManagerGenerate(Manager):
         )
 
         for arch in self.arches:
-            self.cuda[arch] = {}
+            pp(arch)
+            if arch in arches:
+                translated_arch = arches.get(arch).container_arch
+            elif self.tegra:
+                translated_arch = arches.tegra.container_arch
+            if self.tegra:
+                larch = arches.tegra.common_name
+            self.cuda[translated_arch] = {}
             # Only set in version < 11.0
             self.cuda["version"]["build_version"] = self.get_data(
                 conf,
@@ -1028,7 +983,7 @@ class ManagerGenerate(Manager):
                 "build_version",
                 can_skip=True,
             )
-            self.cuda[arch]["components"] = self.get_data(
+            self.cuda[translated_arch]["components"] = self.get_data(
                 conf,
                 self.key,
                 f"{self.distro}{self.distro_version}",
@@ -1042,16 +997,17 @@ class ManagerGenerate(Manager):
                     f"{self.distro}{self.distro_version}",
                     arch,
                 ),
-                arch=arch,
+                arch=translated_arch,
             )
 
         log.debug(f"template context {pp(self.cuda, output=False)}")
 
-        #  sys.exit(1)
-
     def generate_cudnn_scripts(self, base_image, input_template):
         for arch in self.arches:
-            for pkg in self.cudnn_versions(arch):
+            larch = arch
+            if self.tegra:
+                larch = arches.tegra.container_arch
+            for pkg in self.cudnn_versions(larch):
                 if not "cudnn" in self.cuda:
                     self.cuda["cudnn"] = {}
                 self.cuda["cudnn"]["target"] = base_image
@@ -1103,17 +1059,19 @@ class ManagerGenerate(Manager):
             if "base" not in img:
                 self.generate_cudnn_scripts(img, cudnn_template_path)
 
-    # fmt: off
     def generate_gitlab_pipelines(self):
 
         manifest = self.parent.manifest
-        ctx = {"manifest_path": self.parent.manifest_path}
+        ctx = {
+            "supported_distro_matrix": supported_platforms.list,
+            "moby_buildkit_version": MOBY_BUILDKIT_VERSION,
+            "manifest_path": self.parent.manifest_path,
+        }
 
         def get_cudnn_components(key, distro, arch):
             comps = {}
             for comp, val in manifest[key][distro][arch]["components"].items():
                 if "cudnn" in comp and val:
-                    #  print(comp, val)
                     comps[comp] = {}
                     comps[comp]["version"] = val["version"]
             return comps
@@ -1133,13 +1091,17 @@ class ManagerGenerate(Manager):
             if cuda_version not in ctx:
                 ctx[cuda_version] = {}
             ctx[cuda_version][pipeline_name] = {}
-            ctx[cuda_version][pipeline_name]["cuda_version_yaml_safe"] = cuda_version.replace(".", "_")
+            ctx[cuda_version][pipeline_name][
+                "cuda_version_yaml_safe"
+            ] = cuda_version.replace(".", "_")
 
             key = f"cuda_v{cuda_version}"
             if pipeline_name and pipeline_name != "default":
                 key = f"cuda_v{cuda_version}_{pipeline_name}"
 
-            ctx[cuda_version][pipeline_name]["dist_base_path"] = self.get_data(manifest, key, "dist_base_path")
+            ctx[cuda_version][pipeline_name]["dist_base_path"] = self.get_data(
+                manifest, key, "dist_base_path"
+            )
             ctx[cuda_version][pipeline_name]["pipeline_name"] = self.pipeline_name
 
             for distro, _ in manifest[key].items():
@@ -1149,37 +1111,63 @@ class ManagerGenerate(Manager):
                 if not "distros" in ctx[cuda_version][pipeline_name]:
                     ctx[cuda_version][pipeline_name]["distros"] = {}
                 ctx[cuda_version][pipeline_name]["distros"][distro] = {}
-                ctx[cuda_version][pipeline_name]["distros"][distro]["name"] = dm.group('name')
-                ctx[cuda_version][pipeline_name]["distros"][distro]["version"] = dm.group('version')
-                ctx[cuda_version][pipeline_name]["distros"][distro]["yaml_safe"] = distro.replace(".", "_")
-                image_tag_suffix = self.get_data(manifest, key, distro, "image_tag_suffix", can_skip=True)
-                ctx[cuda_version][pipeline_name]["distros"][distro]["image_tag_suffix"] = ""
+                ctx[cuda_version][pipeline_name]["distros"][distro]["name"] = dm.group(
+                    "name"
+                )
+                ctx[cuda_version][pipeline_name]["distros"][distro]["version"] = dm.group(
+                    "version"
+                )
+                ctx[cuda_version][pipeline_name]["distros"][distro][
+                    "yaml_safe"
+                ] = distro.replace(".", "_")
+                image_tag_suffix = self.get_data(
+                    manifest, key, distro, "image_tag_suffix", can_skip=True
+                )
+                ctx[cuda_version][pipeline_name]["distros"][distro][
+                    "image_tag_suffix"
+                ] = ""
 
                 if image_tag_suffix:
-                    ctx[cuda_version][pipeline_name]["distros"][distro]["image_tag_suffix"] = image_tag_suffix
+                    ctx[cuda_version][pipeline_name]["distros"][distro][
+                        "image_tag_suffix"
+                    ] = image_tag_suffix
 
                 ctx[cuda_version][pipeline_name]["distros"][distro]["arches"] = []
 
                 for arch, _ in manifest[key][distro].items():
                     if arch not in ["arm64", "ppc64le", "x86_64"]:
                         continue
+                    no_os_suffix = self.get_data(
+                        manifest, key, distro, "no_os_suffix", can_skip=True
+                    )
+                    ctx[cuda_version][pipeline_name]["image_name"] = self.get_data(
+                        manifest, key, "image_name"
+                    )
 
-                    #  log.debug("arch: '%s'" % arch)
-                    no_os_suffix = self.get_data(manifest, key, distro, "no_os_suffix", can_skip=True)
-                    ctx[cuda_version][pipeline_name]["image_name"] = self.get_data(manifest, key, "image_name")
+                    if (
+                        "no_os_suffix"
+                        not in ctx[cuda_version][pipeline_name]["distros"][distro]
+                    ):
+                        ctx[cuda_version][pipeline_name]["distros"][distro][
+                            "no_os_suffix"
+                        ] = {}
 
-                    if "no_os_suffix" not in ctx[cuda_version][pipeline_name]["distros"][distro]:
-                        ctx[cuda_version][pipeline_name]["distros"][distro]["no_os_suffix"] = {}
-
-                    ctx[cuda_version][pipeline_name]["distros"][distro]["no_os_suffix"] = (True if no_os_suffix else False)
-                    ctx[cuda_version][pipeline_name]["distros"][distro]["arches"].append(arch)
+                    ctx[cuda_version][pipeline_name]["distros"][distro][
+                        "no_os_suffix"
+                    ] = (True if no_os_suffix else False)
+                    ctx[cuda_version][pipeline_name]["distros"][distro]["arches"].append(
+                        arch
+                    )
 
                     if "cudnn" not in ctx[cuda_version][pipeline_name]["distros"][distro]:
                         ctx[cuda_version][pipeline_name]["distros"][distro]["cudnn"] = {}
                     cudnn_comps = get_cudnn_components(key, distro, arch)
                     if cudnn_comps:
-                        ctx[cuda_version][pipeline_name]["distros"][distro]["cudnn"][arch] = cudnn_comps
+                        ctx[cuda_version][pipeline_name]["distros"][distro]["cudnn"][
+                            arch
+                        ] = cudnn_comps
 
+        log.debug(f"template context: {pp(ctx, output=False)}")
         input_template = pathlib.Path("templates/gitlab/gitlab-ci.yml.jinja")
         with open(input_template) as f:
             log.debug("Processing template %s", input_template)
@@ -1187,7 +1175,6 @@ class ManagerGenerate(Manager):
             template = self.template_env.from_string(f.read())
             with open(output_path, "w") as f2:
                 f2.write(template.render(cuda=ctx))
-            #  sys.exit(1)
 
     def generate_readmes(self):
 
@@ -1241,19 +1228,20 @@ class ManagerGenerate(Manager):
         for key, _ in manifest.items():
             if self.matched(key):
                 if self.cuda_version_regex.match(key):
-                    path['dist_base_path'] = self.get_data(manifest, key, "dist_base_path")
-                    path['release_label'] = self.get_data(manifest, key, "release_label")
-                    get_releaseInfo_and_dockerfilePath(path['dist_base_path'])
+                    path["dist_base_path"] = self.get_data(
+                        manifest, key, "dist_base_path"
+                    )
+                    path["release_label"] = self.get_data(manifest, key, "release_label")
+                    get_releaseInfo_and_dockerfilePath(path["dist_base_path"])
                     break  # to keep data for latest available version only
 
-        dist_path_list = path['dist_base_path'].split("/")
+        dist_path_list = path["dist_base_path"].split("/")
 
         # to get all unique supported operating system names
         distros = set(distros)
         platforms = DotDict()
 
         def get_arches_for_platform(os):
-            #  log.debug(f"os: {pp(os, output=False)}")
             ls = []
             for k in glom.glom(
                 self.parent.manifest,
@@ -1264,19 +1252,18 @@ class ManagerGenerate(Manager):
             return ls
 
         for OS in distros:
-            #  log.debug(f"OS: {pp(OS, output=False)}")
             platforms[OS] = DotDict()
             if "centos" in OS:
                 distro = OS.split("centos")
-                platforms[OS]["name"] = f'CentOS {distro[1]}'
+                platforms[OS]["name"] = f"CentOS {distro[1]}"
                 platforms[OS]["arches"] = get_arches_for_platform(OS)
             elif "ubuntu" in OS:
                 distro = OS.split("ubuntu")
-                platforms[OS]["name"] = f'Ubuntu {distro[1]}'
+                platforms[OS]["name"] = f"Ubuntu {distro[1]}"
                 platforms[OS]["arches"] = get_arches_for_platform(OS)
             else:
                 distro = OS.split("ubi")
-                platforms[OS]["name"] = f'UBI {distro[1]}'
+                platforms[OS]["name"] = f"UBI {distro[1]}"
                 platforms[OS]["arches"] = get_arches_for_platform(OS)
 
         # to help populate the OS types in all readmes in a sorted manner
@@ -1284,27 +1271,29 @@ class ManagerGenerate(Manager):
             cuda_release_info[keys] = release_info[keys]
 
         # a data structure to manipulate readme template
-        readme = {'latest_version': dist_path_list[1],
-                    'release_label': path['release_label'],
-                    'cuda_release_info': cuda_release_info,
-                    'platforms': platforms,
-                }
+        readme = {
+            "latest_version": dist_path_list[1],
+            "release_label": path["release_label"],
+            "cuda_release_info": cuda_release_info,
+            "platforms": platforms,
+        }
 
         input_template = pathlib.Path("templates/doc/README.md.jinja")
         with open(input_template) as rf:
-            output_path = pathlib.Path(f'doc/README.md')
+            output_path = pathlib.Path(f"doc/README.md")
             template = self.template_env.from_string(rf.read())
             log.debug(f"Template context: \n{pp(readme, output=False)}")
             with open(output_path, "w") as wf:
                 wf.write(template.render(readme=readme))
-
 
     def generate_tags(self):
 
         tag_list = []  # local list variable to hold tags from dockerhub
         distros_list = []  # local list variable to hold distros from dockerhub
         cuda_releases = {}  # local dict variable for all CUDA releases
-        unsupported_release_labels = []  # to grab unsupported CUDA releases from manifest.yaml
+        unsupported_release_labels = (
+            []
+        )  # to grab unsupported CUDA releases from manifest.yaml
         unsupported_distros = []  # to grab unsupported CUDA distros from manifest.yaml
         # for all supported CUDA releases
         supported_cuda_releases = {}
@@ -1317,7 +1306,6 @@ class ManagerGenerate(Manager):
                 "skopeo",
                 ("list-tags", f"docker://{repo}"),
                 printOutput=False,
-                returnOut=True
             )
 
         try:
@@ -1338,10 +1326,10 @@ class ManagerGenerate(Manager):
                         distros_list.append(tag)
             elif "centos" in tags:
                 centos_tags = tags.split("-")
-                distros_list.append(centos_tags[len(centos_tags)-1])
+                distros_list.append(centos_tags[len(centos_tags) - 1])
             elif "ubi" in tags:
                 ubi_tags = tags.split("-")
-                distros_list.append(ubi_tags[len(ubi_tags)-1])
+                distros_list.append(ubi_tags[len(ubi_tags) - 1])
         distros_set = set(distros_list)
 
         manifest = self.parent.manifest
@@ -1350,7 +1338,9 @@ class ManagerGenerate(Manager):
             if self.matched(key):
                 if self.cuda_version_regex.match(key):
                     new_key = key.split("v")
-                    cuda_releases[new_key[1]] = self.get_data(manifest, key, "release_label")
+                    cuda_releases[new_key[1]] = self.get_data(
+                        manifest, key, "release_label"
+                    )
             if key == "unsupported":
                 unsupported_distros = self.get_data(manifest, key, "distros")
                 unsupported_release_labels = self.get_data(manifest, key, "release_label")
@@ -1372,33 +1362,34 @@ class ManagerGenerate(Manager):
                 if len(tag) == 2:
                     cuda_releases[tag[0]] = label
                 else:
-                    cuda_releases[(tag[0]+"."+tag[len(tag)-1])] = label
-        # log.debug(cuda_releases)
+                    cuda_releases[(tag[0] + "." + tag[len(tag) - 1])] = label
 
-        supported = {'cuda_tags': tag_list,
-                     'supported_distros': sorted(supported_distros, reverse=True),
-                     'supported_cuda_releases': supported_cuda_releases}
+        supported = {
+            "cuda_tags": tag_list,
+            "supported_distros": sorted(supported_distros, reverse=True),
+            "supported_cuda_releases": supported_cuda_releases,
+        }
 
-        unsupported = {'cuda_tags': tag_list,
-                       'cuda_releases': cuda_releases,
-                       'unsupported_distros': sorted(unsupported_distros, reverse=True),
-                       'unsupported_cuda_releases': unsupported_release_labels,
-                       'supported_distros': sorted(supported_distros, reverse=True)}
+        unsupported = {
+            "cuda_tags": tag_list,
+            "cuda_releases": cuda_releases,
+            "unsupported_distros": sorted(unsupported_distros, reverse=True),
+            "unsupported_cuda_releases": unsupported_release_labels,
+            "supported_distros": sorted(supported_distros, reverse=True),
+        }
 
         for tag in ("supported", "unsupported"):
             if "unsupported" in tag:
                 tags = unsupported
             else:
                 tags = supported
-            input_template = pathlib.Path(f'templates/doc/{tag}-tags.md.Jinja')
+            input_template = pathlib.Path(f"templates/doc/{tag}-tags.md.Jinja")
             with open(input_template) as rf:
                 log.debug("Processing template %s for %s tags", input_template, tag)
-                output_path = pathlib.Path(f'doc/{tag}-tags.md')
+                output_path = pathlib.Path(f"doc/{tag}-tags.md")
                 template = self.template_env.from_string(rf.read())
                 with open(output_path, "w") as wf:
                     wf.write(template.render(tags=tags))
-
-    # fmt: on
 
     def set_output_path(self, target):
         self.output_path = pathlib.Path(
@@ -1417,10 +1408,8 @@ class ManagerGenerate(Manager):
             # use regex101.com to debug with gitlab-ci.yml as the search text
             r"^(?P<distro>[a-zA-Z]*)(?P<distro_version>[\d\.]*)-v(?P<cuda_version>[\d\.]*)(?:-(?!cudnn|test|scan|deploy)(?P<pipeline_name>\w+))?$"
         )
-
         for ci_job, _ in self.parent.ci.items():
             if (match := rgx.match(ci_job)) is None:
-                #  log.debug("continuing")
                 continue
             self.distro = match.group("distro")
             self.distro_version = match.group("distro_version")
@@ -1465,12 +1454,12 @@ class ManagerGenerate(Manager):
         key = f"cuda_v{self.release_label}"
         self.cuda_version = self.release_label
         for k, _ in self.shipitdata.shipit_manifest[key].items():
-            if any(x in k for x in SUPPORTED_DISTRO_LIST) or "l4t" in k:
+            if any(x.full_name() in k for x in supported_platforms.list) or "l4t" in k:
                 log.debug(f"Working on {k}")
                 if "l4t" in k:
-                    # FIXME: Code smell. Refactoring this to make it cleaner would take a long time...
-                    self.distro = "l4t"
-                    self.distro_version = "-cuda"
+                    self.tegra = True
+                    self.distro = "l4t-cuda"
+                    self.distro_version = ""
                 else:
                     rgx = re.search(r"(\D*)([\d\.]*)", k)
                     self.distro = rgx.group(1)
@@ -1495,7 +1484,7 @@ class ManagerGenerate(Manager):
         key = f"cuda_v{self.release_label}"
         self.cuda_version = self.release_label
         for k, _ in self.shipitdata.shipit_manifest[key].items():
-            if any(x in k for x in SUPPORTED_DISTRO_LIST) or "l4t" in k:
+            if any(x.full_name() in k for x in supported_platforms.list) or "l4t" in k:
                 if f"{self.distro}{self.distro_version}" not in k:
                     continue
                 log.debug(f"Working on {k}")
@@ -1520,7 +1509,10 @@ class ManagerGenerate(Manager):
         if self.pipeline_name and self.pipeline_name != "default":
             self.key = f"cuda_v{self.release_label}_{self.pipeline_name}"
         log.debug(f"self.key: {self.key}")
-        self.arches = self.supported_arch_list()
+        self.arches = supported_arch_list(
+            self.parent.manifest, f"{self.distro}{self.distro_version}", self.cuda_version
+        )
+
         log.debug(f"self.arches: {self.arches}")
 
         self.dist_base_path = pathlib.Path(
@@ -1532,7 +1524,6 @@ class ManagerGenerate(Manager):
             )
         )
         log.debug(f"self.dist_base_path: {self.dist_base_path}")
-        #  if not self.output_manifest_path:
         self.set_output_path(f"{self.distro}{self.distro_version}")
         log.debug(f"self.output_manifest_path: {self.output_manifest_path}")
         self.prepare_context()
@@ -1598,9 +1589,9 @@ class ManagerStaging(Manager):
         "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda-ppc64le",
     ]
 
-    delete_all = cli.Flag(["--delete-all"], help="Delete all of the staging images.")
+    delete_all: Any = cli.Flag(["--delete-all"], help="Delete all of the staging images.")
 
-    repo = cli.SwitchAttr(
+    repo: Any = cli.SwitchAttr(
         "--repo",
         cli.Set(*repos, case_sensitive=False),
         excludes=["--delete-all"],
@@ -1613,7 +1604,6 @@ class ManagerStaging(Manager):
             "skopeo",
             ("list-tags", f"docker://{repo}"),
             printOutput=False,
-            returnOut=True,
         )
 
     def delete_all_tags(self):
@@ -1638,7 +1628,6 @@ class ManagerStaging(Manager):
                 "skopeo",
                 ("delete", f"docker://{repo}:{tag}"),
                 printOutput=False,
-                returnOut=True,
             )
             if out2.returncode > 0:
                 log.info(f"deleted {repo}:{tag}")

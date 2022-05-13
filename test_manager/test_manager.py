@@ -1,9 +1,12 @@
 import pathlib
 import os
+import json
 
 from beeprint import pp  # type: ignore
-
 import pytest
+import requests
+from plumbum import local
+from deepdiff import DeepDiff
 
 from manager import Manager, ManagerGenerate
 
@@ -15,10 +18,10 @@ def test_check_arches():
 
     This variable is used for the repo paths.
     """
-    # _, rc = Manager.run(["prog", "--manifest=manifests/cuda.yaml", "generate", "--os-name=ubuntu", "--os-version=20.04", "--cuda-version=11.4.0", "--release-label=11.4.0"], exit=False)
-    # pp(rc)
+    # _, rc = Manager.run(["prog", "--manifest=manifests/cuda.yaml", "generate", "--os-name=ubuntu", "--os-version=20.04", "--cuda-version=11.4.0", "--release-label=11.4.0"], exit=False) pp(rc)
     # assert rc == 0
     arches = []
+
     def get_arches(filepath):
         narches = []
         with open(filepath) as file:
@@ -38,6 +41,7 @@ def test_check_arches():
     assert any("x86_64" in arg for arg in arches)
     assert any("sbsa" in arg for arg in arches)
 
+
 def haz_nvprof(filepath):
     with open(filepath) as file:
         lines = file.readlines()
@@ -46,17 +50,24 @@ def haz_nvprof(filepath):
                 return True
     return False
 
+
 def get_dockefiles(distro):
     files = []
     for root, _, _ in os.walk("dist"):
-        if any(x in root for x in ["deprecated", "base", "runtime", "cudnn"]) or "devel" not in root:
+        if (
+            any(x in root for x in ["deprecated", "base", "runtime", "cudnn"])
+            or "devel" not in root
+        ):
             continue
         if "rhel" not in distro and distro not in root:
             continue
-        if "rhel" in distro and not any(d in root for d in ["ubi", "centos", "rockylinux"]):
+        if "rhel" in distro and not any(
+            d in root for d in ["ubi", "centos", "rockylinux"]
+        ):
             continue
         files.append(pathlib.Path(f"{root}/Dockerfile"))
     return files
+
 
 def test_check_nvprof_install_ubuntu():
     """Checks that ubuntu generated output contain nvprof"""
@@ -83,6 +94,7 @@ def test_check_nvprof_install_rhel():
     if failed:
         pytest.fail("nvprof is not being installed in some rhel-based docker files!")
 
+
 def get_cudnn_dockefiles(distro):
     files = []
     for root, _, _ in os.walk("dist"):
@@ -92,10 +104,13 @@ def get_cudnn_dockefiles(distro):
             continue
         if "rhel" not in distro and distro not in root:
             continue
-        if "rhel" in distro and not any(d in root for d in ["ubi", "centos", "rockylinux"]):
+        if "rhel" in distro and not any(
+            d in root for d in ["ubi", "centos", "rockylinux"]
+        ):
             continue
         files.append(pathlib.Path(f"{root}/Dockerfile"))
     return files
+
 
 def arches_in_dockerfile(df):
     count = 0
@@ -105,6 +120,7 @@ def arches_in_dockerfile(df):
             if "base as base-" in line:
                 count = count + 1
     return count
+
 
 def cudnn_package_check(distro):
     failed = False
@@ -122,9 +138,12 @@ def cudnn_package_check(distro):
                     ref_count = ref_count + 1
         if ref_count != num_arch * 2:
             failed = True
-            print(f"imbalance detected for cudnn: '{df}'...balance calculation is {ref_count} != {num_arch * 2}")
+            print(
+                f"imbalance detected for cudnn: '{df}'...balance calculation is {ref_count} != {num_arch * 2}"
+            )
     if failed:
         pytest.fail("cudnn explicit install imbalance detected!")
+
 
 def test_cudnn_devel_has_correct_runtime_package_rhel():
     """Checks the cudnn devel dockerfile for balanced cudnn packages.
@@ -141,6 +160,7 @@ def test_cudnn_devel_has_correct_runtime_package_rhel():
     """
     cudnn_package_check("rhel")
 
+
 def test_cudnn_devel_has_correct_runtime_package_ubuntu():
     """Checks the cudnn devel dockerfile for balanced cudnn packages.
 
@@ -155,3 +175,70 @@ def test_cudnn_devel_has_correct_runtime_package_ubuntu():
     Implemented for https://gitlab.com/nvidia/container-images/cuda/-/issues/160
     """
     cudnn_package_check("ubuntu")
+
+
+def test_all_kitmaker_script_generation(tmp_path):
+    """Tests kitpick generation.
+
+    The tree command is used to output the directory structure to json and this
+    is compared to a previously reviewed sample.
+    """
+    _, rc = Manager.run(
+        [
+            "prog",
+            "--shipit-uuid=146A3758-A6DA-11EC-B4B9-BA92743E8BA1",
+            "generate",
+            "--all",
+            "--release-label=11.6.2",
+        ],
+        exit=False,
+    )
+    pp(rc)
+    assert rc == 0
+    tree = local["tree"]
+    actual_json = tree("-J", "kitpick")
+    expect: str = ""
+    with pathlib.Path(
+        "test_manager/data/kitmaker_generate_expected_directory_structure.json"
+    ).open(encoding="UTF-8") as source:
+        expect = json.load(source)
+    actual = json.loads(actual_json)
+    ddiff = DeepDiff(expect, actual)
+    pp(ddiff)
+    assert not ddiff, "File and directory structure for expected output has changed!!"
+
+
+def test_all_kitmaker_script_generation_l4t(tmp_path):
+    """Tests kitpick generation for l4t.
+
+    The tree command is used to output the directory structure to json and this
+    is compared to a previously reviewed sample.
+    """
+
+    # Generation of l4t images requires pre-set cudnn data
+
+    _, rc = Manager.run(
+        [
+            "prog",
+            "--shipit-uuid=032042B0-7428-11EC-86E3-4D91743E8BA1",
+            "generate",
+            "--all",
+            "--release-label=11.4.14",
+            "--cudnn-json-path=test_manager/data/l4t_cudnn_data.json",
+            "--flavor=l4t",
+        ],
+        exit=False,
+    )
+    pp(rc)
+    assert rc == 0
+    tree = local["tree"]
+    actual_json = tree("-J", "kitpick")
+    expect: str = ""
+    with pathlib.Path(
+        "test_manager/data/kitmaker_generate_expected_directory_structure_l4t.json"
+    ).open(encoding="UTF-8") as source:
+        expect = json.load(source)
+    actual = json.loads(actual_json)
+    ddiff = DeepDiff(expect, actual)
+    pp(ddiff)
+    assert not ddiff, "File and directory structure for expected output has changed!!"

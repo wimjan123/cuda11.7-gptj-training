@@ -26,8 +26,15 @@ urllib3 = "1.26.9"
 
 [tool.poetry.dev-dependencies]
 pytest = ">3.6"
+mypy = "^0.950"
+types-requests = "^2.27.25"
+types-retry = "^0.9.7"
+types-PyYAML = "^6.0.7"
 
 [tool.pytest.ini_options]
 filterwarnings = [
     'ignore:.*distutils.*:DeprecationWarning',
 ]
+
+[tool.black]
+line-length = 90

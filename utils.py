@@ -7,13 +7,15 @@ import yaml
 import pathlib
 import subprocess
 import io
-import collections
 import sys
 import json
 import re
+from typing import NamedTuple
+
 
 from plumbum import local
 from plumbum.cmd import find, cut, sort  # type: ignore
+import glom
 
 
 @retry(
@@ -53,21 +55,24 @@ def auth_registries(push_repos):
                 f"-p" f"{data['pass']}",
             ),
             printOutput=False,
-            returnOut=True,
         )
-        if result.returncode > 0:
+        if result[0] > 0:
             raise ImageRegistryLoginRetry()
         else:
             log.info(f"Docker login to '{repo}' was successful.")
 
 
-def shellcmd(bin, args, printOutput=True, returnOut=False):
+class ShellCmdReturn(NamedTuple):
+    returncode: int
+    stdout: str
+    stderr: str
+
+
+def shellcmd(bin: str, args: tuple[str, ...], printOutput: bool = True) -> ShellCmdReturn:
     """Run the shell command with specified arguments for skopeo/docker
 
     args        -- A tuple of arguments.
     printOutput -- If True, the output of the command will be send to the logger.
-    returnOut   -- Return a tuple of the stdout, stderr, and return code. Default: returns true if the command
-                 succeeded.
     """
     if "skopeo" in bin:
         bin_name = local["/usr/bin/skopeo"]
@@ -99,13 +104,7 @@ def shellcmd(bin, args, printOutput=True, returnOut=False):
         if printOutput:
             log.error(line)
     p.communicate()
-    if returnOut:
-        Output = collections.namedtuple("output", "returncode stdout stderr")
-        return Output(p.returncode, out, err)
-    if p.returncode != 0:
-        #  log.error("See log output...")
-        return False
-    return True
+    return ShellCmdReturn(p.returncode, out, err)
 
 
 # Returns a list of packages used in the templates
@@ -161,10 +160,9 @@ def latest_l4t_base_image():
         "skopeo",
         ("list-tags", f"docker://{L4T_BASE_IMAGE_NAME}"),
         printOutput=False,
-        returnOut=True,
     )
     #  pp(out)
-    if out[0] != 0:
+    if out.returncode != 0:
         log.error(
             f"Some problem occurred in getting tags from NGC (nvcr.io): {out.stderr}"
         )
@@ -189,3 +187,29 @@ def latest_l4t_base_image():
         if re.match("^r[\\d]*\\.", tag):
             tag_list2.append(tag)
     return f"{L4T_BASE_IMAGE_NAME}:{sorted(tag_list2, reverse=True)[0]}"
+
+
+def supported_distro_list_by_cuda_version(
+    manifest: dict[str, dict[str, str]], version: str
+) -> List[str]:
+    """ """
+    keys = manifest[f"cuda_v{version}"].keys()
+    theset = set()
+    for key in keys:
+        for f in supported_platforms.list:
+            if f.full_name() in key:
+                theset.add(f.full_name())
+    return list(sorted(theset))
+
+
+def supported_arch_list(
+    manifest: dict[str, dict[str, str]], distro: str, cuda_version: str
+) -> List[str]:
+    ls = []
+    for k in glom.glom(
+        manifest,
+        glom.Path(f"cuda_v{cuda_version}", distro),
+    ):
+        if k in supported_platforms.all_architectures_by_common_name():
+            ls.append(k)
+    return ls
