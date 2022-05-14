@@ -417,8 +417,8 @@ class ManagerTrigger(Manager):
         log.info("payload %s", payload)
         if not dry_run:
             r = requests.post(final_url, data=payload)
-            log.debug("response status code %s", r.status_code)
-            log.debug("response body %s", r.json())
+            log.info("response status code %s", r.status_code)
+            log.info("response body %s", r.json())
         else:
             log.info("In dry-run mode so not making gitlab trigger POST")
 
@@ -459,8 +459,8 @@ class ManagerTrigger(Manager):
 
         if not dry_run:
             r = requests.post(final_url, data=payload)
-            log.debug("response status code %s", r.status_code)
-            log.debug("response body %s", r.json())
+            log.info("response status code %s", r.status_code)
+            log.info("response body %s", r.json())
         else:
             log.info("In dry-run mode so not making gitlab trigger POST")
 
