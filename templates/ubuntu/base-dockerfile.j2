@@ -51,12 +51,13 @@ ENV NVIDIA_REQUIRE_JETPACK_HOST_MOUNTS ${NVIDIA_REQUIRE_JETPACK_HOST_MOUNTS}
 {% endif -%}
 
 RUN apt-get update &&{% if cuda.flavor == "l4t" %} apt upgrade -y &&{% endif %} apt-get install -y --no-install-recommends \
-{% if cuda.os.version == "22.04" %}
-    gnupg2 curl ca-certificates && \
-    curl -fsSLO https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb && \
-    dpkg -i cuda-keyring_1.0-1_all.deb && \
-    apt-get purge --autoremove -y curl \
-{% elif cuda.os.version != "16.04" or cuda.flavor == "l4t" %}
+{# Commented out until https://jirasw.nvidia.com/browse/CUDAINST-1240 #}
+{# {% if cuda.os.version == "22.04" %} #}
+{#     gnupg2 curl ca-certificates && \ #}
+{#     curl -fsSLO https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb && \ #}
+{#     dpkg -i cuda-keyring_1.0-1_all.deb && \ #}
+{#     apt-get purge --autoremove -y curl \ #}
+{% if cuda.os.version != "16.04" or cuda.flavor == "l4t" %}
     gnupg2 curl ca-certificates && \
     curl -fsSL {{ cuda.repo_url }}/${NVARCH}/3bf863cc.pub | apt-key add - && \
     echo "deb {{ cuda.repo_url }}/${NVARCH} /" > /etc/apt/sources.list.d/cuda.list && \
