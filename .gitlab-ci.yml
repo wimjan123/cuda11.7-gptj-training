@@ -556,42 +556,6 @@ kitmaker_centos7_deploy:
 
 
 # Need to pass these from the trigger
-.kitmaker_ubi9_variables: &kitmaker_ubi9_variables
-  IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
-  OS: "ubi9"
-  OS_NAME: "ubi"
-  OS_VERSION: "9"
-  ARCHES: "x86_64, arm64, ppc64le"
-  # CI_DEBUG_TRACE: "true"
-
-.kitmaker_ubi9_only: &kitmaker_ubi9_only
-  image: gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
-  variables:
-    <<: *kitmaker_ubi9_variables
-    TAG_MANIFEST_PATH: "tag_manifest_ubi9"
-  rules:
-    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "default"'
-    - if: $UBI9 == "true"
-
-kitmaker_ubi9_base:
-  <<: *cuda_base_definition
-  <<: *kitmaker_ubi9_only
-  # Need to build container images on a multi-arch capable machine
-  <<: *tags_definition_multiarch
-
-kitmaker_ubi9_deploy:
-  <<: *deploy_definition
-  <<: *kitmaker_ubi9_only
-  <<: *tags_definition
-  needs:
-    - job: kitmaker_ubi9_base
-      artifacts: true
-  artifacts:
-    paths:
-      - tag_manifest_ubi9
-
-
-# Need to pass these from the trigger
 .kitmaker_ubi8_variables: &kitmaker_ubi8_variables
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda"
   OS: "ubi8"

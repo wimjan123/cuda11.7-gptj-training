@@ -128,12 +128,6 @@ def _pop_supported_platforms():
         ),
         SupportedPlatform(
             distro="ubi",
-            version="9",
-            arches=[arches.x86_64, arches.arm64, arches.ppc64le],
-            package_format="rpm",
-        ),
-        SupportedPlatform(
-            distro="ubi",
             version="8",
             arches=[arches.x86_64, arches.arm64, arches.ppc64le],
             package_format="rpm",
