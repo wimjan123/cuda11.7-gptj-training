@@ -61,7 +61,7 @@ def test_supported_distros():
         "ubuntu2204",
         "ubuntu2004",
         "ubuntu1804",
-        "ubi9",
+        # "ubi9",
         "ubi8",
         "rockylinux8",
         "ubi7",
