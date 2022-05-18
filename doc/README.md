@@ -159,6 +159,12 @@ Visit [OpenSource @ Nvidia](https://developer.download.nvidia.com/compute/cuda/o
 - [`11.7.0-devel-ubi7` (*11.7.0/ubi7/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.7.0/ubi7/devel/Dockerfile)
 - [`11.7.0-base-ubi7` (*11.7.0/ubi7/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.7.0/ubi7/base/Dockerfile)
 
+### rockylinux8 [arm64, x86_64]
+
+- [`11.7.0-runtime-rockylinux8` (*11.7.0/rockylinux8/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.7.0/rockylinux8/runtime/Dockerfile)
+- [`11.7.0-devel-rockylinux8` (*11.7.0/rockylinux8/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.7.0/rockylinux8/devel/Dockerfile)
+- [`11.7.0-base-rockylinux8` (*11.7.0/rockylinux8/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.7.0/rockylinux8/base/Dockerfile)
+
 ### centos7 [x86_64]
 
 *WARNING*: POSSIBLE MISSING IMAGE TAGS

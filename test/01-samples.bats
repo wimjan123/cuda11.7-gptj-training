@@ -52,20 +52,19 @@ function dq_rhel() {
     # fi
     printf "%s\n" "FROM ${image}" > Dockerfile
     [[ "${OS_NAME}" == "ubuntu" ]] && dq_ubuntu
-    [[ "${OS_NAME}" == "centos" ]] || [[ "${OS_NAME}" == "ubi" ]] && dq_rhel
+    [[ "${OS_NAME}" == "centos" ]] || [[ "${OS_NAME}" == "ubi" ]] || [[ "${OS_NAME}" == "rockylinux" ]] && dq_rhel
     if [[ "${unsupported_git_tags[@]}" =~ "${major}.${minor}" ]]; then
         printf "%s\n" "WORKDIR /usr/local/cuda/samples/1_Utilities/deviceQuery" >> Dockerfile
         printf "%s\n" "RUN make " >> Dockerfile
         printf "%s\n" "CMD ./deviceQuery" >> Dockerfile
     else
         printf "%s\n" "RUN git clone https://github.com/NVIDIA/cuda-samples.git" >> Dockerfile
-
-        if [[ "11.6" =~ "${major}.${minor}" ]]; then
+        # printf "%s\n" "RUN git checkout tags/v${major}.${minor}" >> Dockerfile
+        # if [[ "11.6" =~ "${major}.${minor}" ]]; then
             printf "%s\n" "WORKDIR cuda-samples/Samples/1_Utilities/deviceQuery/" >> Dockerfile
-        else
-            printf "%s\n" "WORKDIR cuda-samples/Samples/deviceQuery/" >> Dockerfile
-        fi
-        printf "%s\n" "RUN git checkout tags/v${major}.${minor}" >> Dockerfile
+        # else
+            # printf "%s\n" "WORKDIR cuda-samples/Samples/deviceQuery/" >> Dockerfile
+        # fi
         printf "%s\n" "RUN make TARGET_ARCH='${ARCH}' SMS='75' " >> Dockerfile
         printf "%s\n" "CMD ./deviceQuery" >> Dockerfile
     fi
@@ -78,19 +77,19 @@ function dq_rhel() {
 @test "vectorAdd {
     printf "%s\n" "FROM $image" > Dockerfile
     [[ "${OS_NAME}" == "ubuntu" ]] && dq_ubuntu
-    [[ "${OS_NAME}" == "centos" ]] || [[ "${OS_NAME}" == "ubi" ]] && dq_rhel
+    [[ "${OS_NAME}" == "centos" ]] || [[ "${OS_NAME}" == "ubi" ]] || [[ "${OS_NAME}" == "rockylinux" ]] && dq_rhel
     if [[ "${unsupported_git_tags[@]}" =~ "${major}.${minor}" ]]; then
         printf "%s\n" "WORKDIR /usr/local/cuda/samples/0_Simple/vectorAdd_nvrtc" >> Dockerfile
         printf "%s\n" "RUN make " >> Dockerfile
         printf "%s\n" "CMD ./vectorAdd_nvrtc" >> Dockerfile
     else
         printf "%s\n" "RUN git clone https://github.com/NVIDIA/cuda-samples.git" >> Dockerfile
-        if [[ "11.6" =~ "${major}.${minor}" ]]; then
+        # printf "%s\n" "RUN git checkout tags/v${major}.${minor}" >> Dockerfile
+        # if [[ "11.6" =~ "${major}.${minor}" ]]; then
             printf "%s\n" "WORKDIR cuda-samples/Samples/0_Introduction/vectorAdd_nvrtc" >> Dockerfile
-        else
-            printf "%s\n" "WORKDIR cuda-samples/Samples/vectorAdd_nvrtc" >> Dockerfile
-        fi
-        printf "%s\n" "RUN git checkout tags/v${major}.${minor}" >> Dockerfile
+        # else
+            # printf "%s\n" "WORKDIR cuda-samples/Samples/vectorAdd_nvrtc" >> Dockerfile
+        # fi
         printf "%s\n" "RUN make TARGET_ARCH='${ARCH}' SMS='75'" >> Dockerfile
         printf "%s\n" "CMD ./vectorAdd_nvrtc" >> Dockerfile
     fi
@@ -104,19 +103,19 @@ function dq_rhel() {
 @test "matrixMulDrv {
     printf "%s\n" "FROM ${image}" > Dockerfile
     [[ "${OS_NAME}" == "ubuntu" ]] && dq_ubuntu
-    [[ "${OS_NAME}" == "centos" ]] || [[ "${OS_NAME}" == "ubi" ]] && dq_rhel
+    [[ "${OS_NAME}" == "centos" ]] || [[ "${OS_NAME}" == "ubi" ]] || [[ "${OS_NAME}" == "rockylinux" ]] && dq_rhel
     if [[ "${unsupported_git_tags[@]}" =~ "${major}.${minor}" ]]; then
         printf "%s\n" "WORKDIR /usr/local/cuda/samples/0_Simple/matrixMulDrv" >> Dockerfile
         printf "%s\n" "RUN make " >> Dockerfile
         printf "%s\n" "CMD ./matrixMulDrv" >> Dockerfile
     else
         printf "%s\n" "RUN git clone https://github.com/NVIDIA/cuda-samples.git" >> Dockerfile
-        if [[ "11.6" =~ "${major}.${minor}" ]]; then
+        # printf "%s\n" "RUN git checkout tags/v${major}.${minor}" >> Dockerfile
+        # if [[ "11.6" =~ "${major}.${minor}" ]]; then
             printf "%s\n" "WORKDIR cuda-samples/Samples/0_Introduction/matrixMulDrv/" >> Dockerfile
-        else
-            printf "%s\n" "WORKDIR cuda-samples/Samples/matrixMulDrv/" >> Dockerfile
-        fi
-        printf "%s\n" "RUN git checkout tags/v${major}.${minor}" >> Dockerfile
+        # else
+            # printf "%s\n" "WORKDIR cuda-samples/Samples/matrixMulDrv/" >> Dockerfile
+        # fi
         printf "%s\n" "RUN make TARGET_ARCH='${ARCH}' SMS='75'" >> Dockerfile
         printf "%s\n" "RUN make TARGET_ARCH='${ARCH}'" >> Dockerfile
         printf "%s\n" "CMD ./matrixMulDrv" >> Dockerfile

@@ -112,31 +112,6 @@ cuda_v11.7.0:
           version: 11.7.50-1
       requires: 'cuda>=11.7'
     base_image: rockylinux:8
-    ppc64le:
-      components:
-        cudart:
-          version: 11.7.60-1
-        cudart_dev:
-          version: 11.7.60-1
-        libcublas:
-          version: 11.10.1.25-1
-        libcublas_dev:
-          version: 11.10.1.25-1
-        libcusparse:
-          version: 11.7.3.50-1
-        libcusparse_dev:
-          version: 11.7.3.50-1
-        libnpp:
-          version: 11.7.3.21-1
-        libnpp_dev:
-          version: 11.7.3.21-1
-        nvml_dev:
-          version: 11.7.50-1
-        nvprof:
-          version: 11.7.50-1
-        nvtx:
-          version: 11.7.50-1
-      requires: 'cuda>=11.7'
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8
     template_path: templates/redhat
     x86_64:
