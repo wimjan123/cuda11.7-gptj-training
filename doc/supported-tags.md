@@ -6,7 +6,21 @@ A full list of tags that are supported with CUDA, cuDNN, and security updates.
 > _nvcr.io/nvidia/cuda_<br>
 > _docker.io/nvidia/cuda_
 
+### ubuntu22.04
+
+#### CUDA 11.7.0
+
+- [`11.7.0-base-ubuntu22.04` (*11.7.0/ubuntu22.04/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.7.0/ubuntu22.04/base/Dockerfile)
+- [`11.7.0-devel-ubuntu22.04` (*11.7.0/ubuntu22.04/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.7.0/ubuntu22.04/devel/Dockerfile)
+- [`11.7.0-runtime-ubuntu22.04` (*11.7.0/ubuntu22.04/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.7.0/ubuntu22.04/runtime/Dockerfile)
+
 ### ubuntu20.04
+
+#### CUDA 11.7.0
+
+- [`11.7.0-base-ubuntu20.04` (*11.7.0/ubuntu20.04/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.7.0/ubuntu20.04/base/Dockerfile)
+- [`11.7.0-devel-ubuntu20.04` (*11.7.0/ubuntu20.04/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.7.0/ubuntu20.04/devel/Dockerfile)
+- [`11.7.0-runtime-ubuntu20.04` (*11.7.0/ubuntu20.04/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.7.0/ubuntu20.04/runtime/Dockerfile)
 
 #### CUDA 11.6.2
 
@@ -145,6 +159,12 @@ A full list of tags that are supported with CUDA, cuDNN, and security updates.
 - [`11.0.3-runtime-ubuntu20.04` (*11.0.3/ubuntu20.04/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0.3/ubuntu20.04/runtime/Dockerfile)
 
 ### ubuntu18.04
+
+#### CUDA 11.7.0
+
+- [`11.7.0-base-ubuntu18.04` (*11.7.0/ubuntu18.04/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.7.0/ubuntu18.04/base/Dockerfile)
+- [`11.7.0-devel-ubuntu18.04` (*11.7.0/ubuntu18.04/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.7.0/ubuntu18.04/devel/Dockerfile)
+- [`11.7.0-runtime-ubuntu18.04` (*11.7.0/ubuntu18.04/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.7.0/ubuntu18.04/runtime/Dockerfile)
 
 #### CUDA 11.6.2
 
@@ -398,6 +418,12 @@ A full list of tags that are supported with CUDA, cuDNN, and security updates.
 
 ### ubi8
 
+#### CUDA 11.7.0
+
+- [`11.7.0-base-ubi8` (*11.7.0/ubi8/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.7.0/ubi8/base/Dockerfile)
+- [`11.7.0-devel-ubi8` (*11.7.0/ubi8/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.7.0/ubi8/devel/Dockerfile)
+- [`11.7.0-runtime-ubi8` (*11.7.0/ubi8/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.7.0/ubi8/runtime/Dockerfile)
+
 #### CUDA 11.6.2
 
 - [`11.6.2-base-ubi8` (*11.6.2/ubi8/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.6.2/ubi8/base/Dockerfile)
@@ -555,6 +581,12 @@ A full list of tags that are supported with CUDA, cuDNN, and security updates.
 - [`10.1-runtime-ubi8` (*10.1/ubi8/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/10.1/ubi8/runtime/Dockerfile)
 
 ### ubi7
+
+#### CUDA 11.7.0
+
+- [`11.7.0-base-ubi7` (*11.7.0/ubi7/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.7.0/ubi7/base/Dockerfile)
+- [`11.7.0-devel-ubi7` (*11.7.0/ubi7/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.7.0/ubi7/devel/Dockerfile)
+- [`11.7.0-runtime-ubi7` (*11.7.0/ubi7/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.7.0/ubi7/runtime/Dockerfile)
 
 #### CUDA 11.6.2
 
@@ -720,7 +752,165 @@ A full list of tags that are supported with CUDA, cuDNN, and security updates.
 - [`10.0-devel-ubi7` (*10.0/ubi7/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/10.0/ubi7/devel/Dockerfile)
 - [`10.0-runtime-ubi7` (*10.0/ubi7/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/10.0/ubi7/runtime/Dockerfile)
 
+### rockylinux8
+
+#### CUDA 11.7.0
+
+- [`11.7.0-base-rockylinux8` (*11.7.0/None/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.7.0/None/base/Dockerfile)
+- [`11.7.0-devel-rockylinux8` (*11.7.0/None/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.7.0/None/devel/Dockerfile)
+- [`11.7.0-runtime-rockylinux8` (*11.7.0/None/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.7.0/None/runtime/Dockerfile)
+
+#### CUDA 11.6.2
+
+- [`11.6.2-base-rockylinux8` (*11.6.2/None/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.6.2/None/base/Dockerfile)
+- [`11.6.2-cudnn8-devel-rockylinux8` (*11.6.2/None/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.6.2/None/devel/cudnn8/Dockerfile)
+- [`11.6.2-cudnn8-runtime-rockylinux8` (*11.6.2/None/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.6.2/None/runtime/cudnn8/Dockerfile)
+- [`11.6.2-devel-rockylinux8` (*11.6.2/None/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.6.2/None/devel/Dockerfile)
+- [`11.6.2-runtime-rockylinux8` (*11.6.2/None/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.6.2/None/runtime/Dockerfile)
+
+#### CUDA 11.6.1
+
+- [`11.6.1-base-rockylinux8` (*11.6.1/None/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.6.1/None/base/Dockerfile)
+- [`11.6.1-cudnn8-devel-rockylinux8` (*11.6.1/None/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.6.1/None/devel/cudnn8/Dockerfile)
+- [`11.6.1-cudnn8-runtime-rockylinux8` (*11.6.1/None/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.6.1/None/runtime/cudnn8/Dockerfile)
+- [`11.6.1-devel-rockylinux8` (*11.6.1/None/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.6.1/None/devel/Dockerfile)
+- [`11.6.1-runtime-rockylinux8` (*11.6.1/None/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.6.1/None/runtime/Dockerfile)
+
+#### CUDA 11.6
+
+- [`11.6.0-base-rockylinux8` (*11.6.0/None/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.6.0/None/base/Dockerfile)
+- [`11.6.0-cudnn8-devel-rockylinux8` (*11.6.0/None/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.6.0/None/devel/cudnn8/Dockerfile)
+- [`11.6.0-cudnn8-runtime-rockylinux8` (*11.6.0/None/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.6.0/None/runtime/cudnn8/Dockerfile)
+- [`11.6.0-devel-rockylinux8` (*11.6.0/None/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.6.0/None/devel/Dockerfile)
+- [`11.6.0-runtime-rockylinux8` (*11.6.0/None/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.6.0/None/runtime/Dockerfile)
+
+#### CUDA 11.5.1
+
+- [`11.5.1-base-rockylinux8` (*11.5.1/None/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.5.1/None/base/Dockerfile)
+- [`11.5.1-cudnn8-devel-rockylinux8` (*11.5.1/None/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.5.1/None/devel/cudnn8/Dockerfile)
+- [`11.5.1-cudnn8-runtime-rockylinux8` (*11.5.1/None/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.5.1/None/runtime/cudnn8/Dockerfile)
+- [`11.5.1-devel-rockylinux8` (*11.5.1/None/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.5.1/None/devel/Dockerfile)
+- [`11.5.1-runtime-rockylinux8` (*11.5.1/None/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.5.1/None/runtime/Dockerfile)
+
+#### CUDA 11.5.0
+
+- [`11.5.0-base-rockylinux8` (*11.5.0/None/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.5.0/None/base/Dockerfile)
+- [`11.5.0-cudnn8-devel-rockylinux8` (*11.5.0/None/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.5.0/None/devel/cudnn8/Dockerfile)
+- [`11.5.0-cudnn8-runtime-rockylinux8` (*11.5.0/None/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.5.0/None/runtime/cudnn8/Dockerfile)
+- [`11.5.0-devel-rockylinux8` (*11.5.0/None/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.5.0/None/devel/Dockerfile)
+- [`11.5.0-runtime-rockylinux8` (*11.5.0/None/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.5.0/None/runtime/Dockerfile)
+
+#### CUDA 11.4.3
+
+- [`11.4.3-base-rockylinux8` (*11.4.3/None/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.4.3/None/base/Dockerfile)
+- [`11.4.3-cudnn8-devel-rockylinux8` (*11.4.3/None/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.4.3/None/devel/cudnn8/Dockerfile)
+- [`11.4.3-cudnn8-runtime-rockylinux8` (*11.4.3/None/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.4.3/None/runtime/cudnn8/Dockerfile)
+- [`11.4.3-devel-rockylinux8` (*11.4.3/None/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.4.3/None/devel/Dockerfile)
+- [`11.4.3-runtime-rockylinux8` (*11.4.3/None/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.4.3/None/runtime/Dockerfile)
+
+#### CUDA 11.4.2
+
+- [`11.4.2-base-rockylinux8` (*11.4.2/None/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.4.2/None/base/Dockerfile)
+- [`11.4.2-cudnn8-devel-rockylinux8` (*11.4.2/None/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.4.2/None/devel/cudnn8/Dockerfile)
+- [`11.4.2-cudnn8-runtime-rockylinux8` (*11.4.2/None/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.4.2/None/runtime/cudnn8/Dockerfile)
+- [`11.4.2-devel-rockylinux8` (*11.4.2/None/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.4.2/None/devel/Dockerfile)
+- [`11.4.2-runtime-rockylinux8` (*11.4.2/None/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.4.2/None/runtime/Dockerfile)
+
+#### CUDA 11.4.1
+
+- [`11.4.1-base-rockylinux8` (*11.4.1/None/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.4.1/None/base/Dockerfile)
+- [`11.4.1-cudnn8-devel-rockylinux8` (*11.4.1/None/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.4.1/None/devel/cudnn8/Dockerfile)
+- [`11.4.1-cudnn8-runtime-rockylinux8` (*11.4.1/None/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.4.1/None/runtime/cudnn8/Dockerfile)
+- [`11.4.1-devel-rockylinux8` (*11.4.1/None/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.4.1/None/devel/Dockerfile)
+- [`11.4.1-runtime-rockylinux8` (*11.4.1/None/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.4.1/None/runtime/Dockerfile)
+
+#### CUDA 11.4.0
+
+- [`11.4.0-base-rockylinux8` (*11.4.0/None/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.4.0/None/base/Dockerfile)
+- [`11.4.0-cudnn8-devel-rockylinux8` (*11.4.0/None/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.4.0/None/devel/cudnn8/Dockerfile)
+- [`11.4.0-cudnn8-runtime-rockylinux8` (*11.4.0/None/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.4.0/None/runtime/cudnn8/Dockerfile)
+- [`11.4.0-devel-rockylinux8` (*11.4.0/None/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.4.0/None/devel/Dockerfile)
+- [`11.4.0-runtime-rockylinux8` (*11.4.0/None/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.4.0/None/runtime/Dockerfile)
+
+#### CUDA 11.3.1
+
+- [`11.3.1-base-rockylinux8` (*11.3.1/None/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.1/None/base/Dockerfile)
+- [`11.3.1-cudnn8-devel-rockylinux8` (*11.3.1/None/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.1/None/devel/cudnn8/Dockerfile)
+- [`11.3.1-cudnn8-runtime-rockylinux8` (*11.3.1/None/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.1/None/runtime/cudnn8/Dockerfile)
+- [`11.3.1-devel-rockylinux8` (*11.3.1/None/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.1/None/devel/Dockerfile)
+- [`11.3.1-runtime-rockylinux8` (*11.3.1/None/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.1/None/runtime/Dockerfile)
+
+#### CUDA 11.3.0
+
+- [`11.3.0-base-rockylinux8` (*11.3.0/None/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/None/base/Dockerfile)
+- [`11.3.0-cudnn8-devel-rockylinux8` (*11.3.0/None/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/None/devel/cudnn8/Dockerfile)
+- [`11.3.0-cudnn8-runtime-rockylinux8` (*11.3.0/None/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/None/runtime/cudnn8/Dockerfile)
+- [`11.3.0-devel-rockylinux8` (*11.3.0/None/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/None/devel/Dockerfile)
+- [`11.3.0-runtime-rockylinux8` (*11.3.0/None/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.3.0/None/runtime/Dockerfile)
+
+#### CUDA 11.2 Update 2
+
+- [`11.2.2-base-rockylinux8` (*11.2.2/None/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.2/None/base/Dockerfile)
+- [`11.2.2-cudnn8-devel-rockylinux8` (*11.2.2/None/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.2/None/devel/cudnn8/Dockerfile)
+- [`11.2.2-cudnn8-runtime-rockylinux8` (*11.2.2/None/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.2/None/runtime/cudnn8/Dockerfile)
+- [`11.2.2-devel-rockylinux8` (*11.2.2/None/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.2/None/devel/Dockerfile)
+- [`11.2.2-runtime-rockylinux8` (*11.2.2/None/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.2/None/runtime/Dockerfile)
+
+#### CUDA 11.2 Update 1
+
+- [`11.2.1-base-rockylinux8` (*11.2.1/None/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.1/None/base/Dockerfile)
+- [`11.2.1-cudnn8-devel-rockylinux8` (*11.2.1/None/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.1/None/devel/cudnn8/Dockerfile)
+- [`11.2.1-cudnn8-runtime-rockylinux8` (*11.2.1/None/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.1/None/runtime/cudnn8/Dockerfile)
+- [`11.2.1-devel-rockylinux8` (*11.2.1/None/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.1/None/devel/Dockerfile)
+- [`11.2.1-runtime-rockylinux8` (*11.2.1/None/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.1/None/runtime/Dockerfile)
+
+#### CUDA 11.2.0
+
+- [`11.2.0-base-rockylinux8` (*11.2.0/None/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.0/None/base/Dockerfile)
+- [`11.2.0-cudnn8-devel-rockylinux8` (*11.2.0/None/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.0/None/devel/cudnn8/Dockerfile)
+- [`11.2.0-cudnn8-runtime-rockylinux8` (*11.2.0/None/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.0/None/runtime/cudnn8/Dockerfile)
+- [`11.2.0-devel-rockylinux8` (*11.2.0/None/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.0/None/devel/Dockerfile)
+- [`11.2.0-runtime-rockylinux8` (*11.2.0/None/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.2.0/None/runtime/Dockerfile)
+
+#### CUDA 11.1 Update 1
+
+- [`11.1.1-base-rockylinux8` (*11.1.1/None/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.1.1/None/base/Dockerfile)
+- [`11.1.1-cudnn8-devel-rockylinux8` (*11.1.1/None/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.1.1/None/devel/cudnn8/Dockerfile)
+- [`11.1.1-cudnn8-runtime-rockylinux8` (*11.1.1/None/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.1.1/None/runtime/cudnn8/Dockerfile)
+- [`11.1.1-devel-rockylinux8` (*11.1.1/None/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.1.1/None/devel/Dockerfile)
+- [`11.1.1-runtime-rockylinux8` (*11.1.1/None/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.1.1/None/runtime/Dockerfile)
+
+#### CUDA 11.0 Update 1
+
+- [`11.0.3-base-rockylinux8` (*11.0.3/None/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0.3/None/base/Dockerfile)
+- [`11.0.3-cudnn8-devel-rockylinux8` (*11.0.3/None/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0.3/None/devel/cudnn8/Dockerfile)
+- [`11.0.3-cudnn8-runtime-rockylinux8` (*11.0.3/None/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0.3/None/runtime/cudnn8/Dockerfile)
+- [`11.0.3-devel-rockylinux8` (*11.0.3/None/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0.3/None/devel/Dockerfile)
+- [`11.0.3-runtime-rockylinux8` (*11.0.3/None/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.0.3/None/runtime/Dockerfile)
+
+#### CUDA 10.2
+
+- [`10.2-base-rockylinux8` (*10.2/None/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/10.2/None/base/Dockerfile)
+- [`10.2-cudnn8-devel-rockylinux8` (*10.2/None/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/10.2/None/devel/cudnn8/Dockerfile)
+- [`10.2-cudnn8-runtime-rockylinux8` (*10.2/None/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/10.2/None/runtime/cudnn8/Dockerfile)
+- [`10.2-devel-rockylinux8` (*10.2/None/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/10.2/None/devel/Dockerfile)
+- [`10.2-runtime-rockylinux8` (*10.2/None/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/10.2/None/runtime/Dockerfile)
+
+#### CUDA 10.1
+
+- [`10.1-base-rockylinux8` (*10.1/None/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/10.1/None/base/Dockerfile)
+- [`10.1-cudnn7-devel-rockylinux8` (*10.1/None/devel/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/10.1/None/devel/cudnn7/Dockerfile)
+- [`10.1-cudnn7-runtime-rockylinux8` (*10.1/None/runtime/cudnn7/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/10.1/None/runtime/cudnn7/Dockerfile)
+- [`10.1-devel-rockylinux8` (*10.1/None/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/10.1/None/devel/Dockerfile)
+- [`10.1-runtime-rockylinux8` (*10.1/None/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/10.1/None/runtime/Dockerfile)
+
 ### centos7
+
+#### CUDA 11.7.0
+
+- [`11.7.0-base-centos7` (*11.7.0/centos7/base/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.7.0/centos7/base/Dockerfile)
+- [`11.7.0-devel-centos7` (*11.7.0/centos7/devel/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.7.0/centos7/devel/Dockerfile)
+- [`11.7.0-runtime-centos7` (*11.7.0/centos7/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.7.0/centos7/runtime/Dockerfile)
 
 #### CUDA 11.6.2
 

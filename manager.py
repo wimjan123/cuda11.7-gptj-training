@@ -1334,6 +1334,9 @@ class ManagerGenerate(Manager):
             elif "ubi" in tags:
                 ubi_tags = tags.split("-")
                 distros_list.append(ubi_tags[len(ubi_tags) - 1])
+            elif "rockylinux" in tags:
+                rockylinux_tags = tags.split("-")
+                distros_list.append(rockylinux_tags[len(rockylinux_tags) - 1])
         distros_set = set(distros_list)
 
         manifest = self.parent.manifest
