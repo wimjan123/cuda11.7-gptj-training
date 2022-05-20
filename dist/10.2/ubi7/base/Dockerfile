@@ -3,7 +3,7 @@ FROM registry.access.redhat.com/ubi7/ubi:latest as base
 FROM base as base-amd64
 
 ENV NVARCH x86_64
-ENV NVIDIA_REQUIRE_CUDA cuda>=10.2 brand=tesla,driver>=396,driver<397 brand=tesla,driver>=410,driver<411 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=440,driver<441
+ENV NVIDIA_REQUIRE_CUDA cuda>=10.2 brand=tesla,driver>=418,driver<419
 ENV NV_CUDA_CUDART_VERSION 10.2.89-1
 
 COPY cuda.repo-x86_64 /etc/yum.repos.d/cuda.repo

@@ -373,9 +373,7 @@ cuda_v11.7.0:
   requires: >
     cuda>=11.6
     brand=tesla,driver>=418,driver<419
-    brand=tesla,driver>=440,driver<441
     brand=tesla,driver>=450,driver<451
-    brand=tesla,driver>=460,driver<461
     brand=tesla,driver>=470,driver<471
     brand=unknown,driver>=470,driver<471
     brand=nvidia,driver>=470,driver<471
@@ -728,9 +726,7 @@ cuda_v11.6.2:
   requires: >
     cuda>=11.6
     brand=tesla,driver>=418,driver<419
-    brand=tesla,driver>=440,driver<441
     brand=tesla,driver>=450,driver<451
-    brand=tesla,driver>=460,driver<461
     brand=tesla,driver>=470,driver<471
     brand=unknown,driver>=470,driver<471
     brand=nvidia,driver>=470,driver<471
@@ -1083,9 +1079,7 @@ cuda_v11.6.1:
   requires: >
     cuda>=11.6
     brand=tesla,driver>=418,driver<419
-    brand=tesla,driver>=440,driver<441
     brand=tesla,driver>=450,driver<451
-    brand=tesla,driver>=460,driver<461
     brand=tesla,driver>=470,driver<471
     brand=unknown,driver>=470,driver<471
     brand=nvidia,driver>=470,driver<471
@@ -1435,7 +1429,7 @@ cuda_v11.6.0:
       <<: *cuda11_6_0_requires
 
 .requires_v11.5.2: &cuda11_5_2_requires
-  requires: "cuda>=11.5 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=440,driver<441 brand=tesla,driver>=450,driver<451 brand=tesla,driver>=460,driver<461 brand=tesla,driver>=470,driver<471"
+  requires: "cuda>=11.5 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=450,driver<451 brand=tesla,driver>=470,driver<471"
 
 cuda_v11.5.2:
   dist_base_path: dist/11.5.2
@@ -1726,9 +1720,7 @@ cuda_v11.5.2:
   requires: >
     cuda>=11.5
     brand=tesla,driver>=418,driver<419
-    brand=tesla,driver>=440,driver<441
     brand=tesla,driver>=450,driver<451
-    brand=tesla,driver>=460,driver<461
     brand=tesla,driver>=470,driver<471
     brand=unknown,driver>=470,driver<471
     brand=nvidia,driver>=470,driver<471
@@ -2083,9 +2075,7 @@ cuda_v11.5.1:
   requires: >
     cuda>=11.5
     brand=tesla,driver>=418,driver<419
-    brand=tesla,driver>=440,driver<441
     brand=tesla,driver>=450,driver<451
-    brand=tesla,driver>=460,driver<461
     brand=tesla,driver>=470,driver<471
     brand=unknown,driver>=470,driver<471
     brand=nvidia,driver>=470,driver<471
@@ -2439,9 +2429,7 @@ cuda_v11.5.0:
   requires: >
     cuda>=11.4
     brand=tesla,driver>=418,driver<419
-    brand=tesla,driver>=440,driver<441
     brand=tesla,driver>=450,driver<451
-    brand=tesla,driver>=460,driver<461
 
 cuda_v11.4.3:
   dist_base_path: dist/11.4.3
@@ -2787,9 +2775,7 @@ cuda_v11.4.3:
   requires: >
     cuda>=11.4
     brand=tesla,driver>=418,driver<419
-    brand=tesla,driver>=440,driver<441
     brand=tesla,driver>=450,driver<451
-    brand=tesla,driver>=460,driver<461
 
 cuda_v11.4.2:
   dist_base_path: dist/11.4.2
@@ -3134,9 +3120,7 @@ cuda_v11.4.2:
   requires: >
     cuda>=11.4
     brand=tesla,driver>=418,driver<419
-    brand=tesla,driver>=440,driver<441
     brand=tesla,driver>=450,driver<451
-    brand=tesla,driver>=460,driver<461
 
 cuda_v11.4.1:
   dist_base_path: dist/11.4.1
@@ -3484,9 +3468,7 @@ cuda_v11.4.1:
   requires: >
     cuda>=11.4
     brand=tesla,driver>=418,driver<419
-    brand=tesla,driver>=440,driver<441
     brand=tesla,driver>=450,driver<451
-    brand=tesla,driver>=460,driver<461
 
 
 .components_v11.4.0: &cuda11_4_0_components
@@ -3616,7 +3598,6 @@ cuda_v11.4.0:
   requires: >
     cuda>=11.3
     brand=tesla,driver>=418,driver<419
-    brand=tesla,driver>=440,driver<441
     driver>=450
 
 
@@ -3755,7 +3736,6 @@ cuda_v11.3.1:
   requires: >
     cuda>=11.3
     brand=tesla,driver>=418,driver<419
-    brand=tesla,driver>=440,driver<441
     driver>=450
 
 
@@ -3891,7 +3871,7 @@ cuda_v11.3.0:
 
 
 .requires_v11.2.2: &cuda11_2_2_requires
-  requires: "cuda>=11.2 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=440,driver<441 driver>=450"
+  requires: "cuda>=11.2 brand=tesla,driver>=418,driver<419"
 
 
 .components_v11.2.2: &cuda11_2_2_components
@@ -4026,7 +4006,7 @@ cuda_v11.2.2:
 
 
 .requires_v11.2.1: &cuda11_2_1_requires
-  requires: "cuda>=11.2 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=440,driver<441 driver>=450"
+  requires: "cuda>=11.2 brand=tesla,driver>=418,driver<419"
 
 
 .components_v11.2.1: &cuda11_2_1_components
@@ -4161,7 +4141,7 @@ cuda_v11.2.1:
 
 
 .requires_v11.2.0: &cuda11_2_0_requires
-  requires: "cuda>=11.2 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=440,driver<441 driver>=450"
+  requires: "cuda>=11.2 brand=tesla,driver>=418,driver<419"
 
 
 .components_v11.2.0: &cuda11_2_0_components
@@ -4296,7 +4276,7 @@ cuda_v11.2.0:
 
 
 .requires_v11.1.1: &cuda11_1_1_requires
-  requires: "cuda>=11.1 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=440,driver<441 driver>=450"
+  requires: "cuda>=11.1 brand=tesla,driver>=418,driver<419"
 
 
 .components_v11.1.1: &cuda11_1_1_components
@@ -4439,7 +4419,7 @@ cuda_v11.1.1:
 
 
 .requires_v11.0.3: &cuda11_0_3_requires
-  requires: "cuda>=11.0 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=440,driver<441 driver>=450"
+  requires: "cuda>=11.0 brand=tesla,driver>=418,driver<419"
 
 
 .components_v11.0.3: &cuda11_0_3_components
@@ -4582,7 +4562,7 @@ cuda_v11.0.3:
 
 
 .requires_v10.2: &cuda10_2_requires
-  requires: "cuda>=10.2 brand=tesla,driver>=396,driver<397 brand=tesla,driver>=410,driver<411 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=440,driver<441"
+  requires: "cuda>=10.2 brand=tesla,driver>=418,driver<419"
 
 
 .components_v10.2: &cuda10_2_components
@@ -4720,7 +4700,7 @@ cuda_v10.2:
 
 
 .requires_v10.1: &cuda10_1_requires
-  requires: "cuda>=10.1 brand=tesla,driver>=396,driver<397 brand=tesla,driver>=410,driver<411 brand=tesla,driver>=418,driver<419"
+  requires: "cuda>=10.1 brand=tesla,driver>=418,driver<419"
 
 
 .components_v10.1: &cuda10_1_components
@@ -4882,7 +4862,7 @@ cuda_v10.1:
 
 
 .requires_v10.0: &cuda10_0_requires
-  requires: "cuda>=10.0 brand=tesla,driver>=384,driver<385 brand=tesla,driver>=410,driver<411"
+  requires: "cuda>=10.0 brand=tesla,driver>=384,driver<385"
 
 .components_v10.0: &cuda10_0_components
   cudart:

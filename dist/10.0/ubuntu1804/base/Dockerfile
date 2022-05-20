@@ -3,7 +3,7 @@ FROM ubuntu:18.04 as base
 FROM base as base-amd64
 
 ENV NVARCH x86_64
-ENV NVIDIA_REQUIRE_CUDA "cuda>=10.0 brand=tesla,driver>=384,driver<385 brand=tesla,driver>=410,driver<411"
+ENV NVIDIA_REQUIRE_CUDA "cuda>=10.0 brand=tesla,driver>=384,driver<385"
 ENV NV_CUDA_CUDART_VERSION 10.0.130-1
 
 FROM base as base-ppc64le
