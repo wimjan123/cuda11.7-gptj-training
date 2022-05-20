@@ -337,7 +337,8 @@ class ManagerTrigger(Manager):
 
         Returns True if pipelines have been found matching the trigger command.
         """
-        self.check_explicit_trigger()
+        # 20:22 Thu May 19 2022: commented out because it prevented using explicit trigger with distro 'rockylinux8'
+        # self.check_explicit_trigger()
         pipeline: str = self.trigger_override
         if "all" in pipeline:
             log.info("Triggering ALL of the jobs!")
@@ -1571,6 +1572,10 @@ class ManagerGenerate(Manager):
                 elif self.generate_readme:
                     self.generate_readmes()
                 elif self.generate_tag:
+                    log.warning("USING TAGS LIST FROM DOCKER HUB...")
+                    log.warning(
+                        "THIS COMMAND SHOULD BE USED AFTER TAGS HAVE BEEN PUSHED TO DOCKER HUB!"
+                    )
                     self.generate_tags()
                 else:
                     self.targeted()
