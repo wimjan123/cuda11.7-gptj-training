@@ -59,12 +59,12 @@ function dq_rhel() {
         printf "%s\n" "CMD ./deviceQuery" >> Dockerfile
     else
         printf "%s\n" "RUN git clone https://github.com/NVIDIA/cuda-samples.git" >> Dockerfile
-        # printf "%s\n" "RUN git checkout tags/v${major}.${minor}" >> Dockerfile
-        # if [[ "11.6" =~ "${major}.${minor}" ]]; then
+        if [[ $major -le 11 ]] && [[ $minor -lt 6 ]]; then
+            printf "%s\n" "RUN cd cuda-samples && git checkout tags/v${major}.${minor}" >> Dockerfile
+            printf "%s\n" "WORKDIR cuda-samples/Samples/deviceQuery/" >> Dockerfile
+        else
             printf "%s\n" "WORKDIR cuda-samples/Samples/1_Utilities/deviceQuery/" >> Dockerfile
-        # else
-            # printf "%s\n" "WORKDIR cuda-samples/Samples/deviceQuery/" >> Dockerfile
-        # fi
+        fi
         printf "%s\n" "RUN make TARGET_ARCH='${ARCH}' SMS='75' " >> Dockerfile
         printf "%s\n" "CMD ./deviceQuery" >> Dockerfile
     fi
@@ -84,12 +84,12 @@ function dq_rhel() {
         printf "%s\n" "CMD ./vectorAdd_nvrtc" >> Dockerfile
     else
         printf "%s\n" "RUN git clone https://github.com/NVIDIA/cuda-samples.git" >> Dockerfile
-        # printf "%s\n" "RUN git checkout tags/v${major}.${minor}" >> Dockerfile
-        # if [[ "11.6" =~ "${major}.${minor}" ]]; then
+        if [[ $major -le 11 ]] && [[ $minor -lt 6 ]]; then
+            printf "%s\n" "RUN cd cuda-samples && git checkout tags/v${major}.${minor}" >> Dockerfile
+            printf "%s\n" "WORKDIR cuda-samples/Samples/vectorAdd_nvrtc" >> Dockerfile
+        else
             printf "%s\n" "WORKDIR cuda-samples/Samples/0_Introduction/vectorAdd_nvrtc" >> Dockerfile
-        # else
-            # printf "%s\n" "WORKDIR cuda-samples/Samples/vectorAdd_nvrtc" >> Dockerfile
-        # fi
+        fi
         printf "%s\n" "RUN make TARGET_ARCH='${ARCH}' SMS='75'" >> Dockerfile
         printf "%s\n" "CMD ./vectorAdd_nvrtc" >> Dockerfile
     fi
@@ -110,14 +110,13 @@ function dq_rhel() {
         printf "%s\n" "CMD ./matrixMulDrv" >> Dockerfile
     else
         printf "%s\n" "RUN git clone https://github.com/NVIDIA/cuda-samples.git" >> Dockerfile
-        # printf "%s\n" "RUN git checkout tags/v${major}.${minor}" >> Dockerfile
-        # if [[ "11.6" =~ "${major}.${minor}" ]]; then
+        if [[ $major -le 11 ]] && [[ $minor -lt 6 ]]; then
+            printf "%s\n" "RUN cd cuda-samples && git checkout tags/v${major}.${minor}" >> Dockerfile
+            printf "%s\n" "WORKDIR cuda-samples/Samples/matrixMulDrv/" >> Dockerfile
+        else
             printf "%s\n" "WORKDIR cuda-samples/Samples/0_Introduction/matrixMulDrv/" >> Dockerfile
-        # else
-            # printf "%s\n" "WORKDIR cuda-samples/Samples/matrixMulDrv/" >> Dockerfile
-        # fi
+        fi
         printf "%s\n" "RUN make TARGET_ARCH='${ARCH}' SMS='75'" >> Dockerfile
-        printf "%s\n" "RUN make TARGET_ARCH='${ARCH}'" >> Dockerfile
         printf "%s\n" "CMD ./matrixMulDrv" >> Dockerfile
     fi
     docker_build -t "${image}-${BATS_TEST_NAME}" .
