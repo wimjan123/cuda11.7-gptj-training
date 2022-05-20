@@ -26,11 +26,12 @@ function setup() {
     # - 11.3.0 for ubuntu and ubi (redhat)
     #
     if ([[ "11.3.1" == "${major}.${minor}.${rev}" ]] || ([[ ${major} -eq 11 ]] && [[ ${minor} -gt 3 ]])) || \
-       ([[ "11.3.0" == "${major}.${minor}.${rev}" ]] && ([[ "${OS_NAME}" == "ubuntu" ]] || [[ "${OS_NAME}" == "ubi" ]] || [[ "${OS_NAME}" == "centos" ]])); then
+       ([[ "11.3.0" == "${major}.${minor}.${rev}" ]] && ([[ "${OS_NAME}" == "ubuntu" ]] || [[ "${OS_NAME}" == "ubi" ]] || [[ "${OS_NAME}" == "centos" ]] || [[ "${OS_NAME}" == "rockylinux" ]])); then
         num=3
     fi
 
     debug "num = ${num}"
     docker_run --rm --gpus 0 --platform linux/${ARCH} ${image} bash -c "[[ \$(ls -l /usr/local/ | grep cuda | wc -l) == ${num} ]] || false"
     [ "$status" -eq 0 ]
+    docker rmi -f ${image}
 }

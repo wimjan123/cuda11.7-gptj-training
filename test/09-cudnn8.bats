@@ -45,4 +45,5 @@ function check_rhel() {
 
     [[ "${OS_NAME}" == "ubuntu" ]] && check_ubuntu && return
     [[ "${OS_NAME}" == "centos" ]] || [[ "${OS_NAME}" == "ubi" ]] || [[ "${OS_NAME}" == "rockylinux" ]] && check_rhel
+    docker rmi -f ${image}
 }
