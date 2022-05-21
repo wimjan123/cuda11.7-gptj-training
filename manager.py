@@ -364,12 +364,21 @@ class ManagerTrigger(Manager):
             if self.pipeline_name != "default":
                 self.key = f"cuda_v{version}_{self.pipeline_name}"
 
+            distro_in_job = job
+            if "_" in job:
+                distro_in_job = job.split("_")[1]
+
             distro = next(
-                (d.distro for d in supported_platforms.list if d.distro in job),
+                (d.distro for d in supported_platforms.list if d.distro in distro_in_job),
                 None,
             )
             distro_version = next(
-                (d.version for d in supported_platforms.list if d.version in job), None
+                (
+                    d.version
+                    for d in supported_platforms.list
+                    if d.version in distro_in_job
+                ),
+                None,
             )
 
             # Any or all of the variables passed to this function can be None
