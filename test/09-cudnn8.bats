@@ -7,7 +7,6 @@ image="${IMAGE_NAME}:${CUDA_VERSION}-cudnn8-devel-${OS}${IMAGE_TAG_SUFFIX}"
 function setup() {
     run docker pull --platform linux/${ARCH} ${image}
     if [ "$status" -ne 0 ]; then
-        debug "in here yo"
         skip "'${image}' does not exist"
     fi
     check_runtime

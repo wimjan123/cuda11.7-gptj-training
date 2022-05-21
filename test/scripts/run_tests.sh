@@ -3,6 +3,10 @@
 set -x
 set -e
 
+image="${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}"
+
+docker pull --platform linux/${ARCH} ${image}
+
 script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 test_path=$(realpath "${script_dir}/../")
 
@@ -25,5 +29,5 @@ for test in $(find $test_path -iname "[0-9]*-*.bats" | sort); do
   /usr/local/bin/bats --tap ${test}
 done
 
-docker rmi -f "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}"
-docker system prune
+docker rmi -f ${image}
+docker image prune -f --filter "dangling=true"
