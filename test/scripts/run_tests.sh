@@ -24,3 +24,6 @@ for test in $(find $test_path -iname "[0-9]*-*.bats" | sort); do
   echo "# Running test script '${test}'"
   /usr/local/bin/bats --tap ${test}
 done
+
+docker rmi -f "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}"
+docker system prune

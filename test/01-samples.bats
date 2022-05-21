@@ -15,7 +15,7 @@ function setup() {
 }
 
 function teardown() {
-    cleanup
+    docker rmi -f ${image}-${BATS_TEST_NAME}
 }
 
 function dq_ubuntu() {
@@ -121,6 +121,5 @@ function dq_rhel() {
     fi
     docker_build -t "${image}-${BATS_TEST_NAME}" .
     docker_run --rm --gpus 0 ${image}-${BATS_TEST_NAME}
-    docker rmi -f ${image}-${BATS_TEST_NAME}
     [ "$status" -eq 0 ]
 }

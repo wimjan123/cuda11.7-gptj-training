@@ -1,13 +1,14 @@
 #!/usr/bin/env bats
 
+
 load helpers
 
 image="${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${IMAGE_TAG_SUFFIX}"
 
-function setup() {
-    docker pull ${image}
-    check_runtime
-}
+# function setup() {
+#     docker pull ${image}
+#     check_runtime
+# }
 
 # TODO (jesusa): re-enable this test once we have the a better way to detect which nccl version should be installed
 # @test "check_libnccl_installed" {

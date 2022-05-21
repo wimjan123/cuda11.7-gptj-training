@@ -12,6 +12,10 @@ function setup() {
     check_runtime
 }
 
+function teardown() {
+    docker rmi -f ${image}
+}
+
 function check_ubuntu() {
     vers=$(docker run --rm --gpus 0 ${image} bash -c "apt show libcudnn8 2>&1 | grep Version | cut -d: -f2 | xargs")
     [ "$vers" != "" ]
@@ -44,5 +48,5 @@ function check_rhel() {
 
     [[ "${OS_NAME}" == "ubuntu" ]] && check_ubuntu && return
     [[ "${OS_NAME}" == "centos" ]] || [[ "${OS_NAME}" == "ubi" ]] || [[ "${OS_NAME}" == "rockylinux" ]] && check_rhel
-    docker rmi -f ${image}-${BATS_TEST_NAME}
+    docker rmi -f ${image}
 }
