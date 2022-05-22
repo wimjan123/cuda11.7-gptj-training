@@ -22,9 +22,11 @@ for test in $(find $test_path -iname "[0-9]*-*.bats" | sort); do
       echo "Skipping test '${test}' on architecture ${ARCH}"
       continue
   fi
-  # if [[ "${test}" != "test/01-samples.bats" ]]; then
-  #   continue
-  # fi
+  if [[ "${test}" == *"test/08-cudnn7.bats"* ]] || [[ "${test}" == *"test/09-cudnn8.bats"* ]]; then
+      # 23:07 Sat May 21 2022: temporary disable until server resources can be increased
+      echo "Skipping test '${test}'!!"
+      continue
+  fi
   echo "# Running test script '${test}'"
   /usr/local/bin/bats --tap ${test}
 done
