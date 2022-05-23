@@ -4276,7 +4276,7 @@ cuda_v11.2.0:
 
 
 .requires_v11.1.1: &cuda11_1_1_requires
-  requires: "cuda>=11.1 brand=tesla,driver>=418,driver<419"
+  requires: "cuda>=11.1 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=450,driver<451"
 
 
 .components_v11.1.1: &cuda11_1_1_components
