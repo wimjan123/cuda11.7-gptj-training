@@ -22,7 +22,30 @@ ENV NV_LIBNCCL_DEV_PACKAGE_NAME libnccl-dev
 ENV NV_LIBNCCL_DEV_PACKAGE_VERSION 2.7.8-1
 ENV NCCL_VERSION 2.7.8-1
 ENV NV_LIBNCCL_DEV_PACKAGE ${NV_LIBNCCL_DEV_PACKAGE_NAME}=${NV_LIBNCCL_DEV_PACKAGE_VERSION}+cuda11.1
+ENV NV_LIBNCCL_PACKAGE_SHA256SUM 49ea52c9fbc40e050a89b93937c7c6c23f47c13da70c961cb04284c3225fe63e
+ENV NV_LIBNCCL_PACKAGE_SOURCE https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604/x86_64/libnccl2_2.7.8-1+cuda11.1_amd64.deb
+ENV NV_LIBNCCL_PACKAGE_SOURCE_NAME libnccl2_2.7.8-1+cuda11.1_amd64.deb
 
+RUN apt-get update && apt-get install -y --no-install-recommends wget
+
+RUN wget -q ${NV_LIBNCCL_PACKAGE_SOURCE} \
+    && echo "$NV_LIBNCCL_PACKAGE_SHA256SUM  ${NV_LIBNCCL_PACKAGE_SOURCE_NAME}" | sha256sum -c --strict - \
+    && dpkg -i ${NV_LIBNCCL_PACKAGE_SOURCE_NAME} \
+    && rm -f ${NV_LIBNCCL_PACKAGE_SOURCE_NAME} \
+    && apt-get purge --autoremove -y wget \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV NV_LIBNCCL_DEV_PACKAGE_SHA256SUM 8e01ed67e43958fa0969ec5d433c99b3d9e638f8ad8c8675b59d6f507579cc03
+ENV NV_LIBNCCL_DEV_PACKAGE_SOURCE https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604/x86_64/libnccl-dev_2.7.8-1+cuda11.1_amd64.deb
+ENV NV_LIBNCCL_DEV_PACKAGE_SOURCE_NAME libnccl-dev_2.7.8-1+cuda11.1_amd64.deb
+RUN apt-get update && apt-get install -y --no-install-recommends wget
+
+RUN wget -q ${NV_LIBNCCL_DEV_PACKAGE_SOURCE} \
+    && echo "$NV_LIBNCCL_DEV_PACKAGE_SHA256SUM  ${NV_LIBNCCL_DEV_PACKAGE_SOURCE_NAME}" | sha256sum -c --strict - \
+    && dpkg -i ${NV_LIBNCCL_DEV_PACKAGE_SOURCE_NAME} \
+    && rm -f ${NV_LIBNCCL_DEV_PACKAGE_SOURCE_NAME} \
+    && apt-get purge --autoremove -y wget \
+    && rm -rf /var/lib/apt/lists/*
 
 FROM base-${TARGETARCH}
 

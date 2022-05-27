@@ -34,6 +34,18 @@ ENV NV_LIBNCCL_PACKAGE_NAME libnccl2
 ENV NV_LIBNCCL_PACKAGE_VERSION 2.8.3-1
 ENV NCCL_VERSION 2.8.3-1
 ENV NV_LIBNCCL_PACKAGE ${NV_LIBNCCL_PACKAGE_NAME}=${NV_LIBNCCL_PACKAGE_VERSION}+cuda11.0
+ENV NV_LIBNCCL_PACKAGE_SHA256SUM 7157c77a5593cfd4e0c600308a336a8087c067ce09ebf170493a1f516dd42a44
+ENV NV_LIBNCCL_PACKAGE_SOURCE https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/sbsa/libnccl2_2.8.3-1+cuda11.0_arm64.deb
+ENV NV_LIBNCCL_PACKAGE_SOURCE_NAME libnccl2_2.8.3-1+cuda11.0_arm64.deb
+
+RUN apt-get update && apt-get install -y --no-install-recommends wget
+
+RUN wget -q ${NV_LIBNCCL_PACKAGE_SOURCE} \
+    && echo "$NV_LIBNCCL_PACKAGE_SHA256SUM  ${NV_LIBNCCL_PACKAGE_SOURCE_NAME}" | sha256sum -c --strict - \
+    && dpkg -i ${NV_LIBNCCL_PACKAGE_SOURCE_NAME} \
+    && rm -f ${NV_LIBNCCL_PACKAGE_SOURCE_NAME} \
+    && apt-get purge --autoremove -y wget \
+    && rm -rf /var/lib/apt/lists/*
 
 FROM base as base-ppc64le
 
@@ -47,9 +59,21 @@ ENV NV_LIBCUBLAS_VERSION 11.2.0.252-1
 ENV NV_LIBCUBLAS_PACKAGE ${NV_LIBCUBLAS_PACKAGE_NAME}=${NV_LIBCUBLAS_VERSION}
 
 ENV NV_LIBNCCL_PACKAGE_NAME libnccl2
-ENV NV_LIBNCCL_PACKAGE_VERSION 2.12.10-1
-ENV NCCL_VERSION 2.12.10-1
+ENV NV_LIBNCCL_PACKAGE_VERSION 2.8.3-1
+ENV NCCL_VERSION 2.8.3-1
 ENV NV_LIBNCCL_PACKAGE ${NV_LIBNCCL_PACKAGE_NAME}=${NV_LIBNCCL_PACKAGE_VERSION}+cuda11.0
+ENV NV_LIBNCCL_PACKAGE_SHA256SUM 6f804cb32a6a4e83c46b60ea0f88160d0a11f6b965855bab55a106de73d3358c
+ENV NV_LIBNCCL_PACKAGE_SOURCE https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/ppc64el/libnccl2_2.8.3-1+cuda11.0_ppc64el.deb
+ENV NV_LIBNCCL_PACKAGE_SOURCE_NAME libnccl2_2.8.3-1+cuda11.0_ppc64el.deb
+
+RUN apt-get update && apt-get install -y --no-install-recommends wget
+
+RUN wget -q ${NV_LIBNCCL_PACKAGE_SOURCE} \
+    && echo "$NV_LIBNCCL_PACKAGE_SHA256SUM  ${NV_LIBNCCL_PACKAGE_SOURCE_NAME}" | sha256sum -c --strict - \
+    && dpkg -i ${NV_LIBNCCL_PACKAGE_SOURCE_NAME} \
+    && rm -f ${NV_LIBNCCL_PACKAGE_SOURCE_NAME} \
+    && apt-get purge --autoremove -y wget \
+    && rm -rf /var/lib/apt/lists/*
 
 FROM base-${TARGETARCH}
 

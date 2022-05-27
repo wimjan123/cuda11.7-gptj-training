@@ -6,6 +6,7 @@ FROM base as base-amd64
 ENV NV_CUDNN_VERSION 8.4.0.27-1
 ENV NV_CUDNN_PACKAGE libcudnn8-${NV_CUDNN_VERSION}.cuda10.2
 
+
 FROM base-${TARGETARCH}
 
 ARG TARGETARCH
@@ -19,4 +20,3 @@ RUN yum install -y \
     ${NV_CUDNN_PACKAGE} \
     && yum clean all \
     && rm -rf /var/cache/yum/*
-

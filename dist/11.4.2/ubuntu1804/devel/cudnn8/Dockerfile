@@ -4,10 +4,11 @@ FROM ${IMAGE_NAME}:11.4.2-devel-ubuntu18.04 as base
 FROM base as base-amd64
 
 ENV NV_CUDNN_VERSION 8.2.4.15
+ENV NV_CUDNN_PACKAGE_NAME "libcudnn8"
 
 ENV NV_CUDNN_PACKAGE "libcudnn8=$NV_CUDNN_VERSION-1+cuda11.4"
 ENV NV_CUDNN_PACKAGE_DEV "libcudnn8-dev=$NV_CUDNN_VERSION-1+cuda11.4"
-ENV NV_CUDNN_PACKAGE_NAME "libcudnn8"
+
 
 FROM base-${TARGETARCH}
 
@@ -19,5 +20,5 @@ LABEL com.nvidia.cudnn.version="${NV_CUDNN_VERSION}"
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ${NV_CUDNN_PACKAGE} \
     ${NV_CUDNN_PACKAGE_DEV} \
-    && apt-mark hold ${NV_CUDNN_PACKAGE_NAME} && \
-    rm -rf /var/lib/apt/lists/*
+    && apt-mark hold ${NV_CUDNN_PACKAGE_NAME} \
+    && rm -rf /var/lib/apt/lists/*

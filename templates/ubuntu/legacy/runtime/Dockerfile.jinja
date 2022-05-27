@@ -30,6 +30,21 @@ ENV NV_LIBNCCL_PACKAGE_NAME "libnccl2"
 ENV NV_LIBNCCL_PACKAGE_VERSION {{ cuda.x86_64.components.libnccl2.version }}
 ENV NCCL_VERSION {{ cuda.x86_64.components.libnccl2.version[:-2] }}
 ENV NV_LIBNCCL_PACKAGE ${NV_LIBNCCL_PACKAGE_NAME}=${NV_LIBNCCL_PACKAGE_VERSION}+cuda{{ cuda.version.major }}.{{ cuda.version.minor }}
+    {% if "libnccl2" in cuda.x86_64.components and "source" in cuda.x86_64.components.libnccl2 %}
+ENV NV_LIBNCCL_PACKAGE_SHA256SUM {{ cuda.x86_64.components.libnccl2.sha256sum }}
+ENV NV_LIBNCCL_PACKAGE_SOURCE {{ cuda.x86_64.components.libnccl2.source }}
+ENV NV_LIBNCCL_PACKAGE_SOURCE_NAME {{ cuda.x86_64.components.libnccl2.basename }}
+
+RUN apt-get update && apt-get install -y --no-install-recommends wget
+
+RUN wget -q ${NV_LIBNCCL_PACKAGE_SOURCE} \
+    && echo "$NV_LIBNCCL_PACKAGE_SHA256SUM  ${NV_LIBNCCL_PACKAGE_SOURCE_NAME}" | sha256sum -c --strict - \
+    && dpkg -i ${NV_LIBNCCL_PACKAGE_SOURCE_NAME} \
+    && rm -f ${NV_LIBNCCL_PACKAGE_SOURCE_NAME} \
+    && apt-get purge --autoremove -y wget \
+    && rm -rf /var/lib/apt/lists/*
+
+    {% endif %}
 {% else %}
     {% set nccl_package = 0 %}
 {% endif -%}
@@ -64,6 +79,21 @@ ENV NV_LIBNCCL_PACKAGE_NAME "libnccl2"
 ENV NV_LIBNCCL_PACKAGE_VERSION {{ cuda.ppc64le.components.libnccl2.version }}
 ENV NCCL_VERSION {{ cuda.ppc64le.components.libnccl2.version[:-2] }}
 ENV NV_LIBNCCL_PACKAGE ${NV_LIBNCCL_PACKAGE_NAME}=${NV_LIBNCCL_PACKAGE_VERSION}+cuda{{ cuda.version.major }}.{{ cuda.version.minor }}
+    {% if "libnccl2" in cuda.ppc64le.components and "source" in cuda.ppc64le.components.libnccl2 %}
+ENV NV_LIBNCCL_PACKAGE_SHA256SUM {{ cuda.ppc64le.components.libnccl2.sha256sum }}
+ENV NV_LIBNCCL_PACKAGE_SOURCE {{ cuda.ppc64le.components.libnccl2.source }}
+ENV NV_LIBNCCL_PACKAGE_SOURCE_NAME {{ cuda.ppc64le.components.libnccl2.basename }}
+
+RUN apt-get update && apt-get install -y --no-install-recommends wget
+
+RUN wget -q ${NV_LIBNCCL_PACKAGE_SOURCE} \
+    && echo "$NV_LIBNCCL_PACKAGE_SHA256SUM  ${NV_LIBNCCL_PACKAGE_SOURCE_NAME}" | sha256sum -c --strict - \
+    && dpkg -i ${NV_LIBNCCL_PACKAGE_SOURCE_NAME} \
+    && rm -f ${NV_LIBNCCL_PACKAGE_SOURCE_NAME} \
+    && apt-get purge --autoremove -y wget \
+    && rm -rf /var/lib/apt/lists/*
+
+    {% endif %}
 {% else %}
     {% set nccl_package = 0 %}
 {% endif -%}

@@ -12,18 +12,89 @@ FROM base as base-amd64
 ENV NV_CUDNN_VERSION {{ cuda.x86_64.cudnn.version }}
 {% if cuda.cudnn.target == "runtime" %}
 ENV NV_CUDNN_PACKAGE libcudnn{{ cuda.x86_64.cudnn.version[0] }}-${NV_CUDNN_VERSION}.cuda{{ cuda.version.major }}.{{ cuda.version.minor }}
+
+{% if "source" in cuda.x86_64.cudnn %}
+    {% set hashcmd = "md5sum" -%}
+    {% if "sha256sum" in cuda.x86_64.cudnn %}
+        {% set hashcmd = "sha256sum" %}
+    {% endif -%}
+    {% if "sha256sum" in cuda.x86_64.cudnn %}
+ENV NV_CUDNN_DL_HASHCMD sha256sum
+ENV NV_CUDNN_DL_SUM {{ cuda.x86_64.cudnn.sha256sum }}
+    {% else %}
+ENV NV_CUDNN_DL_HASHCMD md5sum
+ENV NV_CUDNN_DL_SUM {{ cuda.x86_64.cudnn.md5sum }}
+    {% endif %}
+ENV NV_CUDNN_DL_BASENAME {{ cuda.x86_64.cudnn.basename }}
+ENV NV_CUDNN_DL_URL {{ cuda.x86_64.cudnn.source }}
+
+RUN yum -y install wget
+
+RUN wget -q ${NV_CUDNN_DL_URL} \
+    && echo "${NV_CUDNN_DL_SUM}  ${NV_CUDNN_DL_BASENAME}" | ${NV_CUDNN_DL_HASHCMD} -c - \
+    && rpm -i ${NV_CUDNN_DL_BASENAME} \
+    && rm -f ${NV_CUDNN_DL_BASENAME} \
+    && yum -y remove wget
+
+{% endif %}
 {% else %}
 ENV NV_CUDNN_PACKAGE libcudnn{{ cuda.x86_64.cudnn.version[0] }}-${NV_CUDNN_VERSION}.cuda{{ cuda.version.major }}.{{ cuda.version.minor }}
 ENV NV_CUDNN_PACKAGE_DEV libcudnn{{ cuda.x86_64.cudnn.version[0] }}-devel-${NV_CUDNN_VERSION}.cuda{{ cuda.version.major }}.{{ cuda.version.minor }}
+
+{% if "source" in cuda.x86_64.cudnn %}
+    {% set hashcmd = "md5sum" -%}
+    {% if "sha256sum" in cuda.x86_64.cudnn %}
+        {% set hashcmd = "sha256sum" %}
+    {% endif -%}
+    {% if "sha256sum" in cuda.x86_64.cudnn %}
+ENV NV_CUDNN_DL_HASHCMD sha256sum
+ENV NV_CUDNN_DL_SUM {{ cuda.x86_64.cudnn.sha256sum }}
+    {% else %}
+ENV NV_CUDNN_DL_HASHCMD md5sum
+ENV NV_CUDNN_DL_SUM {{ cuda.x86_64.cudnn.md5sum }}
+    {% endif %}
+ENV NV_CUDNN_DL_BASENAME {{ cuda.x86_64.cudnn.basename }}
+ENV NV_CUDNN_DL_URL {{ cuda.x86_64.cudnn.source }}
+
+RUN yum -y install wget
+
+RUN wget -q ${NV_CUDNN_DL_URL} \
+    && echo "${NV_CUDNN_DL_SUM}  ${NV_CUDNN_DL_BASENAME}" | ${NV_CUDNN_DL_HASHCMD} -c - \
+    && rpm -i ${NV_CUDNN_DL_BASENAME} \
+    && rm -f ${NV_CUDNN_DL_BASENAME}
+
 {% endif %}
-{% if "sha256sum" in cuda.x86_64.cudnn %}
+{% if "source" in cuda.x86_64.cudnn.dev %}
+    {% set hashcmd = "md5sum" -%}
+    {% if "sha256sum" in cuda.x86_64.cudnn.dev %}
+        {% set hashcmd = "sha256sum" %}
+    {% endif -%}
+    {% if "sha256sum" in cuda.x86_64.cudnn.dev %}
+ENV NV_CUDNN_DEV_DL_HASHCMD sha256sum
+ENV NV_CUDNN_DEV_DL_SUM {{ cuda.x86_64.cudnn.dev.sha256sum }}
+    {% else %}
+ENV NV_CUDNN_DEV_DL_HASHCMD md5sum
+ENV NV_CUDNN_DEV_DL_SUM {{ cuda.x86_64.cudnn.dev.md5sum }}
+    {% endif %}
+ENV NV_CUDNN_DEV_DL_BASENAME {{ cuda.x86_64.cudnn.dev.basename }}
+ENV NV_CUDNN_DEV_DL_URL {{ cuda.x86_64.cudnn.dev.source }}
+
+RUN wget -q ${NV_CUDNN_DEV_DL_URL} \
+    && echo "${NV_CUDNN_DEV_DL_SUM}  ${NV_CUDNN_DEV_DL_BASENAME}" | ${NV_CUDNN_DEV_DL_HASHCMD} -c - \
+    && rpm -i ${NV_CUDNN_DEV_DL_BASENAME} \
+    && rm -f ${NV_CUDNN_DEV_DL_BASENAME} \
+    && yum -y remove wget
+
+{% endif %}
+{% endif %}
+{% if "sha256sum" in cuda.x86_64.cudnn and not "source" in cuda.x86_64.cudnn %}
     {% set cudnn_url_version = cuda.x86_64.cudnn.version[:cuda.x86_64.cudnn.version.rfind(".")] %}
     {% set cudnn_url_version2 = cudnn_version %}
 ENV NV_CUDNN_DL_SHA256SUM {{ cuda.x86_64.cudnn.sha256sum }}
 ENV NV_CUDNN_DL_BASENAME cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-x64-v{{ cudnn_url_version2 }}.tgz
 ENV NV_CUDNN_DL_URL http://developer.download.nvidia.com/compute/redist/cudnn/v{{ cudnn_url_version }}/${NV_CUDNN_DL_BASENAME}
 {% if cuda.x86_64.cudnn.target == "runtime" -%}ENV NV_CUDNN_DL_RUNTIME_EXTRACT_ARG "--wildcards 'cuda/lib64/libcudnn.so.*'" {% endif -%}
-{% elif "sha256sum" not in cuda.x86_64.cudnn %}
+{% elif "sha256sum" not in cuda.x86_64.cudnn or "source" in cuda.x86_64.cudnn %}
     {% set cudnn_package = 1 %}
 {% endif %}
 {% endif %}
@@ -37,21 +108,91 @@ FROM base as base-ppc64le
 {% endif -%}
 
 ENV NV_CUDNN_VERSION {{ cuda.ppc64le.cudnn.version }}
-ENV NV_CUDNN_VERSION {{ cuda.ppc64le.cudnn.version }}
 {% if cuda.cudnn.target == "runtime" %}
 ENV NV_CUDNN_PACKAGE libcudnn{{ cuda.ppc64le.cudnn.version[0] }}-${NV_CUDNN_VERSION}.cuda{{ cuda.version.major }}.{{ cuda.version.minor }}
+
+{% if "source" in cuda.ppc64le.cudnn %}
+    {% set hashcmd = "md5sum" -%}
+    {% if "sha256sum" in cuda.ppc64le.cudnn %}
+        {% set hashcmd = "sha256sum" %}
+    {% endif -%}
+    {% if "sha256sum" in cuda.ppc64le.cudnn %}
+ENV NV_CUDNN_DL_HASHCMD sha256sum
+ENV NV_CUDNN_DL_SUM {{ cuda.ppc64le.cudnn.sha256sum }}
+    {% else %}
+ENV NV_CUDNN_DL_HASHCMD md5sum
+ENV NV_CUDNN_DL_SUM {{ cuda.ppc64le.cudnn.md5sum }}
+    {% endif %}
+ENV NV_CUDNN_DL_BASENAME {{ cuda.ppc64le.cudnn.basename }}
+ENV NV_CUDNN_DL_URL {{ cuda.ppc64le.cudnn.source }}
+
+RUN yum -y install wget
+
+RUN wget -q ${NV_CUDNN_DL_URL} \
+    && echo "${NV_CUDNN_DL_SUM}  ${NV_CUDNN_DL_BASENAME}" | ${NV_CUDNN_DL_HASHCMD} -c - \
+    && rpm -i ${NV_CUDNN_DL_BASENAME} \
+    && rm -f ${NV_CUDNN_DL_BASENAME} \
+    && yum -y remove wget
+
+{% endif %}
 {% else %}
 ENV NV_CUDNN_PACKAGE libcudnn{{ cuda.ppc64le.cudnn.version[0] }}-${NV_CUDNN_VERSION}.cuda{{ cuda.version.major }}.{{ cuda.version.minor }}
 ENV NV_CUDNN_PACKAGE_DEV libcudnn{{ cuda.ppc64le.cudnn.version[0] }}-devel-${NV_CUDNN_VERSION}.cuda{{ cuda.version.major }}.{{ cuda.version.minor }}
+
+{% if "source" in cuda.ppc64le.cudnn %}
+    {% set hashcmd = "md5sum" -%}
+    {% if "sha256sum" in cuda.ppc64le.cudnn %}
+        {% set hashcmd = "sha256sum" %}
+    {% endif -%}
+    {% if "sha256sum" in cuda.ppc64le.cudnn %}
+ENV NV_CUDNN_DL_HASHCMD sha256sum
+ENV NV_CUDNN_DL_SUM {{ cuda.ppc64le.cudnn.sha256sum }}
+    {% else %}
+ENV NV_CUDNN_DL_HASHCMD md5sum
+ENV NV_CUDNN_DL_SUM {{ cuda.ppc64le.cudnn.md5sum }}
+    {% endif %}
+ENV NV_CUDNN_DL_BASENAME {{ cuda.ppc64le.cudnn.basename }}
+ENV NV_CUDNN_DL_URL {{ cuda.ppc64le.cudnn.source }}
+
+RUN yum -y install wget
+
+RUN wget -q ${NV_CUDNN_DL_URL} \
+    && echo "${NV_CUDNN_DL_SUM}  ${NV_CUDNN_DL_BASENAME}" | ${NV_CUDNN_DL_HASHCMD} -c - \
+    && rpm -i ${NV_CUDNN_DL_BASENAME} \
+    && rm -f ${NV_CUDNN_DL_BASENAME}
+
 {% endif %}
-{% if "sha256sum" in cuda.ppc64le.cudnn %}
+{% if "source" in cuda.ppc64le.cudnn.dev %}
+    {% set hashcmd = "md5sum" -%}
+    {% if "sha256sum" in cuda.ppc64le.cudnn.dev %}
+        {% set hashcmd = "sha256sum" %}
+    {% endif -%}
+    {% if "sha256sum" in cuda.ppc64le.cudnn.dev %}
+ENV NV_CUDNN_DEV_DL_HASHCMD sha256sum
+ENV NV_CUDNN_DEV_DL_SUM {{ cuda.ppc64le.cudnn.dev.sha256sum }}
+    {% else %}
+ENV NV_CUDNN_DEV_DL_HASHCMD md5sum
+ENV NV_CUDNN_DEV_DL_SUM {{ cuda.ppc64le.cudnn.dev.md5sum }}
+    {% endif %}
+ENV NV_CUDNN_DEV_DL_BASENAME {{ cuda.ppc64le.cudnn.dev.basename }}
+ENV NV_CUDNN_DEV_DL_URL {{ cuda.ppc64le.cudnn.dev.source }}
+
+RUN wget -q ${NV_CUDNN_DEV_DL_URL} \
+    && echo "${NV_CUDNN_DEV_DL_SUM}  ${NV_CUDNN_DEV_DL_BASENAME}" | ${NV_CUDNN_DEV_DL_HASHCMD} -c - \
+    && rpm -i ${NV_CUDNN_DEV_DL_BASENAME} \
+    && rm -f ${NV_CUDNN_DEV_DL_BASENAME} \
+    && yum -y remove wget
+
+{% endif %}
+{% endif %}
+{% if "sha256sum" in cuda.ppc64le.cudnn and not "source" in cuda.ppc64le.cudnn %}
     {% set cudnn_url_version = cuda.ppc64le.cudnn.version[:cuda.ppc64le.cudnn.version.rfind(".")] %}
     {% set cudnn_url_version2 = cudnn_version %}
 ENV NV_CUDNN_DL_SHA256SUM {{ cuda.ppc64le.cudnn.sha256sum }}
 ENV NV_CUDNN_DL_BASENAME cudnn-{{ cuda.version.major }}.{{ cuda.version.minor }}-linux-ppc64le-v{{ cudnn_url_version2 }}.tgz
 ENV NV_CUDNN_DL_URL http://developer.download.nvidia.com/compute/redist/cudnn/v{{ cudnn_url_version }}/${NV_CUDNN_DL_BASENAME}
 {% if cuda.ppc64le.cudnn.target == "runtime" -%}ENV NV_CUDNN_DL_RUNTIME_EXTRACT_ARG "--wildcards 'cuda/targets/ppc64le-linux/lib/libcudnn.so.*'"{% endif -%}
-{% elif "sha256sum" not in cuda.ppc64le.cudnn %}
+{% elif "sha256sum" not in cuda.ppc64le.cudnn or "source" in cuda.x86_64.cudnn %}
     {% set cudnn_package = 1 %}
 {% endif %}
 {% endif %}
@@ -73,9 +214,10 @@ RUN yum install -y \
     {% endif %}
     && yum clean all \
     && rm -rf /var/cache/yum/*
-{% endif %}
+{% endif -%}
 
 {% if not cudnn_package %}
+
 # cuDNN license: https://developer.nvidia.com/cudnn/license_agreement
 RUN curl -fsSL ${NV_CUDNN_DL_URL} -O && \
     echo "${NV_CUDNN_DL_SHA256SUM}  ${NV_CUDNN_DL_BASENAME}" | sha256sum -c - && \

@@ -18,6 +18,19 @@ ENV NV_LIBNCCL_PACKAGE_NAME "libnccl2"
 ENV NV_LIBNCCL_PACKAGE_VERSION 2.6.4-1
 ENV NCCL_VERSION 2.6.4
 ENV NV_LIBNCCL_PACKAGE ${NV_LIBNCCL_PACKAGE_NAME}=${NV_LIBNCCL_PACKAGE_VERSION}+cuda10.0
+ENV NV_LIBNCCL_PACKAGE_SHA256SUM f92759e2ab0e36a1c9887f080f7283a774a7c971e352203db4d94d99c44f1028
+ENV NV_LIBNCCL_PACKAGE_SOURCE https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/x86_64/libnccl2_2.6.4-1+cuda10.0_amd64.deb
+ENV NV_LIBNCCL_PACKAGE_SOURCE_NAME libnccl2_2.6.4-1+cuda10.0_amd64.deb
+
+RUN apt-get update && apt-get install -y --no-install-recommends wget
+
+RUN wget -q ${NV_LIBNCCL_PACKAGE_SOURCE} \
+    && echo "$NV_LIBNCCL_PACKAGE_SHA256SUM  ${NV_LIBNCCL_PACKAGE_SOURCE_NAME}" | sha256sum -c --strict - \
+    && dpkg -i ${NV_LIBNCCL_PACKAGE_SOURCE_NAME} \
+    && rm -f ${NV_LIBNCCL_PACKAGE_SOURCE_NAME} \
+    && apt-get purge --autoremove -y wget \
+    && rm -rf /var/lib/apt/lists/*
+
 FROM base as base-ppc64le
 
 ENV NV_CUDA_LIB_VERSION 10.0.130-1
@@ -35,6 +48,19 @@ ENV NV_LIBNCCL_PACKAGE_NAME "libnccl2"
 ENV NV_LIBNCCL_PACKAGE_VERSION 2.6.4-1
 ENV NCCL_VERSION 2.6.4
 ENV NV_LIBNCCL_PACKAGE ${NV_LIBNCCL_PACKAGE_NAME}=${NV_LIBNCCL_PACKAGE_VERSION}+cuda10.0
+ENV NV_LIBNCCL_PACKAGE_SHA256SUM be3fc521c0b10498bdcff17b8331c71f79e7e17372e8572cc97db3162951955a
+ENV NV_LIBNCCL_PACKAGE_SOURCE https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/ppc64el/libnccl2_2.6.4-1+cuda10.0_ppc64el.deb
+ENV NV_LIBNCCL_PACKAGE_SOURCE_NAME libnccl2_2.6.4-1+cuda10.0_ppc64el.deb
+
+RUN apt-get update && apt-get install -y --no-install-recommends wget
+
+RUN wget -q ${NV_LIBNCCL_PACKAGE_SOURCE} \
+    && echo "$NV_LIBNCCL_PACKAGE_SHA256SUM  ${NV_LIBNCCL_PACKAGE_SOURCE_NAME}" | sha256sum -c --strict - \
+    && dpkg -i ${NV_LIBNCCL_PACKAGE_SOURCE_NAME} \
+    && rm -f ${NV_LIBNCCL_PACKAGE_SOURCE_NAME} \
+    && apt-get purge --autoremove -y wget \
+    && rm -rf /var/lib/apt/lists/*
+
 FROM base-${TARGETARCH}
 
 ARG TARGETARCH
