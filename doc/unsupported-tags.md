@@ -22,42 +22,6 @@ All tags for _[`cuda-arm64`](https://hub.docker.com/r/nvidia/cuda-arm64/tags) an
 - `11.0-cudnn8-runtime-ubuntu18.04-rc`
 - `11.0-devel-ubuntu18.04-rc`
 - `11.0-runtime-ubuntu18.04-rc`
-### ubuntu16.04
-#### CUDA 8.0
-- `8.0-cudnn5-devel-ubuntu16.04`
-- `8.0-cudnn5-runtime-ubuntu16.04`
-- `8.0-cudnn6-devel-ubuntu16.04`
-- `8.0-cudnn6-runtime-ubuntu16.04`
-- `8.0-cudnn7-devel-ubuntu16.04`
-- `8.0-cudnn7-runtime-ubuntu16.04`
-- `8.0-devel-ubuntu16.04`
-- `8.0-runtime-ubuntu16.04`
-#### CUDA 9.0
-- `9.0-base-ubuntu16.04`
-- `9.0-cudnn7-devel-ubuntu16.04`
-- `9.0-cudnn7-runtime-ubuntu16.04`
-- `9.0-devel-ubuntu16.04`
-- `9.0-runtime-ubuntu16.04`
-#### CUDA 9.1
-- `9.1-base-ubuntu16.04`
-- `9.1-cudnn7-devel-ubuntu16.04`
-- `9.1-cudnn7-runtime-ubuntu16.04`
-- `9.1-devel-ubuntu16.04`
-- `9.1-runtime-ubuntu16.04`
-#### CUDA 9.2
-- `9.2-base-ubuntu16.04`
-- `9.2-cudnn7-devel-ubuntu16.04`
-- `9.2-cudnn7-runtime-ubuntu16.04`
-- `9.2-devel-ubuntu16.04`
-- `9.2-runtime-ubuntu16.04`
-
-#### CUDA 11.0 RC
-
-- `11.0-base-ubuntu16.04-rc`
-- `11.0-cudnn8-devel-ubuntu16.04-rc`
-- `11.0-cudnn8-runtime-ubuntu16.04-rc`
-- `11.0-devel-ubuntu16.04-rc`
-- `11.0-runtime-ubuntu16.04-rc`
 ### ubi7
 #### CUDA 8.0
 - `8.0-cudnn5-devel-ubi7`
@@ -137,6 +101,109 @@ All tags for _[`cuda-arm64`](https://hub.docker.com/r/nvidia/cuda-arm64/tags) an
 - `9.1-base-ubuntu17.04`
 - `9.1-devel-ubuntu17.04`
 - `9.1-runtime-ubuntu17.04`
+### ubuntu16.04
+#### CUDA 11.3.1
+- `11.3.1-base-ubuntu16.04`
+- `11.3.1-cudnn8-devel-ubuntu16.04`
+- `11.3.1-cudnn8-runtime-ubuntu16.04`
+- `11.3.1-devel-ubuntu16.04`
+- `11.3.1-runtime-ubuntu16.04`
+#### CUDA 11.3.0
+- `11.3.0-base-ubuntu16.04`
+- `11.3.0-cudnn8-devel-ubuntu16.04`
+- `11.3.0-cudnn8-runtime-ubuntu16.04`
+- `11.3.0-devel-ubuntu16.04`
+- `11.3.0-runtime-ubuntu16.04`
+#### CUDA 11.2.2
+- `11.2.2-base-ubuntu16.04`
+- `11.2.2-cudnn8-devel-ubuntu16.04`
+- `11.2.2-cudnn8-runtime-ubuntu16.04`
+- `11.2.2-devel-ubuntu16.04`
+- `11.2.2-runtime-ubuntu16.04`
+#### CUDA 11.2.1
+- `11.2.1-base-ubuntu16.04`
+- `11.2.1-cudnn8-devel-ubuntu16.04`
+- `11.2.1-cudnn8-runtime-ubuntu16.04`
+- `11.2.1-devel-ubuntu16.04`
+- `11.2.1-runtime-ubuntu16.04`
+#### CUDA 11.2.0
+- `11.2.0-base-ubuntu16.04`
+- `11.2.0-cudnn8-devel-ubuntu16.04`
+- `11.2.0-cudnn8-runtime-ubuntu16.04`
+- `11.2.0-devel-ubuntu16.04`
+- `11.2.0-runtime-ubuntu16.04`
+#### CUDA 11.1.1
+- `11.1.1-base-ubuntu16.04`
+- `11.1.1-cudnn8-devel-ubuntu16.04`
+- `11.1.1-cudnn8-runtime-ubuntu16.04`
+- `11.1.1-devel-ubuntu16.04`
+- `11.1.1-runtime-ubuntu16.04`
+#### CUDA 11.0.3
+- `11.0.3-base-ubuntu16.04`
+- `11.0.3-cudnn8-devel-ubuntu16.04`
+- `11.0.3-cudnn8-runtime-ubuntu16.04`
+- `11.0.3-devel-ubuntu16.04`
+- `11.0.3-runtime-ubuntu16.04`
+#### CUDA 10.2
+- `10.2-base-ubuntu16.04`
+- `10.2-cudnn7-devel-ubuntu16.04`
+- `10.2-cudnn7-runtime-ubuntu16.04`
+- `10.2-cudnn8-devel-ubuntu16.04`
+- `10.2-cudnn8-runtime-ubuntu16.04`
+- `10.2-devel-ubuntu16.04`
+- `10.2-runtime-ubuntu16.04`
+#### CUDA 10.1
+- `10.1-base-ubuntu16.04`
+- `10.1-cudnn7-devel-ubuntu16.04`
+- `10.1-cudnn7-runtime-ubuntu16.04`
+- `10.1-cudnn8-devel-ubuntu16.04`
+- `10.1-cudnn8-runtime-ubuntu16.04`
+- `10.1-devel-ubuntu16.04`
+- `10.1-runtime-ubuntu16.04`
+#### CUDA 10.0
+- `10.0-base-ubuntu16.04`
+- `10.0-cudnn7-devel-ubuntu16.04`
+- `10.0-cudnn7-runtime-ubuntu16.04`
+- `10.0-devel-ubuntu16.04`
+- `10.0-runtime-ubuntu16.04`
+#### CUDA 8.0
+- `8.0-cudnn5-devel-ubuntu16.04`
+- `8.0-cudnn5-runtime-ubuntu16.04`
+- `8.0-cudnn6-devel-ubuntu16.04`
+- `8.0-cudnn6-runtime-ubuntu16.04`
+- `8.0-cudnn7-devel-ubuntu16.04`
+- `8.0-cudnn7-runtime-ubuntu16.04`
+- `8.0-devel-ubuntu16.04`
+- `8.0-runtime-ubuntu16.04`
+#### CUDA 9.0
+- `9.0-base-ubuntu16.04`
+- `9.0-cudnn7-devel-ubuntu16.04`
+- `9.0-cudnn7-runtime-ubuntu16.04`
+- `9.0-devel-ubuntu16.04`
+- `9.0-runtime-ubuntu16.04`
+#### CUDA 9.1
+- `9.1-base-ubuntu16.04`
+- `9.1-cudnn7-devel-ubuntu16.04`
+- `9.1-cudnn7-runtime-ubuntu16.04`
+- `9.1-devel-ubuntu16.04`
+- `9.1-runtime-ubuntu16.04`
+#### CUDA 9.2
+- `9.2-base-ubuntu16.04`
+- `9.2-cudnn7-devel-ubuntu16.04`
+- `9.2-cudnn7-runtime-ubuntu16.04`
+- `9.2-devel-ubuntu16.04`
+- `9.2-runtime-ubuntu16.04`
+#### CUDA 11.0
+- `11.0-base-ubuntu16.04`
+- `11.0-base-ubuntu16.04-rc`
+- `11.0-cudnn8-devel-ubuntu16.04`
+- `11.0-cudnn8-devel-ubuntu16.04-rc`
+- `11.0-cudnn8-runtime-ubuntu16.04`
+- `11.0-cudnn8-runtime-ubuntu16.04-rc`
+- `11.0-devel-ubuntu16.04`
+- `11.0-devel-ubuntu16.04-rc`
+- `11.0-runtime-ubuntu16.04`
+- `11.0-runtime-ubuntu16.04-rc`
 ### ubuntu14.04
 #### CUDA 10.1
 - `10.1-base-ubuntu14.04`

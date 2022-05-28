@@ -27,6 +27,7 @@ unsupported:
    - centos6
    - centos8
    - ubuntu14.04
+   - ubuntu16.04
    - ubuntu17.04
   release_label:
    - 6.5
@@ -3677,15 +3678,6 @@ cuda_v11.3.1:
         libnccl2:
         libnccl2_dev:
         cudnn8:
-  ubuntu16.04:
-    template_path: templates/ubuntu
-    base_image: ubuntu:16.04
-    repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604
-    x86_64:
-      <<: *cuda11_3_1_requires
-      components:
-        <<: *cuda11_3_1_components
-        libnccl2:
   centos7:
     template_path: templates/redhat
     base_image: centos:7
@@ -3815,15 +3807,6 @@ cuda_v11.3.0:
         libnccl2:
         libnccl2_dev:
         cudnn8:
-  ubuntu16.04:
-    template_path: templates/ubuntu
-    base_image: ubuntu:16.04
-    repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604
-    x86_64:
-      <<: *cuda11_3_0_requires
-      components:
-        <<: *cuda11_3_0_components
-        libnccl2:
   centos7:
     template_path: templates/redhat
     base_image: centos:7
@@ -3950,15 +3933,6 @@ cuda_v11.2.2:
         libnccl2:
         libnccl2_dev:
         cudnn8:
-  ubuntu16.04:
-    template_path: templates/ubuntu
-    base_image: ubuntu:16.04
-    repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604
-    x86_64:
-      <<: *cuda11_2_2_requires
-      components:
-        <<: *cuda11_2_2_components
-        libnccl2:
   centos7:
     template_path: templates/redhat
     base_image: centos:7
@@ -4085,15 +4059,6 @@ cuda_v11.2.1:
         libnccl2:
         libnccl2_dev:
         cudnn8:
-  ubuntu16.04:
-    template_path: templates/ubuntu
-    base_image: ubuntu:16.04
-    repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604
-    x86_64:
-      <<: *cuda11_2_1_requires
-      components:
-        <<: *cuda11_2_1_components
-        libnccl2:
   centos7:
     template_path: templates/redhat
     base_image: centos:7
@@ -4220,15 +4185,6 @@ cuda_v11.2.0:
         libnccl2:
         libnccl2_dev:
         cudnn8:
-  ubuntu16.04:
-    template_path: templates/ubuntu
-    base_image: ubuntu:16.04
-    repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604
-    x86_64:
-      <<: *cuda11_2_0_requires
-      components:
-        <<: *cuda11_2_0_components
-        libnccl2:
   centos7:
     template_path: templates/redhat
     base_image: centos:7
@@ -4380,24 +4336,6 @@ cuda_v11.1.1:
           sha256sum: c9a0d47598afaab0107b55326ab19fd558e774266c1da80e0d6ff02b809a9672
           source: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/sbsa/libnccl-dev_2.8.3-1+cuda11.1_arm64.deb
           basename: libnccl-dev_2.8.3-1+cuda11.1_arm64.deb
-  ubuntu16.04:
-    template_path: templates/ubuntu
-    base_image: ubuntu:16.04
-    repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604
-    x86_64:
-      <<: *cuda11_1_1_requires
-      components:
-        <<: *cuda11_1_1_components
-        libnccl2:
-          version: 2.7.8-1
-          sha256sum: 49ea52c9fbc40e050a89b93937c7c6c23f47c13da70c961cb04284c3225fe63e
-          source: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604/x86_64/libnccl2_2.7.8-1+cuda11.1_amd64.deb
-          basename: libnccl2_2.7.8-1+cuda11.1_amd64.deb
-        libnccl2_dev:
-          version: 2.7.8-1
-          sha256sum: 8e01ed67e43958fa0969ec5d433c99b3d9e638f8ad8c8675b59d6f507579cc03
-          source: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1604/x86_64/libnccl-dev_2.7.8-1+cuda11.1_amd64.deb
-          basename: libnccl-dev_2.7.8-1+cuda11.1_amd64.deb
   centos7:
     template_path: templates/redhat
     base_image: centos:7
@@ -4561,14 +4499,6 @@ cuda_v11.0.3:
           sha256sum: e8fe10aa2dd8c54d97ecc6f3b92cef1e7243af07a03f8d7a18f49c4c90b8102e
           source: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/sbsa/libnccl-dev_2.8.3-1+cuda11.0_arm64.deb
           basename: libnccl-dev_2.8.3-1+cuda11.0_arm64.deb
-  ubuntu16.04:
-    template_path: templates/ubuntu
-    base_image: ubuntu:16.04
-    repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604
-    x86_64:
-      <<: *cuda11_0_3_requires
-      components:
-        <<: *cuda11_0_3_components
   centos7:
     template_path: templates/redhat
     base_image: centos:7
@@ -4692,14 +4622,6 @@ cuda_v10.2:
         libnccl2_dev:
           version: 2.11.4-1
         cudnn8:
-  ubuntu16.04:
-    template_path: templates/ubuntu/legacy
-    base_image: ubuntu:16.04
-    repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604
-    x86_64:
-      <<: *cuda10_2_requires
-      components:
-        <<: *cuda10_2_components
   centos7:
     template_path: templates/redhat/legacy
     base_image: centos:7
@@ -4879,14 +4801,6 @@ cuda_v10.1:
           version: 8.0.4.30-1
           source: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/ppc64el/libcudnn8_8.0.4.30-1+cuda10.1_ppc64el.deb
           sha256sum: da448059bdbd4585c8855f93438654503fa75bf75dc8c6de39eceabd7c9dc76a
-  ubuntu16.04:
-    template_path: templates/ubuntu/legacy
-    base_image: ubuntu:16.04
-    repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804
-    x86_64:
-      <<: *cuda10_1_requires
-      components:
-        <<: *cuda10_1_components
   centos7:
     template_path: templates/redhat/legacy
     base_image: centos:7
@@ -5099,14 +5013,6 @@ cuda_v10.0:
           version: 7.6.5.32-1
           source: https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu1804/ppc64el/libcudnn7_7.6.5.32-1+cuda10.0_ppc64el.deb
           sha256sum: 1e650f9e87ef160730fadd909fcd511be633d7bf07761183bfcfd839239e033d
-  ubuntu16.04:
-    template_path: templates/ubuntu/legacy
-    base_image: ubuntu:16.04
-    repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1604
-    x86_64:
-      <<: *cuda10_0_requires
-      components:
-        <<: *cuda10_0_components
   centos7:
     template_path: templates/redhat/legacy
     base_image: centos:7
