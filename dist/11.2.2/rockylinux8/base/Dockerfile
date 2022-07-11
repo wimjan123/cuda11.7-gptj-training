@@ -3,7 +3,7 @@ FROM rockylinux:8 as base
 FROM base as base-amd64
 
 ENV NVARCH x86_64
-ENV NVIDIA_REQUIRE_CUDA "cuda>=11.2 brand=tesla,driver>=418,driver<419"
+ENV NVIDIA_REQUIRE_CUDA "cuda>=11.2 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=450,driver<451"
 ENV NV_CUDA_CUDART_VERSION 11.2.152-1
 
 COPY cuda.repo-x86_64 /etc/yum.repos.d/cuda.repo
