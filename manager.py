@@ -1474,7 +1474,7 @@ class ManagerGenerate(Manager):
                 log.debug(f"Working on {k}")
                 if "l4t" in k:
                     self.tegra = True
-                    self.distro = "l4t-cuda"
+                    self.distro = "l4t"
                     self.distro_version = ""
                 else:
                     rgx = re.search(r"(\D*)([\d\.]*)", k)
