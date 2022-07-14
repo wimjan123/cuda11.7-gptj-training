@@ -664,40 +664,73 @@ kitmaker_ubi7_deploy:
 
 
 # Need to pass these from the trigger
-.kitmaker_l4t_variables: &kitmaker_l4t_variables
+.kitmaker_l4t_jetson_variables: &kitmaker_l4t_jetson_variables
   IMAGE_NAME: "gitlab-master.nvidia.com:5005/cuda-installer/cuda/l4t-cuda"
   OS: "l4t"
   OS_NAME: "l4t"
   OS_VERSION: ""
   ARCHES: "tegra"
+  FLAVOR: "jetson"
   # CI_DEBUG_TRACE: "true"
 
-.kitmaker_l4t_only: &kitmaker_l4t_only
+.kitmaker_l4t_jetson_only: &kitmaker_l4t_jetson_only
   image: gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
   variables:
-    <<: *kitmaker_l4t_variables
-    TAG_MANIFEST_PATH: "tag_manifest_l4t"
+    <<: *kitmaker_l4t_jetson_variables
+    TAG_MANIFEST_PATH: "tag_manifest_l4t_jetson"
   rules:
-    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "l4t"'
-    - if: $L4T == "true"
+    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "jetson"'
 
-kitmaker_l4t_base:
+kitmaker_l4t_jetson_base:
   <<: *cuda_base_definition
-  <<: *kitmaker_l4t_only
+  <<: *kitmaker_l4t_jetson_only
   # Need to build container images on a multi-arch capable machine
   <<: *tags_definition_multiarch
 
-kitmaker_l4t_deploy:
+# L4T only, will be removed eventually!
+kitmaker_l4t_jetson_cudnn:
+  <<: *cudnn_definition
+  <<: *kitmaker_l4t_jetson_only
+  # Need to build container images on a multi-arch capable machine
+  <<: *tags_definition_multiarch
+  artifacts:
+    reports:
+      dotenv: cudnn_tags.env
+
+kitmaker_l4t_jetson_deploy:
   <<: *deploy_definition
-  <<: *kitmaker_l4t_only
+  <<: *kitmaker_l4t_jetson_only
   <<: *tags_definition
   needs:
-    - job: kitmaker_l4t_base
+    - job: kitmaker_l4t_jetson_base
       artifacts: true
+    - job: kitmaker_l4t_jetson_cudnn
+      optional: true
   artifacts:
     paths:
-      - tag_manifest_l4t
+      - tag_manifest_l4t_jetson
 
+kitmaker_l4t_jetson_success:
+  stage: cleanup_success
+  image: gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
+  <<: *tags_definition
+  rules:
+    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "jetson"'
+      when: on_success
+  script:
+    - |
+      kitmaker_cleanup_webhook_success
+
+kitmaker_l4t_jetson_failure:
+  stage: cleanup_failure
+  image: gitlab-master.nvidia.com:5005/cuda-installer/cuda/gitlab-cuda-builder
+  <<: *tags_definition
+  rules:
+    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "jetson"'
+      when: on_failure
+  script:
+    - |
+      kitmaker_webhook_failed
 
 
 kitmaker_success:

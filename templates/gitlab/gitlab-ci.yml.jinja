@@ -368,9 +368,6 @@ prepare:
       echo ">>> END ${TAG_MANIFEST_PATH} <<<"
       if [ ! -z $KITMAKER ] && [ ! -z $TRIGGER ]; then
           manifest_file="manifest.yml"
-          {# if  [ ! -z $FLAVOR ] && [ "$FLAVOR" =~ "l4t" ]; then #}
-          {#     manifest_file="manifest-l4t.yml" #}
-          {# fi #}
           if ! retry 3 10 wget --no-verbose --directory-prefix="kitpick" --reject="index.html*" --no-parent ${CANDIDATE_URL}/${manifest_file}; then
               echo "Could not download files from '${CANDIDATE_URL}'!!"
               # kitmaker_webhook_failed
@@ -453,18 +450,18 @@ trigger:
     TAG_MANIFEST_PATH: "tag_manifest_{{ kitmaker_distro_clean }}"
   rules:
     {% if "l4t" in kitmaker_distro_clean %}
-    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "l4t"'
+    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "jetson"'
     {% else %}
     - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "default"'
-    {% endif %}
     - if: ${{kitmaker_distro_clean | upper }} == "true"
+    {% endif %}
 
 kitmaker_{{ kitmaker_distro }}_{{ flavor }}base:
   <<: *cuda_base_definition
   <<: *kitmaker_{{ kitmaker_distro_clean }}_only
   # Need to build container images on a multi-arch capable machine
   <<: *tags_definition_multiarch
-{% if data.flavor == "l4t" %}
+{% if data.flavor == "jetson" %}
 
 # L4T only, will be removed eventually!
 kitmaker_{{ kitmaker_distro }}_{{ flavor }}cudnn:
@@ -484,7 +481,7 @@ kitmaker_{{ kitmaker_distro }}_{{ flavor }}deploy:
   needs:
     - job: kitmaker_{{ kitmaker_distro }}_{{ flavor }}base
       artifacts: true
-    {% if data.flavor == "l4t" %}
+    {% if data.flavor == "jetson" %}
     - job: kitmaker_{{ kitmaker_distro }}_{{ flavor }}cudnn
       optional: true
     {% endif %}
@@ -492,24 +489,24 @@ kitmaker_{{ kitmaker_distro }}_{{ flavor }}deploy:
     paths:
       - tag_manifest_{{ kitmaker_distro_clean }}
 
-{% if data.flavor == "l4t" %}
-kitmaker_{{ flavor }}success:
+{% if data.flavor == "jetson" %}
+kitmaker_{{ kitmaker_distro }}_{{ flavor }}success:
   stage: cleanup_success
   image: {{ gitlab_builder_image }}
   <<: *tags_definition
   rules:
-    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "l4t"'
+    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "jetson"'
       when: on_success
   script:
     - |
       kitmaker_cleanup_webhook_success
 
-kitmaker_{{ flavor }}failure:
+kitmaker_{{ kitmaker_distro }}_{{ flavor }}failure:
   stage: cleanup_failure
   image: {{ gitlab_builder_image }}
   <<: *tags_definition
   rules:
-    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "l4t"'
+    - if: '$TRIGGER == "true" && $KITMAKER == "true" && $FLAVOR == "jetson"'
       when: on_failure
   script:
     - |
