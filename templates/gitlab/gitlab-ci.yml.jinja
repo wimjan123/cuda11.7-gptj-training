@@ -421,7 +421,7 @@ trigger:
     {% set kitmaker_distro = data.full_name() %}
     {% set kitmaker_distro_clean = data.shipit_distro_name() %}
     {% if cuda.supported_distro_matrix.by_distro(kitmaker_distro_clean) %}
-        {% set arches = cuda.supported_distro_matrix.by_distro(kitmaker_distro_clean).common_arches_csv() %}
+        {% set arches = cuda.supported_distro_matrix.by_distro(kitmaker_distro_clean).container_arches_csv() %}
     {% endif %}
     {% if data.flavor %}
         {% set flavor = data.flavor + "_" %}

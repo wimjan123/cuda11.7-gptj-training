@@ -66,6 +66,13 @@ class SupportedPlatform:
             csv.append(arch.common_name)
         return ", ".join(csv)
 
+    def container_arches_csv(self) -> str:
+        """ """
+        csv: List[str] = []
+        for arch in self.arches:
+            csv.append(arch.container_arch)
+        return ", ".join(csv)
+
 
 _package_repo_arch_repr = namedtuple("_package_repo_arch_repr", ["deb", "rpm"])
 

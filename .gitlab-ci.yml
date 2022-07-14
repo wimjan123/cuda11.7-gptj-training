@@ -669,7 +669,7 @@ kitmaker_ubi7_deploy:
   OS: "l4t"
   OS_NAME: "l4t"
   OS_VERSION: ""
-  ARCHES: "tegra"
+  ARCHES: "arm64"
   FLAVOR: "jetson"
   # CI_DEBUG_TRACE: "true"
 
