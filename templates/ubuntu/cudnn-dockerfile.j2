@@ -89,6 +89,7 @@ RUN wget -q ${NV_CUDNN_DEV_DL_URL} \
 {% endif %}
 
 {% endif %}
+{% endif %}
 {% if "arm64" in cuda %}
 FROM base as base-arm64
 
@@ -179,7 +180,6 @@ RUN wget -q ${NV_CUDNN_DEV_DL_URL} \
 
     {% endif %}
 {% endif %}
-{% endif -%}
 {% endif -%}
 {% if "ppc64le" in cuda %}
 FROM base as base-ppc64le
