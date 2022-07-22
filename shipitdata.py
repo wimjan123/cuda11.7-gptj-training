@@ -373,7 +373,7 @@ class ShipitData:
                         self.l4t_base_image = f"{L4T_BASE_IMAGE_NAME}:r32.7.1"
                         requires = "cuda>=10.2"
                     elif self.release_label == "11.4.14":
-                        self.l4t_base_image = f"{L4T_BASE_IMAGE_NAME}:r35.1"
+                        self.l4t_base_image = f"{L4T_BASE_IMAGE_NAME}:r35.1.0"
                         requires = "cuda>=11.4"
                     elif not self.l4t_base_image:
                         # 21:29 Mon May 09 2022: jesusa: This is not used much
