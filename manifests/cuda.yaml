@@ -89,6 +89,8 @@ cuda_v11.7.1:
           version: 2.13.4-1
         libnccl2_dev:
           version: 2.13.4-1
+        cudnn8:
+          version: 8.5.0.96-1
       <<: *cuda11_7_1_requires
   rockylinux8:
     arm64:
@@ -119,6 +121,8 @@ cuda_v11.7.1:
           version: 2.13.4-1
         libnccl2_dev:
           version: 2.13.4-1
+        cudnn8:
+          version: 8.5.0.96-1
       requires: 'cuda>=11.7'
     base_image: rockylinux:8
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8
@@ -151,6 +155,8 @@ cuda_v11.7.1:
           version: 2.13.4-1
         libnccl2_dev:
           version: 2.13.4-1
+        cudnn8:
+          version: 8.5.0.96-1
       <<: *cuda11_7_1_requires
   ubi7:
     base_image: registry.access.redhat.com/ubi7/ubi:latest
@@ -180,6 +186,8 @@ cuda_v11.7.1:
           version: 2.13.4-1
         libnccl2_dev:
           version: 2.13.4-1
+        cudnn8:
+          version: 8.5.0.96-1
       <<: *cuda11_7_1_requires
   ubi8:
     arm64:
@@ -206,6 +214,8 @@ cuda_v11.7.1:
           version: 2.13.4-1
         libnccl2_dev:
           version: 2.13.4-1
+        cudnn8:
+          version: 8.5.0.96-1
       requires: 'cuda>=11.7'
     base_image: registry.access.redhat.com/ubi8/ubi:latest
     ppc64le:
@@ -232,6 +242,8 @@ cuda_v11.7.1:
           version: 2.13.4-1
         libnccl2_dev:
           version: 2.13.4-1
+        cudnn8:
+          version: 8.5.0.96-1
       <<: *cuda11_7_1_requires
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8
     template_path: templates/redhat
@@ -259,6 +271,8 @@ cuda_v11.7.1:
           version: 2.13.4-1
         libnccl2_dev:
           version: 2.13.4-1
+        cudnn8:
+          version: 8.5.0.96-1
       <<: *cuda11_7_1_requires
   ubuntu18.04:
     base_image: ubuntu:18.04
@@ -292,6 +306,8 @@ cuda_v11.7.1:
           version: 2.13.4-1
         libnccl2_dev:
           version: 2.13.4-1
+        cudnn8:
+          version: 8.5.0.96-1
       <<: *cuda11_7_1_requires
   ubuntu20.04:
     arm64:
@@ -322,6 +338,8 @@ cuda_v11.7.1:
           version: 2.12.12-1
         libnccl2_dev:
           version: 2.12.12-1
+        cudnn8:
+          version: 8.5.0.96-1
       requires: 'cuda>=11.7'
     base_image: ubuntu:20.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004
@@ -354,6 +372,8 @@ cuda_v11.7.1:
           version: 2.13.4-1
         libnccl2_dev:
           version: 2.13.4-1
+        cudnn8:
+          version: 8.5.0.96-1
       <<: *cuda11_7_1_requires
   ubuntu22.04:
     arm64:
@@ -384,6 +404,8 @@ cuda_v11.7.1:
           version: 2.13.4-1
         libnccl2_dev:
           version: 2.13.4-1
+        cudnn8:
+          version: 8.5.0.96-1
       requires: 'cuda>=11.7'
     base_image: ubuntu:22.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204
@@ -416,6 +438,8 @@ cuda_v11.7.1:
           version: 2.13.4-1
         libnccl2_dev:
           version: 2.13.4-1
+        cudnn8:
+          version: 8.5.0.96-1
       <<: *cuda11_7_1_requires
 
 .requires_v11.7.0: &cuda11_7_0_requires
@@ -468,6 +492,8 @@ cuda_v11.7.0:
           version: 2.13.4-1
         libnccl2_dev:
           version: 2.13.4-1
+        cudnn8:
+          version: 8.5.0.96-1
       <<: *cuda11_7_0_requires
   rockylinux8:
     arm64:
@@ -498,6 +524,8 @@ cuda_v11.7.0:
           version: 2.12.12-1
         libnccl2_dev:
           version: 2.12.12-1
+        cudnn8:
+          version: 8.5.0.96-1
       requires: 'cuda>=11.7'
     base_image: rockylinux:8
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8
@@ -530,6 +558,8 @@ cuda_v11.7.0:
           version: 2.13.4-1
         libnccl2_dev:
           version: 2.13.4-1
+        cudnn8:
+          version: 8.5.0.96-1
       <<: *cuda11_7_0_requires
   ubi7:
     base_image: registry.access.redhat.com/ubi7/ubi:latest
@@ -559,6 +589,8 @@ cuda_v11.7.0:
           version: 2.13.4-1
         libnccl2_dev:
           version: 2.13.4-1
+        cudnn8:
+          version: 8.5.0.96-1
       <<: *cuda11_7_0_requires
   ubi8:
     arm64:
@@ -585,6 +617,8 @@ cuda_v11.7.0:
           version: 2.12.12-1
         libnccl2_dev:
           version: 2.12.12-1
+        cudnn8:
+          version: 8.5.0.96-1
       requires: 'cuda>=11.7'
     base_image: registry.access.redhat.com/ubi8/ubi:latest
     ppc64le:
@@ -611,6 +645,8 @@ cuda_v11.7.0:
           version: 2.13.4-1
         libnccl2_dev:
           version: 2.13.4-1
+        cudnn8:
+          version: 8.5.0.96-1
       requires: 'cuda>=11.7'
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8
     template_path: templates/redhat
@@ -638,6 +674,8 @@ cuda_v11.7.0:
           version: 2.13.4-1
         libnccl2_dev:
           version: 2.13.4-1
+        cudnn8:
+          version: 8.5.0.96-1
       <<: *cuda11_7_0_requires
   ubuntu18.04:
     base_image: ubuntu:18.04
@@ -671,6 +709,8 @@ cuda_v11.7.0:
           version: 2.13.4-1
         libnccl2_dev:
           version: 2.13.4-1
+        cudnn8:
+          version: 8.5.0.96-1
       <<: *cuda11_7_0_requires
   ubuntu20.04:
     arm64:
@@ -701,6 +741,8 @@ cuda_v11.7.0:
           version: 2.12.12-1
         libnccl2_dev:
           version: 2.12.12-1
+        cudnn8:
+          version: 8.5.0.96-1
       requires: 'cuda>=11.7'
     base_image: ubuntu:20.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004
@@ -733,6 +775,8 @@ cuda_v11.7.0:
           version: 2.13.4-1
         libnccl2_dev:
           version: 2.13.4-1
+        cudnn8:
+          version: 8.5.0.96-1
       <<: *cuda11_7_0_requires
   ubuntu22.04:
     arm64:
@@ -759,6 +803,8 @@ cuda_v11.7.0:
           version: 11.7.50-1
         nvtx:
           version: 11.7.50-1
+        cudnn8:
+          version: 8.5.0.96-1
       requires: 'cuda>=11.7'
     base_image: ubuntu:22.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204
@@ -791,6 +837,8 @@ cuda_v11.7.0:
           version: 2.13.4-1
         libnccl2_dev:
           version: 2.13.4-1
+        cudnn8:
+          version: 8.5.0.96-1
       <<: *cuda11_7_0_requires
 
 .requires_v11.6.2: &cuda11_6_2_requires
@@ -5014,7 +5062,7 @@ cuda_v11.0.3:
   libnccl2_dev:
     version: 2.13.4-1
   cudnn8:
-    version: 8.4.0.27-1
+    version: 8.5.0.96-1
 
 
 cuda_v10.2:
@@ -5034,8 +5082,6 @@ cuda_v10.2:
       <<: *cuda10_2_requires
       components:
         <<: *cuda10_2_components
-        cudnn8:
-          version: 8.4.0.27-1
     ppc64le:
       requires: "cuda>=10.2"
       components:
@@ -5053,8 +5099,6 @@ cuda_v10.2:
       <<: *cuda10_2_requires
       components:
         <<: *cuda10_2_components
-        cudnn8:
-          version: 8.4.0.27-1
     ppc64le:
       requires: "cuda>=10.2"
       components:
@@ -5069,9 +5113,6 @@ cuda_v10.2:
       <<: *cuda10_2_requires
       components:
         <<: *cuda10_2_components
-        # cudnn7 is not in the ML repo for rhel8
-        cudnn8:
-          version: 8.4.0.27-1
   ubi8:
     template_path: templates/redhat/legacy
     base_image: registry.access.redhat.com/ubi8/ubi:latest
@@ -5080,9 +5121,6 @@ cuda_v10.2:
       <<: *cuda10_2_requires
       components:
         <<: *cuda10_2_components
-        # cudnn7 is not in the ML repo for rhel8
-        cudnn8:
-          version: 8.4.0.27-1
   ubi7:
     template_path: templates/redhat/legacy
     base_image: registry.access.redhat.com/ubi7/ubi:latest
@@ -5091,9 +5129,6 @@ cuda_v10.2:
       <<: *cuda10_2_requires
       components:
         <<: *cuda10_2_components
-        # TODO: version is different for rhel7
-        cudnn8:
-          version: 8.4.0.27-1
     ppc64le:
       requires: "cuda>=10.2"
       components:

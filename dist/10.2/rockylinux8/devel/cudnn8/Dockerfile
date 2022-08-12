@@ -3,7 +3,7 @@ FROM ${IMAGE_NAME}:10.2-devel-rockylinux8 as base
 
 FROM base as base-amd64
 
-ENV NV_CUDNN_VERSION 8.4.0.27-1
+ENV NV_CUDNN_VERSION 8.5.0.96-1
 ENV NV_CUDNN_PACKAGE libcudnn8-${NV_CUDNN_VERSION}.cuda10.2
 ENV NV_CUDNN_PACKAGE_DEV libcudnn8-devel-${NV_CUDNN_VERSION}.cuda10.2
 
