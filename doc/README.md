@@ -171,8 +171,6 @@ Visit [OpenSource @ Nvidia](https://developer.download.nvidia.com/compute/cuda/o
 
 ### rockylinux8 [arm64, x86_64]
 
-NOT YET PUSHED: See https://gitlab.com/nvidia/container-images/cuda/-/issues/169
-
 - [`11.7.1-cudnn8-runtime-rockylinux8` (*11.7.1/rockylinux8/runtime/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.7.1/rockylinux8/runtime/cudnn8/Dockerfile)
 - [`11.7.1-runtime-rockylinux8` (*11.7.1/rockylinux8/runtime/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.7.1/rockylinux8/runtime/Dockerfile)
 - [`11.7.1-cudnn8-devel-rockylinux8` (*11.7.1/rockylinux8/devel/cudnn8/Dockerfile*)](https://gitlab.com/nvidia/container-images/cuda/blob/master/dist/11.7.1/rockylinux8/devel/cudnn8/Dockerfile)
