@@ -34,7 +34,7 @@ function dq_rhel() {
     if [[ "${ARCH}" != "x86_64" ]]; then
         pkgcomp="gcc.${ARCH}"
     fi
-    printf "%s\n" "RUN ${pkgmgr} install -y ${pkgcomp} git" >> Dockerfile
+    printf "%s\n" "RUN ${pkgmgr} install -y ${pkgcomp} git findutils" >> Dockerfile
     if [[ "${unsupported_git_tags[@]}" =~ "${major}.${minor}" ]]; then
         if [[ "${OS}" == "ubi7" ]]; then
             # Dependencies are broken for cuda 8.0 samples on ubi7
