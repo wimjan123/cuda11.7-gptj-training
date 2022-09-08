@@ -28,10 +28,15 @@ RUN if [ ! -e /usr/bin/pip ]; then ln -s pip3 /usr/bin/pip ; fi
 
 RUN if [ ! -e /usr/bin/python ]; then ln -sf /usr/bin/python3 /usr/bin/python; fi
 
-RUN curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python
-
 COPY pyproject.toml /root/
+COPY poetry.lock /root/
 
 WORKDIR /root
 
-RUN . $HOME/.poetry/env && poetry config virtualenvs.create false && poetry install
+ENV PIP_DISABLE_PIP_VERSION_CHECK=true
+# ENV PATH=$PATH:/root/.local/bin
+
+RUN pip install poetry==1.2 && \
+    # poetry config virtualenvs.create true --local && \
+    # poetry config virtualenvs.in-project true --local && \
+    poetry install -vvv
