@@ -381,7 +381,7 @@ prepare:
           echo -e "\e[31m\e[1m>>>> Push uses protected variables and the current branch (${CI_COMMIT_BRANCH}) IS NOT the default branch! (${CI_DEFAULT_BRANCH}) Failures may occur! <<<<\e[0m"
           echo -e "\e[31m\e[1m>>>> WARNING <<<<\e[0m"
       fi
-      if ! run_cmd retry 3 10 python manager.py ${MANIFEST:+`echo "--manifest ${MANIFEST}"`} push \
+      if ! run_cmd retry 3 10 poetry run ./manager.py ${MANIFEST:+`echo "--manifest ${MANIFEST}"`} push \
               --tag-manifest ${TAG_MANIFEST_PATH} \
               --image-name "${IMAGE_NAME}" \
               --os-name "${OS_NAME}" \
@@ -410,7 +410,7 @@ trigger:
   script:
     - echo CI_COMMIT_MESSAGE:$CI_COMMIT_MESSAGE
     - export ESC_TO=`echo $TRIGGER_OVERRIDE | sed 's/\ //g'`
-    - export CMD="python manager.py ${MANIFEST:+`echo --manifest ${MANIFEST}`} trigger ${TRIGGER_OVERRIDE:+`echo --trigger-override ${ESC_TO}`}"
+    - export CMD="poetry run ./manager.py ${MANIFEST:+`echo --manifest ${MANIFEST}`} trigger ${TRIGGER_OVERRIDE:+`echo --trigger-override ${ESC_TO}`}"
     - 'echo "COMMAND: $CMD"'
     - $CMD
   rules:
