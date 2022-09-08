@@ -50,5 +50,3 @@ RUN rm pyproject.toml poetry.lock
 
 # Start virtual env when bash starts
 RUN echo 'source /root/cuda_manager_env/bin/activate' >> ~/.bashrc
-
-ENTRYPOINT ["/bin/bash"]

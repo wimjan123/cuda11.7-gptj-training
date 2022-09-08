@@ -376,6 +376,9 @@ prepare:
           echo -e "\e[31m\e[1m>>>> Push uses protected variables and the current branch (${CI_COMMIT_BRANCH}) IS NOT the default branch! (${CI_DEFAULT_BRANCH}) Failures may occur! <<<<\e[0m"
           echo -e "\e[31m\e[1m>>>> WARNING <<<<\e[0m"
       fi
+      # TODO: switch to zippapp or pipx, this is just silly
+      export PATH=$PATH:/root/.local/bin
+      source /root/cuda_manager_env/bin/activate
       if ! run_cmd retry 3 10 poetry run ./manager.py ${MANIFEST:+`echo "--manifest ${MANIFEST}"`} push \
               --tag-manifest ${TAG_MANIFEST_PATH} \
               --image-name "${IMAGE_NAME}" \
@@ -407,6 +410,7 @@ trigger:
     - export ESC_TO=`echo $TRIGGER_OVERRIDE | sed 's/\ //g'`
     - export CMD="poetry run ./manager.py ${MANIFEST:+`echo --manifest ${MANIFEST}`} trigger ${TRIGGER_OVERRIDE:+`echo --trigger-override ${ESC_TO}`}"
     - 'echo "COMMAND: $CMD"'
+    - source /root/cuda_manager_env/bin/activate
     - $CMD
   rules:
     - if: '$TRIGGER_OVERRIDE'
