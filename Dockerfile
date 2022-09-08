@@ -34,9 +34,19 @@ COPY poetry.lock /root/
 WORKDIR /root
 
 ENV PIP_DISABLE_PIP_VERSION_CHECK=true
-# ENV PATH=$PATH:/root/.local/bin
+ENV VIRTUAL_ENV_DISABLE_PROMPT 1
+ENV PATH=$PATH:/root/.local/bin
 
 RUN pip install poetry==1.2 && \
-    # poetry config virtualenvs.create true --local && \
-    # poetry config virtualenvs.in-project true --local && \
-    poetry install -vvv
+    poetry config virtualenvs.create true --local && \
+    poetry config virtualenvs.in-project true --local && \
+    poetry install --no-interaction -vv
+
+# Provide a known path for the virtual environment by creating a symlink
+RUN ln -s $(poetry env info --path) /root/cuda_manager_env
+
+# Clean up project files. You can add them with a Docker mount later.
+RUN rm pyproject.toml poetry.lock
+
+# Start virtual env when bash starts
+RUN echo 'source /root/cuda_manager_env/bin/activate' >> ~/.bashrc
