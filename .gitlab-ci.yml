@@ -53,7 +53,7 @@ before_script:
   - retry 5 20 docker login -u '$oauthtoken' -p $NVCR_TOKEN nvcr.io;
 
 .security_scan:
-  image: gitlab-master.nvidia.com:5005/pstooling/pulse-group/pulse-container-scanner/pulse-cli:1.2.0
+  image: gitlab-master.nvidia.com:5005/pstooling/pulse-group/pulse-container-scanner/pulse-cli:latest
   variables:
     PSS_SSA_ID: "x9thwm-cootr2q1jdv5p7b8iw4fs4ob3x6nqqsoznyk"
     PSS_SSA_SCOPE: "nspect.verify%20scan.anchore"
