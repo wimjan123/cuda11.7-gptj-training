@@ -108,6 +108,10 @@ cuda_v11.8.0:
           version: 11.8.86-1
         profiler_api:
           version: 11.8.86-1
+        libnccl2:
+          version: 2.15.5-1
+        libnccl2_dev:
+          version: 2.15.5-1
         cudnn8:
           version: 8.6.0.163-1
       <<: *cuda11_8_0_requires
@@ -141,6 +145,10 @@ cuda_v11.8.0:
           version: 11.8.86-1
         profiler_api:
           version: 11.8.86-1
+        libnccl2:
+          version: 2.15.5-1
+        libnccl2_dev:
+          version: 2.15.5-1
         cudnn8:
           version: 8.6.0.163-1
       <<: *cuda11_8_0_requires
@@ -170,6 +178,10 @@ cuda_v11.8.0:
           version: 11.8.86-1
         profiler_api:
           version: 11.8.86-1
+        libnccl2:
+          version: 2.15.5-1
+        libnccl2_dev:
+          version: 2.15.5-1
         cudnn8:
           version: 8.6.0.163-1
       <<: *cuda11_8_0_requires
@@ -194,6 +206,10 @@ cuda_v11.8.0:
           version: 11.8.86-1
         profiler_api:
           version: 11.8.86-1
+        libnccl2:
+          version: 2.15.5-1
+        libnccl2_dev:
+          version: 2.15.5-1
         cudnn8:
           version: 8.6.0.163-1
       requires: 'cuda>=11.8'
@@ -220,6 +236,10 @@ cuda_v11.8.0:
           version: 11.8.86-1
         profiler_api:
           version: 11.8.86-1
+        libnccl2:
+          version: 2.15.5-1
+        libnccl2_dev:
+          version: 2.15.5-1
         cudnn8:
           version: 8.6.0.163-1
       requires: 'cuda>=11.8'
@@ -247,6 +267,10 @@ cuda_v11.8.0:
           version: 11.8.86-1
         profiler_api:
           version: 11.8.86-1
+        libnccl2:
+          version: 2.15.5-1
+        libnccl2_dev:
+          version: 2.15.5-1
         cudnn8:
           version: 8.6.0.163-1
       <<: *cuda11_8_0_requires
@@ -280,6 +304,10 @@ cuda_v11.8.0:
           version: 11.8.86-1
         profiler_api:
           version: 11.8.86-1
+        libnccl2:
+          version: 2.15.5-1
+        libnccl2_dev:
+          version: 2.15.5-1
         cudnn8:
           version: 8.6.0.163-1
       <<: *cuda11_8_0_requires
@@ -308,6 +336,10 @@ cuda_v11.8.0:
           version: 11.8.86-1
         profiler_api:
           version: 11.8.86-1
+        libnccl2:
+          version: 2.15.5-1
+        libnccl2_dev:
+          version: 2.15.5-1
         cudnn8:
           version: 8.6.0.163-1
       requires: 'cuda>=11.8'
@@ -340,6 +372,10 @@ cuda_v11.8.0:
           version: 11.8.86-1
         profiler_api:
           version: 11.8.86-1
+        libnccl2:
+          version: 2.15.5-1
+        libnccl2_dev:
+          version: 2.15.5-1
         cudnn8:
           version: 8.6.0.163-1
       <<: *cuda11_8_0_requires
@@ -368,6 +404,10 @@ cuda_v11.8.0:
           version: 11.8.86-1
         profiler_api:
           version: 11.8.86-1
+        libnccl2:
+          version: 2.15.5-1
+        libnccl2_dev:
+          version: 2.15.5-1
       requires: 'cuda>=11.8'
     base_image: ubuntu:22.04
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204
@@ -398,6 +438,10 @@ cuda_v11.8.0:
           version: 11.8.86-1
         profiler_api:
           version: 11.8.86-1
+        libnccl2:
+          version: 2.15.5-1
+        libnccl2_dev:
+          version: 2.15.5-1
         cudnn8:
           version: 8.6.0.163-1
       <<: *cuda11_8_0_requires
@@ -5308,9 +5352,9 @@ cuda_v11.1.1:
   libcusparse_dev:
     version: 11.1.1.245-1
   libnccl2:
-    version: 2.13.4-1
+    version: 2.15.5-1
   libnccl2_dev:
-    version: 2.13.4-1
+    version: 2.15.5-1
   cudnn8:
     version: 8.0.5.39-1
 
@@ -5467,9 +5511,9 @@ cuda_v11.0.3:
   libcublas_dev:
     version: 10.2.2.89-1
   libnccl2:
-    version: 2.13.4-1
+    version: 2.15.5-1
   libnccl2_dev:
-    version: 2.13.4-1
+    version: 2.15.5-1
   cudnn8:
     version: 8.6.0.163-1
 
