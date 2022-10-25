@@ -105,6 +105,8 @@ The container image scripts are archived in the `dist/` directory and are availa
 
 Here is an example on how to build an multi-arch container image for Ubuntu 18.04 and CUDA 11.6.0:
 
+WARNING: cudgl image builds *REQUIRE* a secure registry to push built intermediate images to since buildkit does not easily allow using local image references from the build container.
+
 ```bash
 ./build.sh -d --image-name my-remote-container-registry/cuda --cuda-version 11.6.0 --os ubuntu --os-version 18.04 --arch x86_64,arm64 --push
 ```
