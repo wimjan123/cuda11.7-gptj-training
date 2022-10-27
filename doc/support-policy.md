@@ -71,9 +71,20 @@ Image sets that would be sunsetted (and eventually deleted)
 | Cuda 11.6.1         | Yes                       | r418, r450, r470 |
 | Cuda 11.7.0         | Yes                       | r450, r470, r510 |
 
+## Workarounds
+
+It is possible to build the images that are needed from the container scripts provided using the build script.
+
+Please see the (project readme for instructions)[https://gitlab-master.nvidia.com/cuda-installer/cuda#building-from-source].
 
 ## How to get notified of upcoming changes
 
-TODO: link gitlab issue
+Please consider subscribing to [this gitlab issue](https://gitlab.com/nvidia/container-images/cuda/-/issues/176) to be notified of breaking changes.
 
-This issue is pinned to the Gitlab issue tracker and comments can only be left by Nvidia employees. Please subscribe to this bug for email notifications of image support changes.
+This issue is locked in the Gitlab issue tracker and comments can only be left by Nvidia employees.
+
+## Comments or suggestions
+
+To provide feed back or comments, please goto:
+
+https://gitlab.com/nvidia/container-images/cuda/-/issues/177
