@@ -75,7 +75,7 @@ Image sets that would be sunsetted (and eventually deleted)
 
 It is possible to build the images that are needed from the container scripts provided using the build script.
 
-Please see the (project readme for instructions)[https://gitlab-master.nvidia.com/cuda-installer/cuda#building-from-source].
+Please see the (project readme for instructions)[https://gitlab.com/nvidia/container-images/cuda#building-from-source].
 
 ## How to get notified of upcoming changes
 
