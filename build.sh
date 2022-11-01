@@ -248,7 +248,6 @@ main() {
     if [[ ${build_cudagl} -eq 0 ]]; then
         run_cmd cp NGC-DL-CONTAINER-LICENSE ${BASE_PATH}/${OS_PATH_NAME}/base/
 
-
         run_cmd docker buildx build --pull ${LOAD_ARG} ${PUSH_ARG} ${PLATFORM_ARG} \
             -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${OS_VERSION}${IMAGE_SUFFIX:+-${IMAGE_SUFFIX}}" \
             "${BASE_PATH}/${OS_PATH_NAME}/base"
@@ -270,42 +269,40 @@ main() {
         # TODO: CHECK BRANCH NAME EXISTS
         git_clone_pull opengl https://gitlab.com/nvidia/container-images/opengl.git ${OS}${OS_VERSION}
         run_cmd cp NGC-DL-CONTAINER-LICENSE opengl/base/
-        # run_cmd docker buildx create --use --name cudagl
 
         CGL_INTER_IMAGE_NAME="${IMAGE_NAME}${CGL_INTER_IMAGE_NAME_SUFFIX}"
         debug "CGL_INTER_IMAGE_NAME=${CGL_INTER_IMAGE_NAME}"
 
-        # - docker buildx create --use --name cudagl
-        run_cmd docker buildx build --pull ${LOAD_ARG} ${PUSH_ARG} -t "${CGL_INTER_IMAGE_NAME}:${CUDA_VERSION}-base-base-${OS}${OS_VERSION}" \
+        run_cmd docker build  -t "${CGL_INTER_IMAGE_NAME}:${CUDA_VERSION}-base-base-${OS}${OS_VERSION}" \
                      --build-arg "from=${CUDA_IMAGE}:${CUDA_VERSION}-base-${OS}${OS_VERSION}${IMAGE_SUFFIX:+-${IMAGE_SUFFIX}}" \
                      "opengl/base"
-        run_cmd docker buildx build --pull ${LOAD_ARG} ${PUSH_ARG} -t "${CGL_INTER_IMAGE_NAME}:${CUDA_VERSION}-base-runtime-${OS}${OS_VERSION}" \
+        run_cmd docker build  -t "${CGL_INTER_IMAGE_NAME}:${CUDA_VERSION}-base-runtime-${OS}${OS_VERSION}" \
                      --build-arg "from=${CGL_INTER_IMAGE_NAME}:${CUDA_VERSION}-base-base-${OS}${OS_VERSION}" \
                      --build-arg "LIBGLVND_VERSION=${LIBGLVND_VERSION}" \
                      "opengl/glvnd/runtime"
-        run_cmd docker buildx build --pull ${LOAD_ARG} ${PUSH_ARG} -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${OS_VERSION}" \
+        run_cmd docker build  -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${OS_VERSION}" \
                      --build-arg "from=${CGL_INTER_IMAGE_NAME}:${CUDA_VERSION}-base-runtime-${OS}${OS_VERSION}" \
                      "opengl/glvnd/devel"
 
 
         # cudagl runtime is cuda:x.y-runtime + opengl:x.y-glvnd-runtime
-        run_cmd docker buildx build --pull ${LOAD_ARG} ${PUSH_ARG} -t "${CGL_INTER_IMAGE_NAME}:${CUDA_VERSION}-runtime-base-${OS}${OS_VERSION}" \
+        run_cmd docker build  -t "${CGL_INTER_IMAGE_NAME}:${CUDA_VERSION}-runtime-base-${OS}${OS_VERSION}" \
                        --build-arg "from=${CUDA_IMAGE}:${CUDA_VERSION}-runtime-${OS}${OS_VERSION}${IMAGE_SUFFIX:+-${IMAGE_SUFFIX}}" \
                        "opengl/base"
-        run_cmd docker buildx build --pull ${LOAD_ARG} ${PUSH_ARG} -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${OS_VERSION}" \
+        run_cmd docker build  -t "${IMAGE_NAME}:${CUDA_VERSION}-runtime-${OS}${OS_VERSION}" \
                        --build-arg "from=${CGL_INTER_IMAGE_NAME}:${CUDA_VERSION}-runtime-base-${OS}${OS_VERSION}" \
                        --build-arg "LIBGLVND_VERSION=${LIBGLVND_VERSION}" \
                        "opengl/glvnd/runtime"
 
         # cudagl devel is cuda:x.y-devel + opengl:x.y-glvnd-devel
-        run_cmd docker buildx build --pull ${LOAD_ARG} ${PUSH_ARG} -t "${CGL_INTER_IMAGE_NAME}:${CUDA_VERSION}-devel-base-${OS}${OS_VERSION}" \
+        run_cmd docker build  -t "${CGL_INTER_IMAGE_NAME}:${CUDA_VERSION}-devel-base-${OS}${OS_VERSION}" \
                        --build-arg "from=${CUDA_IMAGE}:${CUDA_VERSION}-devel-${OS}${OS_VERSION}${IMAGE_SUFFIX:+-${IMAGE_SUFFIX}}" \
                        "opengl/base"
-        run_cmd docker buildx build --pull ${LOAD_ARG} ${PUSH_ARG} -t "${CGL_INTER_IMAGE_NAME}:${CUDA_VERSION}-devel-runtime-${OS}${OS_VERSION}" \
+        run_cmd docker build  -t "${CGL_INTER_IMAGE_NAME}:${CUDA_VERSION}-devel-runtime-${OS}${OS_VERSION}" \
                        --build-arg "from=${CGL_INTER_IMAGE_NAME}:${CUDA_VERSION}-devel-base-${OS}${OS_VERSION}" \
                        --build-arg "LIBGLVND_VERSION=${LIBGLVND_VERSION}" \
                        "opengl/glvnd/runtime"
-        run_cmd docker buildx build --pull ${LOAD_ARG} ${PUSH_ARG} -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${OS_VERSION}" \
+        run_cmd docker build  -t "${IMAGE_NAME}:${CUDA_VERSION}-devel-${OS}${OS_VERSION}" \
                        --build-arg "from=${CGL_INTER_IMAGE_NAME}:${CUDA_VERSION}-devel-runtime-${OS}${OS_VERSION}" \
                        "opengl/glvnd/devel"
     fi
