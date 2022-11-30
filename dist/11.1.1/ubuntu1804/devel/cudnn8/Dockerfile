@@ -9,6 +9,11 @@ ENV NV_CUDNN_PACKAGE_NAME "libcudnn8"
 ENV NV_CUDNN_PACKAGE "libcudnn8=$NV_CUDNN_VERSION-1+cuda11.1"
 ENV NV_CUDNN_PACKAGE_DEV "libcudnn8-dev=$NV_CUDNN_VERSION-1+cuda11.1"
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ${NV_CUDNN_PACKAGE} \
+    ${NV_CUDNN_PACKAGE_DEV} \
+    && apt-mark hold ${NV_CUDNN_PACKAGE_NAME} \
+    && rm -rf /var/lib/apt/lists/*
 
 FROM base as base-arm64
 
@@ -18,6 +23,11 @@ ENV NV_CUDNN_PACKAGE_NAME "libcudnn8"
 ENV NV_CUDNN_PACKAGE "libcudnn8=$NV_CUDNN_VERSION-1+cuda11.1"
 ENV NV_CUDNN_PACKAGE_DEV "libcudnn8-dev=$NV_CUDNN_VERSION-1+cuda11.1"
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ${NV_CUDNN_PACKAGE} \
+    ${NV_CUDNN_PACKAGE_DEV} \
+    && apt-mark hold ${NV_CUDNN_PACKAGE_NAME} \
+    && rm -rf /var/lib/apt/lists/*
 FROM base as base-ppc64le
 
 ENV NV_CUDNN_VERSION 8.0.4.30
@@ -25,6 +35,12 @@ ENV NV_CUDNN_PACKAGE_NAME "libcudnn8"
 
 ENV NV_CUDNN_PACKAGE "libcudnn8=$NV_CUDNN_VERSION-1+cuda11.1"
 ENV NV_CUDNN_PACKAGE_DEV "libcudnn8-dev=$NV_CUDNN_VERSION-1+cuda11.1"
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ${NV_CUDNN_PACKAGE} \
+    ${NV_CUDNN_PACKAGE_DEV} \
+    && apt-mark hold ${NV_CUDNN_PACKAGE_NAME} \
+    && rm -rf /var/lib/apt/lists/*
 
 ENV NV_CUDNN_DL_HASHCMD sha256sum
 ENV NV_CUDNN_DL_SUM 2779c07458fc4ae690070decf59cfcb3ec9a67607f9a26819f1631e661961ccb
@@ -55,9 +71,3 @@ ARG TARGETARCH
 
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 LABEL com.nvidia.cudnn.version="${NV_CUDNN_VERSION}"
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ${NV_CUDNN_PACKAGE} \
-    ${NV_CUDNN_PACKAGE_DEV} \
-    && apt-mark hold ${NV_CUDNN_PACKAGE_NAME} \
-    && rm -rf /var/lib/apt/lists/*
