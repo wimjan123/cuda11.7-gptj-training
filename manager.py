@@ -30,6 +30,8 @@ import pathlib
 import logging
 import logging.config
 
+# import shutil
+
 import sys
 
 import json
@@ -369,7 +371,11 @@ class ManagerTrigger(Manager):
                 distro_in_job = job.split("_")[1]
 
             distro = next(
-                (d.distro for d in supported_platforms.list if d.distro in distro_in_job),
+                (
+                    d.distro
+                    for d in supported_platforms.list
+                    if d.distro in distro_in_job
+                ),
                 None,
             )
             distro_version = next(
@@ -731,6 +737,9 @@ class ManagerGenerate(Manager):
     # ( ͡° ͜ʖ ͡°)
     tegra: bool = False
 
+    # RIP
+    end_of_life = False
+
     template_env: Any = Environment(
         extensions=["jinja2.ext.do", "jinja2.ext.loopcontrols"],
         trim_blocks=True,
@@ -940,6 +949,7 @@ class ManagerGenerate(Manager):
             major = self.cuda_version.split(".")[0]
             minor = self.cuda_version.split(".")[1]
 
+        self.end_of_life = self.get_data(conf, self.key, "end_of_life")
         self.image_tag_suffix = self.get_data(
             conf,
             self.key,
@@ -967,6 +977,7 @@ class ManagerGenerate(Manager):
             "arches": larch,
             "os": {"distro": self.distro, "version": self.distro_version},
             "image_tag_suffix": self.image_tag_suffix,
+            "end_of_life": self.end_of_life,
         }
 
         self.extract_keys(
@@ -1123,9 +1134,9 @@ class ManagerGenerate(Manager):
                 ctx[cuda_version][pipeline_name]["distros"][distro]["name"] = dm.group(
                     "name"
                 )
-                ctx[cuda_version][pipeline_name]["distros"][distro]["version"] = dm.group(
+                ctx[cuda_version][pipeline_name]["distros"][distro][
                     "version"
-                )
+                ] = dm.group("version")
                 ctx[cuda_version][pipeline_name]["distros"][distro][
                     "yaml_safe"
                 ] = distro.replace(".", "_")
@@ -1164,12 +1175,17 @@ class ManagerGenerate(Manager):
                     ctx[cuda_version][pipeline_name]["distros"][distro][
                         "no_os_suffix"
                     ] = (True if no_os_suffix else False)
-                    ctx[cuda_version][pipeline_name]["distros"][distro]["arches"].append(
-                        arch
-                    )
+                    ctx[cuda_version][pipeline_name]["distros"][distro][
+                        "arches"
+                    ].append(arch)
 
-                    if "cudnn" not in ctx[cuda_version][pipeline_name]["distros"][distro]:
-                        ctx[cuda_version][pipeline_name]["distros"][distro]["cudnn"] = {}
+                    if (
+                        "cudnn"
+                        not in ctx[cuda_version][pipeline_name]["distros"][distro]
+                    ):
+                        ctx[cuda_version][pipeline_name]["distros"][distro][
+                            "cudnn"
+                        ] = {}
                     cudnn_comps = get_cudnn_components(key, distro, arch)
                     if cudnn_comps:
                         ctx[cuda_version][pipeline_name]["distros"][distro]["cudnn"][
@@ -1240,7 +1256,9 @@ class ManagerGenerate(Manager):
                     path["dist_base_path"] = self.get_data(
                         manifest, key, "dist_base_path"
                     )
-                    path["release_label"] = self.get_data(manifest, key, "release_label")
+                    path["release_label"] = self.get_data(
+                        manifest, key, "release_label"
+                    )
                     get_releaseInfo_and_dockerfilePath(path["dist_base_path"])
                     break  # to keep data for latest available version only
 
@@ -1359,7 +1377,9 @@ class ManagerGenerate(Manager):
                     )
             if key == "unsupported":
                 unsupported_distros = self.get_data(manifest, key, "distros")
-                unsupported_release_labels = self.get_data(manifest, key, "release_label")
+                unsupported_release_labels = self.get_data(
+                    manifest, key, "release_label"
+                )
 
         for distro in distros_set:
             if distro not in unsupported_distros:
@@ -1526,7 +1546,9 @@ class ManagerGenerate(Manager):
             self.key = f"cuda_v{self.release_label}_{self.pipeline_name}"
         log.debug(f"self.key: {self.key}")
         self.arches = supported_arch_list(
-            self.parent.manifest, f"{self.distro}{self.distro_version}", self.cuda_version
+            self.parent.manifest,
+            f"{self.distro}{self.distro_version}",
+            self.cuda_version,
         )
 
         log.debug(f"self.arches: {self.arches}")
@@ -1609,7 +1631,9 @@ class ManagerStaging(Manager):
         "gitlab-master.nvidia.com:5005/cuda-installer/cuda/release-candidate/cuda-ppc64le",
     ]
 
-    delete_all: Any = cli.Flag(["--delete-all"], help="Delete all of the staging images.")
+    delete_all: Any = cli.Flag(
+        ["--delete-all"], help="Delete all of the staging images."
+    )
 
     repo: Any = cli.SwitchAttr(
         "--repo",

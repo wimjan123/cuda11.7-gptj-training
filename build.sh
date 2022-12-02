@@ -247,6 +247,7 @@ main() {
 
     if [[ ${build_cudagl} -eq 0 ]]; then
         run_cmd cp NGC-DL-CONTAINER-LICENSE ${BASE_PATH}/${OS_PATH_NAME}/base/
+        run_cmd cp -R entrypoint.d nvidia_entrypoint.sh ${BASE_PATH}/${OS_PATH_NAME}/runtime/
 
         run_cmd docker buildx build --pull ${LOAD_ARG} ${PUSH_ARG} ${PLATFORM_ARG} \
             -t "${IMAGE_NAME}:${CUDA_VERSION}-base-${OS}${OS_VERSION}${IMAGE_SUFFIX:+-${IMAGE_SUFFIX}}" \
@@ -269,6 +270,7 @@ main() {
         # TODO: CHECK BRANCH NAME EXISTS
         git_clone_pull opengl https://gitlab.com/nvidia/container-images/opengl.git ${OS}${OS_VERSION}
         run_cmd cp NGC-DL-CONTAINER-LICENSE opengl/base/
+        # run_cmd cp -R entrypoint.d nvidia_entrypoint.sh ${BASE_PATH}/${OS_PATH_NAME}/runtime/
 
         CGL_INTER_IMAGE_NAME="${IMAGE_NAME}${CGL_INTER_IMAGE_NAME_SUFFIX}"
         debug "CGL_INTER_IMAGE_NAME=${CGL_INTER_IMAGE_NAME}"

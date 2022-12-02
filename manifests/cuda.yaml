@@ -885,6 +885,7 @@ cuda_v11.7.1:
     brand=geforcertx,driver>=510,driver<511
 
 cuda_v11.7.0:
+  end_of_life: True
   dist_base_path: dist/11.7.0
   image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
   release_label: 11.7.0
@@ -1644,6 +1645,7 @@ cuda_v11.6.2:
     brand=titanrtx,driver>=470,driver<471
 
 cuda_v11.6.1:
+  end_of_life: True
   dist_base_path: dist/11.6.1
   image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
   release_label: 11.6.1
@@ -2002,6 +2004,7 @@ cuda_v11.6.1:
     brand=titanrtx,driver>=470,driver<471
 
 cuda_v11.6.0:
+  end_of_life: True
   dist_base_path: dist/11.6.0
   release_label: 11.6
   image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
@@ -2648,6 +2651,7 @@ cuda_v11.5.2:
     brand=titanrtx,driver>=470,driver<471
 
 cuda_v11.5.1:
+  end_of_life: True
   dist_base_path: dist/11.5.1
   release_label: 11.5.1
   image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
@@ -3008,6 +3012,7 @@ cuda_v11.5.1:
     brand=titanrtx,driver>=470,driver<471
 
 cuda_v11.5.0:
+  end_of_life: True
   dist_base_path: dist/11.5.0
   release_label: 11.5.0
   image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
@@ -3703,6 +3708,7 @@ cuda_v11.4.3:
     brand=tesla,driver>=450,driver<451
 
 cuda_v11.4.2:
+  end_of_life: True
   dist_base_path: dist/11.4.2
   release_label: 11.4.2
   image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
@@ -4048,6 +4054,7 @@ cuda_v11.4.2:
     brand=tesla,driver>=450,driver<451
 
 cuda_v11.4.1:
+  end_of_life: True
   dist_base_path: dist/11.4.1
   release_label: 11.4.1
   image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
@@ -4438,6 +4445,7 @@ cuda_v11.4.1:
 
 
 cuda_v11.4.0:
+  end_of_life: True
   dist_base_path: dist/11.4.0
   release_label: 11.4.0
   image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
@@ -4697,6 +4705,7 @@ cuda_v11.3.1:
 
 
 cuda_v11.3.0:
+  end_of_life: True
   dist_base_path: dist/11.3.0
   release_label: 11.3.0
   image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
@@ -4949,6 +4958,7 @@ cuda_v11.2.2:
 
 
 cuda_v11.2.1:
+  end_of_life: True
   dist_base_path: dist/11.2.1
   release_label: 11.2 Update 1
   image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
@@ -5075,6 +5085,7 @@ cuda_v11.2.1:
 
 
 cuda_v11.2.0:
+  end_of_life: True
   dist_base_path: dist/11.2.0
   release_label: 11.2.0
   image_name: gitlab-master.nvidia.com:5005/cuda-installer/cuda
@@ -5519,6 +5530,7 @@ cuda_v11.0.3:
 
 
 cuda_v10.2:
+  end_of_life: True
   build_version: 89
   dist_base_path: dist/10.2
   release_label: 10.2
@@ -5638,6 +5650,7 @@ cuda_v10.2:
 
 
 cuda_v10.1:
+  end_of_life: True
   dist_base_path: dist/10.1
   release_label: 10.1
   build_version: 243
@@ -5868,6 +5881,7 @@ cuda_v10.1:
 
 
 cuda_v10.0:
+  end_of_life: True
   dist_base_path: dist/10.0
   build_version: 130
   release_label: 10.0

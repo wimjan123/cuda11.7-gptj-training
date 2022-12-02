@@ -154,4 +154,13 @@ RUN apt-mark hold ${NV_LIBCUBLAS_PACKAGE_NAME}{% if has_libnccl_package %} ${NV_
 {% if cuda.flavor == "jetson" %}
 RUN rm /etc/apt/sources.list.d/cuda.list
 RUN rm -rf /var/lib/apt/lists/*
-{% endif -%}
+{% endif %}
+
+# Add entrypoint items
+COPY entrypoint.d/ /opt/nvidia/entrypoint.d/
+COPY nvidia_entrypoint.sh /opt/nvidia/
+ENV NVIDIA_PRODUCT_NAME="CUDA"
+{% if cuda.end_of_life %}
+ENV NVIDIA_CUDA_END_OF_LIFE=1
+{% endif %}
+ENTRYPOINT ["/opt/nvidia/nvidia_entrypoint.sh"]

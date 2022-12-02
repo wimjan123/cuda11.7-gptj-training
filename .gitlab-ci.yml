@@ -167,6 +167,8 @@ prepare:
       echo "TAG_DEVEL: ${TAG_DEVEL}"
       # COPY the NGC DEEP LEARNING CONTAINER LICENSE
       run_cmd cp -v ./NGC-DL-CONTAINER-LICENSE "${DIST_BASE_PATH}/base"
+      # COPY the entrypoint scripts
+      run_cmd cp -R entrypoint.d nvidia_entrypoint.sh ${BASE_PATH}/${OS_PATH_NAME}/runtime/
       # --driver-opt flag is needed to workaround https://github.com/docker/buildx/issues/386
       if ! run_cmd retry 3 10 docker buildx create --use ${PLATFORM_ARG} --driver-opt image=moby/buildkit:v0.10.3 --name cuda; then
           echo "Failed creating buildx instance!"
