@@ -217,8 +217,8 @@ FROM base-${TARGETARCH}
 ARG TARGETARCH
 
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
-
 {% if cuda.flavor == "jetson" %}
+
 # Runtime images have internal cuda repo config removed to prevent breaking apt when used externally
 RUN apt-get update && apt upgrade -y && apt-get install -y --no-install-recommends \
     gnupg2 curl ca-certificates && \
@@ -256,8 +256,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN apt-mark hold ${NV_LIBCUBLAS_DEV_PACKAGE_NAME}{% if has_libnccl_dev_package %} ${NV_LIBNCCL_DEV_PACKAGE_NAME}{% endif %}
 
 ENV LIBRARY_PATH /usr/local/cuda/lib64/stubs
-
 {% if cuda.flavor == "jetson" %}
+
 RUN rm /etc/apt/sources.list.d/cuda.list
 RUN rm -rf /var/lib/apt/lists/*
 {% endif -%}

@@ -43,7 +43,15 @@ RUN wget -q ${NV_CUDNN_DL_URL} \
 ENV NV_CUDNN_PACKAGE "libcudnn{{ cuda.x86_64.cudnn.version[0] }}=$NV_CUDNN_VERSION-1+cuda{{ cuda.version.major }}.{{ cuda.version.minor }}"
 ENV NV_CUDNN_PACKAGE_DEV "libcudnn{{ cuda.x86_64.cudnn.version[0] }}-dev=$NV_CUDNN_VERSION-1+cuda{{ cuda.version.major }}.{{ cuda.version.minor }}"
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ${NV_CUDNN_PACKAGE} \
+    {% if cuda.cudnn.target == "devel" %}
+    ${NV_CUDNN_PACKAGE_DEV} \
+    {% endif %}
+    && apt-mark hold ${NV_CUDNN_PACKAGE_NAME} \
+    && rm -rf /var/lib/apt/lists/*
 {% if "source" in cuda.x86_64.cudnn %}
+
     {% set dl_cudnn = true %}
     {% set hashcmd = "md5sum" -%}
     {% if "sha256sum" in cuda.x86_64.cudnn %}
@@ -136,7 +144,15 @@ RUN wget -q ${NV_CUDNN_DL_URL} \
 ENV NV_CUDNN_PACKAGE "libcudnn{{ cuda.arm64.cudnn.version[0] }}=$NV_CUDNN_VERSION-1+cuda{{ cuda.version.major }}.{{ cuda.version.minor }}"
 ENV NV_CUDNN_PACKAGE_DEV "libcudnn{{ cuda.arm64.cudnn.version[0] }}-dev=$NV_CUDNN_VERSION-1+cuda{{ cuda.version.major }}.{{ cuda.version.minor }}"
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ${NV_CUDNN_PACKAGE} \
+    {% if cuda.cudnn.target == "devel" %}
+    ${NV_CUDNN_PACKAGE_DEV} \
+    {% endif %}
+    && apt-mark hold ${NV_CUDNN_PACKAGE_NAME} \
+    && rm -rf /var/lib/apt/lists/*
 {% if "source" in cuda.arm64.cudnn %}
+
     {% set dl_cudnn = true %}
     {% set hashcmd = "md5sum" -%}
     {% if "sha256sum" in cuda.arm64.cudnn %}
@@ -227,7 +243,15 @@ RUN wget -q ${NV_CUDNN_DL_URL} \
 ENV NV_CUDNN_PACKAGE "libcudnn{{ cuda.ppc64le.cudnn.version[0] }}=$NV_CUDNN_VERSION-1+cuda{{ cuda.version.major }}.{{ cuda.version.minor }}"
 ENV NV_CUDNN_PACKAGE_DEV "libcudnn{{ cuda.ppc64le.cudnn.version[0] }}-dev=$NV_CUDNN_VERSION-1+cuda{{ cuda.version.major }}.{{ cuda.version.minor }}"
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ${NV_CUDNN_PACKAGE} \
+    {% if cuda.cudnn.target == "devel" %}
+    ${NV_CUDNN_PACKAGE_DEV} \
+    {% endif %}
+    && apt-mark hold ${NV_CUDNN_PACKAGE_NAME} \
+    && rm -rf /var/lib/apt/lists/*
 {% if "source" in cuda.ppc64le.cudnn %}
+
     {% set dl_cudnn = true %}
     {% set hashcmd = "md5sum" -%}
     {% if "sha256sum" in cuda.ppc64le.cudnn %}
@@ -282,13 +306,3 @@ ARG TARGETARCH
 
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 LABEL com.nvidia.cudnn.version="${NV_CUDNN_VERSION}"
-
-{% if not dl_cudnn %}
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ${NV_CUDNN_PACKAGE} \
-    {% if cuda.cudnn.target == "devel" %}
-    ${NV_CUDNN_PACKAGE_DEV} \
-    {% endif %}
-    && apt-mark hold ${NV_CUDNN_PACKAGE_NAME} \
-    && rm -rf /var/lib/apt/lists/*
-{% endif %}

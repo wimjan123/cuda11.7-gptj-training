@@ -55,3 +55,9 @@ RUN yum install -y xz && NCCL_DOWNLOAD_SUM=${NV_LIBNCCL_DL_SHA256SUM} \
     && ldconfig \
     && yum clean all \
     && rm -rf /var/cache/yum/*
+# Add entrypoint items
+COPY entrypoint.d/ /opt/nvidia/entrypoint.d/
+COPY nvidia_entrypoint.sh /opt/nvidia/
+ENV NVIDIA_PRODUCT_NAME="CUDA"
+ENV NVIDIA_CUDA_END_OF_LIFE=1
+ENTRYPOINT ["/opt/nvidia/nvidia_entrypoint.sh"]

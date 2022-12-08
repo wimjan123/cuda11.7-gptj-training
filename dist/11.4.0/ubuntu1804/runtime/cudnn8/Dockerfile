@@ -14,8 +14,3 @@ ARG TARGETARCH
 
 LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
 LABEL com.nvidia.cudnn.version="${NV_CUDNN_VERSION}"
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ${NV_CUDNN_PACKAGE} \
-    && apt-mark hold ${NV_CUDNN_PACKAGE_NAME} \
-    && rm -rf /var/lib/apt/lists/*
