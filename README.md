@@ -9,9 +9,11 @@ Container images are available from:
 
 ## Announcement
 
-### NEW: Cuda Image Support Policy
+### Cuda 12 images are now LIVE
 
-We are changing the terms for how long we support published CUDA images to NGC and Docker Hub. Please review the NEW CUDA image support policy [*here*](https://gitlab.com/nvidia/container-images/cuda/blob/master/doc/support-policy.md).
+Entrypoint scripts are rolling out now for all images, which include deprecation notices for image sets that have reached End-of-life.
+
+Please read our [Container Tag Support Policy](https://gitlab.com/nvidia/container-images/cuda/-/blob/master/doc/support-policy.md) for more information.
 
 ### Deprecated: "latest" tag
 
