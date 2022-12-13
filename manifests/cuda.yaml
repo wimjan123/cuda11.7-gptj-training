@@ -147,8 +147,6 @@ cuda_v12.0.0:
           version: 12.0.0.30-1
         nvml_dev:
           version: 12.0.76-1
-        nvprof:
-          version: 12.0.90-1
         nvtx:
           version: 12.0.76-1
         profiler_api:
