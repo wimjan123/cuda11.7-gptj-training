@@ -33,8 +33,7 @@ ENV CUDA_VERSION 11.3.1
 RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-cudart-11-3=${NV_CUDA_CUDART_VERSION} \
     ${NV_CUDA_COMPAT_PACKAGE} \
-    && ln -s cuda-11.3 /usr/local/cuda && \
-    rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
 
 # Required for nvidia-docker v1
 RUN echo "/usr/local/nvidia/lib" >> /etc/ld.so.conf.d/nvidia.conf \

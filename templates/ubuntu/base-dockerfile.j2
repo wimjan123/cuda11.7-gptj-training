@@ -80,8 +80,7 @@ ENV CUDA_VERSION {{ cuda.version.release_label }}
 RUN apt-get update && apt-get install -y --no-install-recommends \
     cuda-cudart-{{ cuda.version.major }}-{{ cuda.version.minor }}=${NV_CUDA_CUDART_VERSION} \
     ${NV_CUDA_COMPAT_PACKAGE} \
-    && ln -s cuda-{{ cuda.version.major }}.{{ cuda.version.minor }} /usr/local/cuda && \
-    rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
 
 # Required for nvidia-docker v1
 RUN echo "/usr/local/nvidia/lib" >> /etc/ld.so.conf.d/nvidia.conf \

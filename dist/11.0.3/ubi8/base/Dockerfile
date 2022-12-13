@@ -40,7 +40,6 @@ ENV CUDA_VERSION 11.0.3
 RUN yum upgrade -y && yum install -y \
     cuda-cudart-11-0-${NV_CUDA_CUDART_VERSION} \
     cuda-compat-11-0 \
-    && ln -s cuda-11.0 /usr/local/cuda \
     && yum clean all \
     && rm -rf /var/cache/yum/*
 

@@ -7,5 +7,5 @@ dist/*/*/base/NGC-DL-CONTAINER-LICENSE
 pytestdebug.log
 opengl/
 pyrightconfig.json
-dist/**/runtime/entrypoint/
+dist/**/runtime/*entrypoint*
 dist/**/runtime/deviceQuery/

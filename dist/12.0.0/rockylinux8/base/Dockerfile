@@ -33,7 +33,6 @@ ENV CUDA_VERSION 12.0.0
 RUN yum upgrade -y && yum install -y \
     cuda-cudart-12-0-${NV_CUDA_CUDART_VERSION} \
     cuda-compat-12-0 \
-    && ln -s cuda-12.0 /usr/local/cuda \
     && yum clean all \
     && rm -rf /var/cache/yum/*
 
