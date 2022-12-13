@@ -26,7 +26,8 @@ function setup() {
     # - 11.3.0 for ubuntu and ubi (redhat)
     #
     if ([[ "11.3.1" == "${major}.${minor}.${rev}" ]] || ([[ ${major} -eq 11 ]] && [[ ${minor} -gt 3 ]])) || \
-       ([[ "11.3.0" == "${major}.${minor}.${rev}" ]] && ([[ "${OS_NAME}" == "ubuntu" ]] || [[ "${OS_NAME}" == "ubi" ]] || [[ "${OS_NAME}" == "centos" ]] || [[ "${OS_NAME}" == "rockylinux" ]])); then
+       ([[ "11.3.0" == "${major}.${minor}.${rev}" ]] && ([[ "${OS_NAME}" == "ubuntu" ]] || [[ "${OS_NAME}" == "ubi" ]] || [[ "${OS_NAME}" == "centos" ]] || [[ "${OS_NAME}" == "rockylinux" ]])) || \
+       ([[ "12.0.0" == "${major}.${minor}.${rev}" ]] || ([[ ${major} -eq 11 ]] && [[ ${minor} -gt 3 ]])); then
         num=3
     fi
 
