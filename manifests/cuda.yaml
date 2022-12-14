@@ -534,6 +534,33 @@ cuda_v11.8.0:
     base_image: rockylinux:8
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8
     template_path: templates/redhat
+    arm64:
+      components:
+        cudart:
+          version: 11.8.89-1
+        cudart_dev:
+          version: 11.8.89-1
+        libcublas:
+          version: 11.11.3.6-1
+        libcublas_dev:
+          version: 11.11.3.6-1
+        libnpp:
+          version: 11.8.0.86-1
+        libnpp_dev:
+          version: 11.8.0.86-1
+        nvml_dev:
+          version: 11.8.86-1
+        nvtx:
+          version: 11.8.86-1
+        profiler_api:
+          version: 11.8.86-1
+        libnccl2:
+          version: 2.15.5-1
+        libnccl2_dev:
+          version: 2.15.5-1
+        cudnn8:
+          version: 8.6.0.163-1
+      requires: 'cuda>=11.8'    
     x86_64:
       components:
         cudart:
@@ -2803,6 +2830,64 @@ cuda_v11.5.2:
         cudnn8:
           version: 8.3.3.40-1
       <<: *cuda11_5_2_requires
+  rockylinux8:
+    arm64:
+      components:
+        cudart:
+          version: 11.5.117-1
+        cudart_dev:
+          version: 11.5.117-1
+        libcublas:
+          version: 11.7.4.6-1
+        libcublas_dev:
+          version: 11.7.4.6-1
+        libnpp:
+          version: 11.5.1.107-1
+        libnpp_dev:
+          version: 11.5.1.107-1
+        nvml_dev:
+          version: 11.5.50-1
+        nvprof:
+          version: 11.5.114-1
+        nvtx:
+          version: 11.5.114-1
+        libnccl2:
+          version: 2.11.4-1
+        libnccl2_dev:
+          version: 2.11.4-1
+        cudnn8:
+          version: 8.3.3.40-1
+      requires: 'cuda>=11.5'
+    base_image: rockylinux:8
+    repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8
+    template_path: templates/redhat      
+    x86_64:
+      components:
+        cudart:
+          version: 11.5.117-1
+        cudart_dev:
+          version: 11.5.117-1
+        libcublas:
+          version: 11.7.4.6-1
+        libcublas_dev:
+          version: 11.7.4.6-1
+        libnpp:
+          version: 11.5.1.107-1
+        libnpp_dev:
+          version: 11.5.1.107-1
+        nvml_dev:
+          version: 11.5.50-1
+        nvprof:
+          version: 11.5.114-1
+        nvtx:
+          version: 11.5.114-1
+        libnccl2:
+          version: 2.11.4-1
+        libnccl2_dev:
+          version: 2.11.4-1
+        cudnn8:
+          version: 8.3.3.40-1
+      <<: *cuda11_5_2_requires      
   ubi7:
     base_image: registry.access.redhat.com/ubi7/ubi:latest
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
