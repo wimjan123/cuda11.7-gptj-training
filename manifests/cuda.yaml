@@ -469,6 +469,7 @@ cuda_v12.0.0:
     brand=quadrortx,driver>=470,driver<471
     brand=titan,driver>=470,driver<471
     brand=titanrtx,driver>=470,driver<471
+    brand=tesla,driver>=510,driver<511
     brand=unknown,driver>=510,driver<511
     brand=nvidia,driver>=510,driver<511
     brand=nvidiartx,driver>=510,driver<511
@@ -478,6 +479,7 @@ cuda_v12.0.0:
     brand=quadrortx,driver>=510,driver<511
     brand=titan,driver>=510,driver<511
     brand=titanrtx,driver>=510,driver<511
+    brand=tesla,driver>=515,driver<516
     brand=unknown,driver>=515,driver<516
     brand=nvidia,driver>=515,driver<516
     brand=nvidiartx,driver>=515,driver<516
@@ -524,9 +526,9 @@ cuda_v11.8.0:
         profiler_api:
           version: 11.8.86-1
         libnccl2:
-          version: 2.15.5-1
+          version: 2.16.2-1
         libnccl2_dev:
-          version: 2.15.5-1
+          version: 2.16.2-1
         cudnn8:
           version: 8.6.0.163-1
       <<: *cuda11_8_0_requires
@@ -534,6 +536,33 @@ cuda_v11.8.0:
     base_image: rockylinux:8
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8
     template_path: templates/redhat
+    arm64:
+      components:
+        cudart:
+          version: 11.8.89-1
+        cudart_dev:
+          version: 11.8.89-1
+        libcublas:
+          version: 11.11.3.6-1
+        libcublas_dev:
+          version: 11.11.3.6-1
+        libnpp:
+          version: 11.8.0.86-1
+        libnpp_dev:
+          version: 11.8.0.86-1
+        nvml_dev:
+          version: 11.8.86-1
+        nvtx:
+          version: 11.8.86-1
+        profiler_api:
+          version: 11.8.86-1
+        libnccl2:
+          version: 2.15.5-1
+        libnccl2_dev:
+          version: 2.15.5-1
+        cudnn8:
+          version: 8.6.0.163-1
+      requires: 'cuda>=11.8'    
     x86_64:
       components:
         cudart:
@@ -752,9 +781,9 @@ cuda_v11.8.0:
         profiler_api:
           version: 11.8.86-1
         libnccl2:
-          version: 2.15.5-1
+          version: 2.16.2-1
         libnccl2_dev:
-          version: 2.15.5-1
+          version: 2.16.2-1
         cudnn8:
           version: 8.6.0.163-1
       requires: 'cuda>=11.8'
@@ -788,9 +817,9 @@ cuda_v11.8.0:
         profiler_api:
           version: 11.8.86-1
         libnccl2:
-          version: 2.15.5-1
+          version: 2.16.2-1
         libnccl2_dev:
-          version: 2.15.5-1
+          version: 2.16.2-1
         cudnn8:
           version: 8.6.0.163-1
       <<: *cuda11_8_0_requires
@@ -876,6 +905,7 @@ cuda_v11.8.0:
     brand=quadrortx,driver>=470,driver<471
     brand=titan,driver>=470,driver<471
     brand=titanrtx,driver>=470,driver<471
+    brand=tesla,driver>=510,driver<511
     brand=unknown,driver>=510,driver<511
     brand=nvidia,driver>=510,driver<511
     brand=nvidiartx,driver>=510,driver<511
@@ -1289,6 +1319,7 @@ cuda_v11.7.1:
     brand=quadrortx,driver>=470,driver<471
     brand=titan,driver>=470,driver<471
     brand=titanrtx,driver>=470,driver<471
+    brand=tesla,driver>=510,driver<511
     brand=unknown,driver>=510,driver<511
     brand=nvidia,driver>=510,driver<511
     brand=nvidiartx,driver>=510,driver<511
@@ -2803,6 +2834,64 @@ cuda_v11.5.2:
         cudnn8:
           version: 8.3.3.40-1
       <<: *cuda11_5_2_requires
+  rockylinux8:
+    arm64:
+      components:
+        cudart:
+          version: 11.5.117-1
+        cudart_dev:
+          version: 11.5.117-1
+        libcublas:
+          version: 11.7.4.6-1
+        libcublas_dev:
+          version: 11.7.4.6-1
+        libnpp:
+          version: 11.5.1.107-1
+        libnpp_dev:
+          version: 11.5.1.107-1
+        nvml_dev:
+          version: 11.5.50-1
+        nvprof:
+          version: 11.5.114-1
+        nvtx:
+          version: 11.5.114-1
+        libnccl2:
+          version: 2.11.4-1
+        libnccl2_dev:
+          version: 2.11.4-1
+        cudnn8:
+          version: 8.3.3.40-1
+      requires: 'cuda>=11.5'
+    base_image: rockylinux:8
+    repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel8
+    template_path: templates/redhat      
+    x86_64:
+      components:
+        cudart:
+          version: 11.5.117-1
+        cudart_dev:
+          version: 11.5.117-1
+        libcublas:
+          version: 11.7.4.6-1
+        libcublas_dev:
+          version: 11.7.4.6-1
+        libnpp:
+          version: 11.5.1.107-1
+        libnpp_dev:
+          version: 11.5.1.107-1
+        nvml_dev:
+          version: 11.5.50-1
+        nvprof:
+          version: 11.5.114-1
+        nvtx:
+          version: 11.5.114-1
+        libnccl2:
+          version: 2.11.4-1
+        libnccl2_dev:
+          version: 2.11.4-1
+        cudnn8:
+          version: 8.3.3.40-1
+      <<: *cuda11_5_2_requires      
   ubi7:
     base_image: registry.access.redhat.com/ubi7/ubi:latest
     repo_url: https://developer.download.nvidia.com/compute/cuda/repos/rhel7
@@ -5857,6 +5946,10 @@ cuda_v11.0.3:
       <<: *cuda11_0_3_requires
       components:
         <<: *cuda11_0_3_components
+        libnccl2:
+          version: 2.16.2-1
+        libnccl2_dev:
+          version: 2.16.2-1        
   rockylinux8:
     template_path: templates/redhat
     base_image: rockylinux:8
