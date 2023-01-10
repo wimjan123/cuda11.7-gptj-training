@@ -949,7 +949,7 @@ class ManagerGenerate(Manager):
             major = self.cuda_version.split(".")[0]
             minor = self.cuda_version.split(".")[1]
 
-        self.end_of_life = self.get_data(conf, self.key, "end_of_life")
+        self.end_of_life = self.get_data(conf, self.key, "end_of_life", can_skip=True)
         self.image_tag_suffix = self.get_data(
             conf,
             self.key,
