@@ -136,12 +136,14 @@ def _pop_supported_platforms():
         SupportedPlatform(
             distro="ubi",
             version="9",
-            arches=[arches.x86_64, arches.arm64, arches.ppc64le],
+            # ubi9 supports ppc64le, but CUDA does not...
+            arches=[arches.x86_64, arches.arm64],
             package_format="rpm",
         ),
         SupportedPlatform(
             distro="rockylinux",
             version="9",
+            # rockylinux9 supports ppc64le, but CUDA does not...
             arches=[arches.x86_64, arches.arm64],
             package_format="rpm",
         ),

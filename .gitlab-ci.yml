@@ -567,7 +567,7 @@ kitmaker_centos7_deploy:
   OS: "ubi9"
   OS_NAME: "ubi"
   OS_VERSION: "9"
-  ARCHES: "x86_64, arm64, ppc64le"
+  ARCHES: "x86_64, arm64"
   # CI_DEBUG_TRACE: "true"
 
 .kitmaker_ubi9_only: &kitmaker_ubi9_only
