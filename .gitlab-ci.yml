@@ -2228,7 +2228,7 @@ ubuntu22.04-v11.8.0-cudnn8:
   variables:
     <<: *ubuntu22_04_11_8_0_variables
     CUDNN_VERSION: "cudnn8"
-    ARCHES: "x86_64"
+    ARCHES: "arm64, x86_64"
   needs:
     - job: ubuntu22.04-v11.8.0
       artifacts: true
