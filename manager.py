@@ -1341,8 +1341,9 @@ class ManagerGenerate(Manager):
 
         try:
             tag_dict = json.loads(get_repo_tags(docker_repo).stdout)
-        except:
+        except Exception as e:
             log.error("Some problem occurred in getting tags from DockerHub")
+            log.error(e)            
             sys.exit(1)
 
         for key in tag_dict.keys():
