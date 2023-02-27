@@ -59,3 +59,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Keep apt from auto upgrading the cublas and nccl packages. See https://gitlab.com/nvidia/container-images/cuda/-/issues/88
 RUN apt-mark hold ${NV_LIBCUBLAS_DEV_PACKAGE_NAME} ${NV_LIBNCCL_DEV_PACKAGE_NAME}
 ENV LIBRARY_PATH /usr/local/cuda/lib64/stubs
+
+RUN apt-get install nano python3-pip python3-dev \
+		&& mkdir /ai && cd /ai \
+		&& git clone https://github.com/jdwx/gptj-finetune \
+		&& cd gptj-finetune/ \
+		&& pip3.10 install -r requirements.txt \
+		&& cd ./text/ \
+		&& wget https://huggingface.co/datasets/Thewillonline/reddit-sarcasm/resolve/main/reddit-sarcasm.txt
